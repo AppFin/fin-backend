@@ -4,7 +4,7 @@ using Fin.Infrastructure.Extensions;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
-    .AddInfrastructureServices()
+    .AddInfrastructure(builder.Configuration)
     .AddAutoSingletonServices()
     .AddAutoScopedServices()
     .AddAutoTransientServices()

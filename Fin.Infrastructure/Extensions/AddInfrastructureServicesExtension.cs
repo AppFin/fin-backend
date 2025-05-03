@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Fin.Infrastructure.Extensions;
 
-public static class AddInfrastructureServicesExtensions
+public static class AddInfrastructureServicesExtension
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
     {
