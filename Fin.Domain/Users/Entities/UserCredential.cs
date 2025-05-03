@@ -1,4 +1,5 @@
-﻿using Fin.Domain.Global.Interfaces;
+﻿using System.Text.RegularExpressions;
+using Fin.Domain.Global.Interfaces;
 
 namespace Fin.Domain.Users.Entities;
 
@@ -74,5 +75,18 @@ public class UserCredential : IEntity
     public void IncrementFailLoginAttempts()
     {
         FailLoginAttempts++;
+    }
+    
+    public static bool IsValidPassword(string password)
+    {
+        if (password.Length < 5)
+            return false;
+
+        var temMinuscula = Regex.IsMatch(password, "[a-z]");
+        var temMaiuscula = Regex.IsMatch(password, "[A-Z]");
+        var temNumero = Regex.IsMatch(password, "[0-9]");
+        var temEspecial = Regex.IsMatch(password, "[^a-zA-Z0-9]");
+
+        return temMinuscula && temMaiuscula && temNumero && temEspecial;
     }
 }
