@@ -1,11 +1,10 @@
-﻿using Fin.Infrastructure.Database;
-using Fin.Infrastructure.Database.IRepositories;
+﻿using Fin.Infrastructure.Database.IRepositories;
 using Fin.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Fin.Infrastructure.Extensions;
+namespace Fin.Infrastructure.Database.Extensions;
 
 public static class AddDatabaseExtension
 {

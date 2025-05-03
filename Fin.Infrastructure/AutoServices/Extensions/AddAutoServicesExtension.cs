@@ -1,9 +1,9 @@
 ﻿using System.Reflection;
-using Fin.Infrastructure.AutoServices;
+using Fin.Infrastructure.AutoServices.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
-using IAutoScoped = Fin.Infrastructure.AutoServices.IAutoScoped;
+using IAutoScoped = Fin.Infrastructure.AutoServices.Interfaces.IAutoScoped;
 
-namespace Fin.Infrastructure.Extensions;
+namespace Fin.Infrastructure.AutoServices.Extensions;
 
 public static class AddAutoServicesExtension
 {

@@ -14,7 +14,15 @@ public class Repository<T> : IRepository<T> where T : class, IEntity
         _dbSet = _context.Set<T>();
     }
 
-    public IQueryable<T> Query => _dbSet.AsNoTracking();
+    public IQueryable<T> Query(bool tracking = true)
+    {
+        return tracking ? _dbSet : _dbSet.AsNoTracking();
+    }
+
+    public async Task<T> FindAsync(Guid entityId, bool tracking = true)
+    {
+        return await Query(tracking).FirstOrDefaultAsync(x => x.Id == entityId);
+    }
 
     public async Task AddAsync(T entity, bool autoSave = false)
     {

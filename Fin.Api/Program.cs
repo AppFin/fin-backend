@@ -1,4 +1,4 @@
-using Fin.Infrastructure.Extensions;
+using Fin.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 

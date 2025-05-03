@@ -1,4 +1,5 @@
 ﻿using Fin.Infrastructure.AutoServices;
+using Fin.Infrastructure.AutoServices.Interfaces;
 
 namespace Fin.Infrastructure.Services;
 

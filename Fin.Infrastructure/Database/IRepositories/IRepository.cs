@@ -1,8 +1,11 @@
-﻿namespace Fin.Infrastructure.Database.IRepositories;
+﻿using Fin.Domain.Global.Interfaces;
 
-public interface IRepository<T>
+namespace Fin.Infrastructure.Database.IRepositories;
+
+public interface IRepository<T> where T : class, IEntity
 {
-    IQueryable<T> Query { get; }
+    IQueryable<T> Query(bool tracking = true);
+    Task<T> FindAsync(Guid entityId, bool tracking = true);
     Task AddAsync(T entity, bool autoSave = false);
     Task UpdateAsync(T entity, bool autoSave = false);
     Task DeleteAsync(T entity, bool autoSave = false);

@@ -1,5 +1,6 @@
 ﻿using Fin.Application.HealthChecks.Dtos;
 using Fin.Infrastructure.AutoServices;
+using Fin.Infrastructure.AutoServices.Interfaces;
 using Fin.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 
