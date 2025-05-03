@@ -20,10 +20,6 @@ public class FinDbContext: DbContext
     
     public FinDbContext(DbContextOptions<FinDbContext> options, bool migrate = true) : base(options)
     {
-        if (migrate)
-        {
-            Database.Migrate();
-        }
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

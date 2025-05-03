@@ -1,5 +1,6 @@
 ﻿using Fin.Infrastructure.Database;
 using Fin.Infrastructure.Database.IRepositories;
+using Fin.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +12,7 @@ public static class AddDatabaseExtension
     public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
     {
         services
+            .AddScoped<AuditedEntityInterceptor>()
             .AddDbContext<FinDbContext>((serviceProvider, op) =>
             {
                 var auditedEntityInterceptor = serviceProvider.GetRequiredService<AuditedEntityInterceptor>();
@@ -20,6 +22,9 @@ public static class AddDatabaseExtension
                     .AddInterceptors(auditedEntityInterceptor);
             })
             .AddScoped(typeof(IRepository<>), typeof(Repository<>));;
+        
+        services.AddHostedService<MigrateDatabaseHostedService>();
+        
         
         return services;
     }
