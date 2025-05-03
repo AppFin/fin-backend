@@ -1,8 +1,10 @@
 using Fin.Application.AutoServices.Extensions;
+using Fin.Infrastructure.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
+    .AddInfrastructureServices()
     .AddAutoSingletonServices()
     .AddAutoScopedServices()
     .AddAutoTransientServices()
