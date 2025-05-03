@@ -1,10 +1,15 @@
-using Fin.Application.HealthChecks.Services;
+using Fin.Application.AutoServices.Extensions;
+using Fin.Infrastructure.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
-builder.Services.AddSingleton<IHealthCheckService, HealthCheckService>();
-builder.Services.AddOpenApiDocument();
+builder.Services
+    .AddInfrastructure(builder.Configuration)
+    .AddAutoSingletonServices()
+    .AddAutoScopedServices()
+    .AddAutoTransientServices()
+    .AddOpenApiDocument()
+    .AddControllers();
 
 var app = builder.Build();
 
