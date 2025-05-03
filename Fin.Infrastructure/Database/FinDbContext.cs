@@ -1,14 +1,21 @@
 ﻿using System.Linq.Expressions;
 using Fin.Domain.Global.Interfaces;
+using Fin.Domain.Tenants.Entities;
+using Fin.Domain.Users.Entities;
+using Fin.Infrastructure.Database.Configurations;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fin.Infrastructure.Database;
 
 public class FinDbContext: DbContext
 {
+    public DbSet<User> Users { get; set; }
+    public DbSet<UserCredential> Credentials { get; set; }
+    public DbSet<Tenant> Tenants { get; set; }
+    public DbSet<TenantUser> TenantUsers { get; set; }
+    
     public FinDbContext()
     {
-        
     }
     
     public FinDbContext(DbContextOptions<FinDbContext> options, bool migrate = true) : base(options)
@@ -23,6 +30,9 @@ public class FinDbContext: DbContext
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.HasDefaultSchema("public");
+        
+        UserEntityConfiguration.Configure(modelBuilder);
+        TenantEntityConfiguration.Configure(modelBuilder);
      
         // Configurar quando tiver o AmbientData
         // ConfigTenantFilter(modelBuilder);
