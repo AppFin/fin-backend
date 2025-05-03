@@ -1,11 +1,22 @@
-﻿using Fin.Application.AutoServices.Interfaces;
+﻿using System.Reflection;
+using Fin.Infrastructure.AutoServices;
 using Microsoft.Extensions.DependencyInjection;
-using IAutoScoped = Fin.Application.AutoServices.Interfaces.IAutoScoped;
+using IAutoScoped = Fin.Infrastructure.AutoServices.IAutoScoped;
 
-namespace Fin.Application.AutoServices.Extensions;
+namespace Fin.Infrastructure.Extensions;
 
 public static class AddAutoServicesExtension
 {
+    public static IServiceCollection AddAutoServices(this IServiceCollection services)
+    {
+        services
+            .AddAutoSingletonServices()
+            .AddAutoScopedServices()
+            .AddAutoTransientServices();
+        
+        return services;
+    }
+    
     public static IServiceCollection AddAutoTransientServices(this IServiceCollection services)
     {
         RegisterDependencyByType(services, typeof(IAutoTransient), ServiceLifetime.Transient);
@@ -26,6 +37,25 @@ public static class AddAutoServicesExtension
     
     private static void RegisterDependencyByType(IServiceCollection serviceCollection, Type dependencyType, ServiceLifetime lifeStyle)
     {
+        var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
+        var referencedPaths = Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll");
+        
+        foreach (var path in referencedPaths)
+        {
+            try
+            {
+                var assemblyName = AssemblyName.GetAssemblyName(path);
+                if (loadedAssemblies.All(a => a.FullName != assemblyName.FullName))
+                {
+                    loadedAssemblies.Add(AppDomain.CurrentDomain.Load(assemblyName));
+                }
+            }
+            catch
+            {
+                // Ignorer DLLs
+            }
+        }
+        
         var dependencies =
             from dependency in AppDomain.CurrentDomain.GetAssemblies().SelectMany(assembly => assembly.GetTypes())
             where dependency.GetInterfaces().Contains(dependencyType)

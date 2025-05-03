@@ -8,7 +8,7 @@ public static class AddInfrastructureExtension
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services
-            .AddInfrastructureServices()
+            .AddAutoServices()
             .AddDatabase(configuration);
         
         return services;

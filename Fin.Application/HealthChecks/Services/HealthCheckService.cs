@@ -1,5 +1,5 @@
-﻿using Fin.Application.AutoServices.Interfaces;
-using Fin.Application.HealthChecks.Dtos;
+﻿using Fin.Application.HealthChecks.Dtos;
+using Fin.Infrastructure.AutoServices;
 using Fin.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 

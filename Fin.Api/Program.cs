@@ -1,13 +1,9 @@
-using Fin.Application.AutoServices.Extensions;
 using Fin.Infrastructure.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
     .AddInfrastructure(builder.Configuration)
-    .AddAutoSingletonServices()
-    .AddAutoScopedServices()
-    .AddAutoTransientServices()
     .AddOpenApiDocument()
     .AddControllers();
 
@@ -19,5 +15,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUi();
 }
 
+app.UseHsts();
+app.UseHttpsRedirection();
 app.MapControllers();
 app.Run();
