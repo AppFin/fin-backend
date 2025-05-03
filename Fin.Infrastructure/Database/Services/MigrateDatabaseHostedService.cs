@@ -1,10 +1,9 @@
-﻿using Fin.Infrastructure.Database;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Fin.Infrastructure.Services;
+namespace Fin.Infrastructure.Database.Services;
 
 public class MigrateDatabaseHostedService : IHostedService
 {

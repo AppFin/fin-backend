@@ -1,5 +1,5 @@
 ﻿using Fin.Infrastructure.Database.IRepositories;
-using Fin.Infrastructure.Services;
+using Fin.Infrastructure.Database.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
