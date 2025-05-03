@@ -12,6 +12,8 @@ public static class TenantEntityConfiguration
         {
             u.HasKey(x => x.Id);
             
+            u.Property(x => x.Locale).HasMaxLength(30);
+            u.Property(x => x.Timezone).HasMaxLength(30);
             
             u
                 .HasMany(e => e.Users)

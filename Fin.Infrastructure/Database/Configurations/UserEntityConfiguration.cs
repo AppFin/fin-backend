@@ -10,6 +10,11 @@ public static class UserEntityConfiguration
         modelBuilder.Entity<User>(u =>
         {
             u.HasKey(x => x.Id);
+            
+            u.Property(x => x.FirstName).HasMaxLength(100);
+            u.Property(x => x.LastName).HasMaxLength(100);
+            u.Property(x => x.DisplayName).HasMaxLength(150);
+            u.Property(x => x.ImageIdentifier).HasMaxLength(200);
         });
 
         modelBuilder.Entity<UserCredential>(u =>
@@ -21,6 +26,14 @@ public static class UserEntityConfiguration
             u.HasIndex(x => x.GoogleId).IsUnique();
             u.HasIndex(x => x.TelegramChatId).IsUnique();
             u.HasIndex(x => x.ResetToken).IsUnique();
+            
+            u.Property(x => x.EncryptedEmail).HasMaxLength(200);
+            u.Property(x => x.EncryptedPhone).HasMaxLength(200);
+            u.Property(x => x.EncryptedPassword).HasMaxLength(300);
+            u.Property(x => x.GoogleId).HasMaxLength(200);
+            u.Property(x => x.TelegramChatId).HasMaxLength(200);
+            u.Property(x => x.ResetToken).HasMaxLength(200);
+            u.Property(x => x.PhoneCountryCode).HasMaxLength(3);
             
             u
                 .HasOne(x => x.User)
