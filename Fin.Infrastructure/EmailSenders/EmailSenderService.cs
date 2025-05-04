@@ -22,8 +22,8 @@ public class EmailSenderService: IEmailSenderService, IAutoTransient
 
     public async Task SendEmailAsync(string toEmail, string subject, string body)
     {
-        var emailAddress = _configuration["AppSettings:EmailSender:EmailAddress"];
-        var emailPassword = _configuration["AppSettings:EmailSender:Password"];
+        var emailAddress = _configuration.GetSection("ApiSettings:EmailSender:EmailAddress").Value ?? "";
+        var emailPassword = _configuration.GetSection("ApiSettings:EmailSender:Password").Value ?? "";
         
         var email = new MimeMessage();
         email.From.Add(MailboxAddress.Parse(emailAddress));

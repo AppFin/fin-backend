@@ -5,7 +5,7 @@ public class ValidationResultDto<D, E>
     public D? Data { get; set; }
     public string Message { get; set; }
     public bool Success { get; set; }
-    public Enum? ErrorCode { get; set; }
+    public E? ErrorCode { get; set; }
 }
 
 public class ValidationResultDto<D>

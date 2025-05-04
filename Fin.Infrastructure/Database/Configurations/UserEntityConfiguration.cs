@@ -22,18 +22,13 @@ public static class UserEntityConfiguration
             u.HasKey(x => x.Id);
             
             u.HasIndex(x => x.EncryptedEmail).IsUnique();
-            u.HasIndex(x => x.EncryptedPhone).IsUnique();
             u.HasIndex(x => x.GoogleId).IsUnique();
-            u.HasIndex(x => x.TelegramChatId).IsUnique();
             u.HasIndex(x => x.ResetToken).IsUnique();
             
             u.Property(x => x.EncryptedEmail).HasMaxLength(200);
-            u.Property(x => x.EncryptedPhone).HasMaxLength(200);
             u.Property(x => x.EncryptedPassword).HasMaxLength(300);
             u.Property(x => x.GoogleId).HasMaxLength(200);
-            u.Property(x => x.TelegramChatId).HasMaxLength(200);
             u.Property(x => x.ResetToken).HasMaxLength(200);
-            u.Property(x => x.PhoneCountryCode).HasMaxLength(3);
             
             u
                 .HasOne(x => x.User)

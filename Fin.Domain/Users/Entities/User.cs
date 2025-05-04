@@ -22,35 +22,36 @@ public class User: IEntity
     
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
-    
+
     public UserCredential Credential { get; set; }
-    public ICollection<Tenant> Tenants { get; set; }
+    public ICollection<Tenant> Tenants { get; set; } = new List<Tenant>();
 
     public User()
     {
     }
 
-    public User(UserUpdateAndCreateDto userUpdateAndCreateDto, DateTime now)
+    public User(UserUpdateOrCreateDto userUpdateOrCreateDto, DateTime now)
     {
         Id = Guid.NewGuid();
         
-        FirstName = userUpdateAndCreateDto.FirstName;
-        LastName = userUpdateAndCreateDto.LastName;
-        DisplayName = userUpdateAndCreateDto.DisplayName;
-        Sex = userUpdateAndCreateDto.Sex;
-        BirthDate = userUpdateAndCreateDto.BirthDate;
+        FirstName = userUpdateOrCreateDto.FirstName;
+        LastName = userUpdateOrCreateDto.LastName;
+        DisplayName = userUpdateOrCreateDto.DisplayName;
+        Sex = userUpdateOrCreateDto.Sex;
+        BirthDate = userUpdateOrCreateDto.BirthDate;
         
+        IsActivity = true;
         CreatedAt = now;
         UpdatedAt = now;
     }
     
-    public void Update(UserUpdateAndCreateDto userUpdateAndCreateDto, DateTime now)
+    public void Update(UserUpdateOrCreateDto userUpdateOrCreateDto, DateTime now)
     {
-        FirstName = userUpdateAndCreateDto.FirstName;
-        LastName = userUpdateAndCreateDto.LastName;
-        DisplayName = userUpdateAndCreateDto.DisplayName;
-        Sex = userUpdateAndCreateDto.Sex;
-        BirthDate = userUpdateAndCreateDto.BirthDate;
+        FirstName = userUpdateOrCreateDto.FirstName;
+        LastName = userUpdateOrCreateDto.LastName;
+        DisplayName = userUpdateOrCreateDto.DisplayName;
+        Sex = userUpdateOrCreateDto.Sex;
+        BirthDate = userUpdateOrCreateDto.BirthDate;
         
         UpdatedAt = now;
     }

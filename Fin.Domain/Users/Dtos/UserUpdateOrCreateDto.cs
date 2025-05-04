@@ -1,0 +1,25 @@
+﻿using System.ComponentModel.DataAnnotations;
+using Fin.Domain.Users.Enums;
+
+namespace Fin.Domain.Users.Dtos;
+
+public class UserUpdateOrCreateDto
+{
+    [Required]
+    [MinLength(2)]
+    [MaxLength(100)]
+    public string FirstName { get; set; }
+    [Required]
+    [MinLength(2)]
+    [MaxLength(100)]
+    public string LastName { get; set; }
+    [Required]
+    [MinLength(2)]
+    [MaxLength(150)]
+    public string DisplayName { get; set; }
+
+    [Required]
+    public UserSex Sex { get; set; }
+    [Required]
+    public DateOnly BirthDate { get; set; }
+}

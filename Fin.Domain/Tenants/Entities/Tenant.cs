@@ -18,9 +18,9 @@ public class Tenant: IEntity
     {
     }
     
-    public Tenant(Guid id, DateTime now, string locale, string timezone)
+    public Tenant(DateTime now, string locale, string timezone)
     {
-        Id = id;
+        Id = Guid.NewGuid();
         CreatedAt = now;
         UpdatedAt = now;
         Locale = locale;

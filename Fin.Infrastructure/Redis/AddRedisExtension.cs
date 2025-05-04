@@ -9,7 +9,7 @@ public static class AddRedisExtension
 {
     public static IServiceCollection AddRedis(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration["AppSettings:Redis"] ?? "";
+        var connectionString = configuration.GetSection("ApiSettings:Redis").Value ?? "";
 
         services
             .AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(connectionString))

@@ -5,10 +5,10 @@ namespace Fin.Infrastructure.Database.IRepositories;
 
 public class Repository<T> : IRepository<T> where T : class, IEntity
 {
-    private readonly DbContext _context;
+    private readonly FinDbContext _context;
     private readonly DbSet<T> _dbSet;
 
-    public Repository(DbContext context)
+    public Repository(FinDbContext context)
     {
         _context = context;
         _dbSet = _context.Set<T>();

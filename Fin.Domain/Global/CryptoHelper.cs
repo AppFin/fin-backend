@@ -11,6 +11,9 @@ public class CryptoHelper
 
     public CryptoHelper(string key, string iv)
     {
+        if (key.Length != 32 || iv.Length != 16)
+            throw new ArgumentException("Key and IV must be 32 and 16 bytes long.");
+        
         _key = key;
         _iv = iv;
     }
