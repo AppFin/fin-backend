@@ -12,15 +12,15 @@ public class UserCredential : IEntity
 
     public string GoogleId { get; set; }
 
-    public string ResetToken { get; private set; } = "";
-    private int FailLoginAttempts { get;  set; }
+    public string ResetToken { get; set; } = "";
+    public int FailLoginAttempts { get; private set; }
     
     public Guid UserId { get; private  set; }
     public virtual User User { get; set; }
     
     public bool HasGoogle => !string.IsNullOrEmpty(GoogleId);
     public bool HasPassword => !string.IsNullOrEmpty(EncryptedPassword);
-    public bool ExceededAttempts => FailLoginAttempts > 5;
+    public bool ExceededAttempts => FailLoginAttempts >= 5;
     
     public UserCredential()
     {
@@ -47,11 +47,7 @@ public class UserCredential : IEntity
 
         EncryptedPassword = newPasswordEncrypted;
         ResetFailLoginAttempts();
-        
         ResetToken = ""; 
-        
-        if (!User.IsActivity)
-            User.ToggleActivity();
         
         return true;
     }

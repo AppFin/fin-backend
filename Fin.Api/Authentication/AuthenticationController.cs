@@ -1,4 +1,5 @@
-﻿using Fin.Infrastructure.Authentications;
+﻿using Fin.Application.Authentications.Dtos;
+using Fin.Infrastructure.Authentications;
 using Fin.Infrastructure.Authentications.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,9 +26,9 @@ public class AuthenticationController: ControllerBase
     }
     
     [HttpPost("refresh-token")]
-    public async Task<ActionResult<LoginOutput>> RefreshToken([FromBody] string refreshToken)
+    public async Task<ActionResult<LoginOutput>> RefreshToken([FromBody] UserRefreshTokenInput input)
     {
-        var result = await _authenticationService.RefreshToken(refreshToken);
+        var result = await _authenticationService.RefreshToken(input.RefreshToken);
         if (result.Success)
             return Ok(result);
         return UnprocessableEntity(result);

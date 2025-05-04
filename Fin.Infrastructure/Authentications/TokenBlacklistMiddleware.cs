@@ -1,10 +1,9 @@
-﻿using Fin.Infrastructure.AutoServices.Interfaces;
-using Fin.Infrastructure.Redis;
+﻿using Fin.Infrastructure.Redis;
 using Microsoft.AspNetCore.Http;
 
 namespace Fin.Infrastructure.Authentications;
 
-public class TokenBlacklistMiddleware: IMiddleware, IAutoScoped
+public class TokenBlacklistMiddleware: IMiddleware
 {
     private readonly IRedisCacheService _cache;
 

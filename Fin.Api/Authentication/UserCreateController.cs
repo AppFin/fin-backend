@@ -77,4 +77,20 @@ public class UserCreateController : ControllerBase
             return Unauthorized(e.Message);
         }
     }
+    
+    [HttpPost("start-reset-password")]
+    public async Task<ActionResult> StartResetPassword([FromBody] UserStartResetPasswordInput input)
+    {
+        await _userCreateService.StartResetPassword(input.Email);
+        return Ok();
+    }
+    
+    [HttpPost("reset-password")]
+    public async Task<ActionResult> ResetPassword([FromBody] UserResetPasswordInput input)
+    {
+        var result = await _userCreateService.ResetPassword(input);
+        if (result.Success)
+            return Ok(result.Data);
+        return UnprocessableEntity(result);
+    }
 }

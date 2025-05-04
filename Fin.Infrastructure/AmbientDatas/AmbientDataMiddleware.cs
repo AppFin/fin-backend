@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace Fin.Infrastructure.AmbientDatas;
 
-public class AmbientDataMiddleware: IMiddleware, IAutoScoped
+public class AmbientDataMiddleware: IMiddleware
 {
     private readonly IAmbientData _ambientData;
 
@@ -28,13 +28,17 @@ public class AmbientDataMiddleware: IMiddleware, IAutoScoped
             {
                 var jwt = handler.ReadJwtToken(token);
 
-                var displayName = jwt.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value ?? "";
-                var userId = jwt.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value ?? "";
-                var isAdmin = jwt.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value == "Admin";
-                var tenantId = jwt.Claims.FirstOrDefault(c => c.Type == "TenantId")?.Value ?? "";
+                var displayName = jwt.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value ?? "";
+                var userId = jwt.Claims.FirstOrDefault(c => c.Type == "userId")?.Value ?? "";
+                var isAdmin = jwt.Claims.FirstOrDefault(c => c.Type == "role")?.Value == "Admin";
+                var tenantId = jwt.Claims.FirstOrDefault(c => c.Type == "tenantId")?.Value ?? "";
 
                 _ambientData.SetData(Guid.Parse(tenantId), Guid.Parse(userId), displayName, isAdmin);           
             }
+        }
+        else
+        {
+            _ambientData.SetNotLogged();
         }
 
         await next(context);

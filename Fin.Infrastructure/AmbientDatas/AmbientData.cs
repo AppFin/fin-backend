@@ -17,4 +17,12 @@ public class AmbientData: IAmbientData, IAutoScoped
         DisplayName = displayName;       
         IsAdmin = isAdmin;       
     }
+
+    public void SetNotLogged()
+    {
+        TenantId = null;
+        UserId = null;
+        DisplayName = null;       
+        IsAdmin = false; 
+    }
 }

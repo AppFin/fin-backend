@@ -25,6 +25,9 @@ public interface IUserCreateService
     public Task<ValidationResultDto<bool>> ValidateEmailCode(string creationToken, string emailConfirmationCode);
     
     public Task<ValidationResultDto<UserOutput>> CreateUser(string creationToken, UserUpdateOrCreateDto input);
+    
+    public Task StartResetPassword(string email);
+    public Task<ValidationResultDto<bool, UserResetPasswordErrorCode>> ResetPassword(UserResetPasswordInput input);
 }
 
 public class UserCreateService : IUserCreateService, IAutoTransient
@@ -203,6 +206,75 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         };
     }
 
+    public async Task StartResetPassword(string email)
+    {
+        var encryptedEmail = _cryptoHelper.Encrypt(email);
+        var credential = _credentialRepository.Query()
+            .Include(c => c.User)
+            .FirstOrDefault(c => c.EncryptedEmail == encryptedEmail);
+        
+        if (credential == null || !credential.User.IsActivity)
+            return;
+
+        var token = $"{Guid.NewGuid()}-{Guid.NewGuid()}";
+
+        credential.ResetToken = token;
+        await _cache.SetAsync(GetResetTokenCacheKey(token), credential.UserId, new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6)
+        });
+        await _credentialRepository.UpdateAsync(credential, true);
+        
+        await _emailSender.SendEmailAsync(email, "Fin - Reset Password", $"Your reset token is <b>{token}</b>");
+    }
+
+    public async Task<ValidationResultDto<bool, UserResetPasswordErrorCode>> ResetPassword(UserResetPasswordInput input)
+    {
+        var isValidPass = UserCredential.IsValidPassword(input.Password);
+        var isSamePass = input.Password == input.PasswordConfirmation;
+
+        if (!isValidPass)
+            return new ValidationResultDto<bool, UserResetPasswordErrorCode>
+            {
+                Message = "Invalid password",
+                ErrorCode = UserResetPasswordErrorCode.InvalidPassword
+            };
+        
+        if (!isSamePass)
+            return new ValidationResultDto<bool, UserResetPasswordErrorCode>
+            {
+                Message = "Not same password",
+                ErrorCode = UserResetPasswordErrorCode.NotSamePassword
+            };
+        
+        var credential = await _credentialRepository.Query().FirstOrDefaultAsync(c => c.ResetToken == input.ResetToken);
+        if (credential == null)
+            return new ValidationResultDto<bool, UserResetPasswordErrorCode>
+            {
+                Message = "Invalid reset token",
+                ErrorCode = UserResetPasswordErrorCode.InvalidToken
+            };
+        
+        var userId = await _cache.GetAsync<Guid>(GetResetTokenCacheKey(input.ResetToken));
+        if (userId == Guid.Empty || userId != credential.UserId)
+            return new ValidationResultDto<bool, UserResetPasswordErrorCode>
+            {
+                Message = userId == Guid.Empty ? "Reset token has expired" : "Invalid reset token",
+                ErrorCode = userId == Guid.Empty ?  UserResetPasswordErrorCode.ExpiredToken : UserResetPasswordErrorCode.InvalidToken
+            };
+
+        var encryptedPassword = _cryptoHelper.Encrypt(input.Password);
+        credential.ResetPassword(encryptedPassword, input.ResetToken);
+        await _credentialRepository.UpdateAsync(credential, true);
+
+        return new ValidationResultDto<bool, UserResetPasswordErrorCode>
+        {
+            Success = true,
+            Data = true,
+            Message = "Success"
+        };
+    }
+
     private string GenerateProcessCacheKey(string creationToken) => $"user-create-process-{creationToken}";
 
     private ValidationResultDto<UserStartCreateOutput, UserStartCreateErrorCode> GetResultWithError(
@@ -230,4 +302,6 @@ public class UserCreateService : IUserCreateService, IAutoTransient
 
         return new string(result);
     }
+    
+    private static string GetResetTokenCacheKey(string token) => $"reset-token-{token}";
 }

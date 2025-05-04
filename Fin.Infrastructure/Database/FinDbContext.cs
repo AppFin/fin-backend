@@ -9,21 +9,21 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Fin.Infrastructure.Database;
 
-public class FinDbContext: DbContext
+public class FinDbContext : DbContext
 {
     public DbSet<User> Users { get; set; }
     public DbSet<UserCredential> Credentials { get; set; }
     public DbSet<Tenant> Tenants { get; set; }
     public DbSet<TenantUser> TenantUsers { get; set; }
-    
+
     private readonly IAmbientData _ambientData;
-    
-    public FinDbContext(IAmbientData ambientData)
+
+    public FinDbContext()
     {
-        _ambientData = ambientData;
     }
-    
-    public FinDbContext(DbContextOptions<FinDbContext> options, IAmbientData ambientData, bool migrate = true) : base(options)
+
+    public FinDbContext(DbContextOptions<FinDbContext> options, IAmbientData ambientData, bool migrate = true) :
+        base(options)
     {
         _ambientData = ambientData;
     }
@@ -32,13 +32,13 @@ public class FinDbContext: DbContext
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.HasDefaultSchema("public");
-        
+
         UserEntityConfiguration.Configure(modelBuilder);
         TenantEntityConfiguration.Configure(modelBuilder);
-     
+
         ApplyTenantFilter(modelBuilder);
     }
-    
+
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
         if (!options.IsConfigured)
@@ -49,6 +49,7 @@ public class FinDbContext: DbContext
 
     private void ApplyTenantFilter(ModelBuilder modelBuilder)
     {
+        if (!(_ambientData?.IsLogged ?? false)) return;
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             if (typeof(ITenantEntity).IsAssignableFrom(entityType.ClrType))

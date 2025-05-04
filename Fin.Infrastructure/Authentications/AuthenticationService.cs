@@ -71,7 +71,7 @@ public class AuthenticationService: IAuthenticationService, IAutoTransient
         if (!credential.HasPassword)
             return new LoginOutput { ErrorCode = LoginErrorCode.DoNotHasPassword };
         
-        var validPassword = credential.TestCredentials(encryptedPassword, encryptedPassword); 
+        var validPassword = credential.TestCredentials(encryptedEmail, encryptedPassword); 
         
         await _credentialRepository.UpdateAsync(credential, true);
         if (!validPassword)
@@ -82,14 +82,17 @@ public class AuthenticationService: IAuthenticationService, IAutoTransient
 
     public async Task<LoginOutput> RefreshToken(string refreshToken)
     {
-        var userId = await _cache.GetAsync<Guid>(refreshToken);
+        var userId = await _cache.GetAsync<Guid>(GetRefreshTokenCacheKey(refreshToken));
         if (userId == Guid.Empty)
             return new LoginOutput { ErrorCode = LoginErrorCode.InvalidRefreshToken };
         
-        var user = await _userRepository.Query(false).FirstOrDefaultAsync(c => c.Id == userId);
+        var user = await _userRepository.Query(false)
+            .Include(c => c.Tenants)
+            .FirstOrDefaultAsync(c => c.Id == userId);
         if (user == null)
             return new LoginOutput { ErrorCode = LoginErrorCode.InvalidRefreshToken };
 
+        await _cache.RemoveAsync(GetRefreshTokenCacheKey(refreshToken));
         return await GenerateTokenAsync(user);
     }
 
@@ -127,20 +130,28 @@ public class AuthenticationService: IAuthenticationService, IAutoTransient
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.UTF8.GetBytes(_configuration.GetSection("ApiSettings:Authentication:Jwt:Key").Value ?? "");
         
+        var minutesToExpire = double.Parse(_configuration.GetSection("ApiSettings:Authentication:Jwt:ExpireMinutes").Value ?? "120");
+        var expiration = _dateTimeProvider.UtcNow().AddMinutes(minutesToExpire);
+
+        var credent = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);
+
+        var issuer = _configuration.GetSection("ApiSettings:Authentication:Jwt:Issuer").Value ?? "";
+        var audience = _configuration.GetSection("ApiSettings:Authentication:Jwt:Audience").Value ?? "";
+
+        var subject = new List<Claim>();
+        subject.Add(new Claim(ClaimTypes.Name, user.DisplayName));
+        subject.Add(new Claim("userId", user.Id.ToString()));
+        subject.Add(new Claim(ClaimTypes.Role, user.IsAdmin ? "Admin" : "User"));
+        subject.Add(new Claim("imageUrl", user.ImageIdentifier ?? ""));
+        subject.Add(new Claim("tenantId", user.Tenants.FirstOrDefault()?.Id.ToString() ?? ""));
+        
         var tokenDescriptor = new SecurityTokenDescriptor
         {
-            Subject = new ClaimsIdentity(new[]
-            {
-                new Claim(ClaimTypes.Name, user.DisplayName),
-                new Claim("UserId", user.Id.ToString()),
-                new Claim(ClaimTypes.Role, user.IsAdmin ? "Admin" : "User"),
-                new Claim("ImageUrl", user.ImageIdentifier),
-                new Claim("TenantId", user.Tenants.FirstOrDefault()?.Id.ToString() ?? ""),
-            }),
-            Expires = _dateTimeProvider.UtcNow().AddMinutes(double.Parse(_configuration.GetSection("ApiSettings:Authentication:Jwt:ExpireMinutes").Value ?? "120")),
-            Issuer = _configuration.GetSection("ApiSettings:Authentication:Jwt:Issuer").Value ?? "",
-            Audience = _configuration.GetSection("ApiSettings:Authentication:Jwt:Audience").Value ?? "",
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            Subject = new ClaimsIdentity(subject),
+            Expires = expiration,
+            Issuer = issuer,
+            Audience = audience,
+            SigningCredentials = credent
         };
 
         var token = tokenHandler.CreateToken(tokenDescriptor);

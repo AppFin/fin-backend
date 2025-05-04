@@ -1,4 +1,5 @@
-﻿using Fin.Infrastructure.Authentications;
+﻿using Fin.Infrastructure.AmbientDatas;
+using Fin.Infrastructure.Authentications;
 using Fin.Infrastructure.AutoServices.Extensions;
 using Fin.Infrastructure.Database.Extensions;
 using Fin.Infrastructure.Redis;
@@ -15,6 +16,8 @@ public static class AddInfrastructureExtension
             .AddRedis(configuration)
             .AddFinAuthentication(configuration)
             .AddAutoServices()
+            .AddScoped<TokenBlacklistMiddleware>()
+            .AddScoped<AmbientDataMiddleware>()
             .AddDatabase(configuration);
         
         return services;
