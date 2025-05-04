@@ -19,6 +19,7 @@ public class UserCredential : IEntity
     public virtual User User { get; set; }
     
     public bool HasGoogle => !string.IsNullOrEmpty(GoogleId);
+    public bool HasPassword => !string.IsNullOrEmpty(EncryptedPassword);
     public bool ExceededAttempts => FailLoginAttempts > 5;
     
     public UserCredential()

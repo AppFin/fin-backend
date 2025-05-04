@@ -1,4 +1,5 @@
-﻿using Fin.Infrastructure.AutoServices.Extensions;
+﻿using Fin.Infrastructure.Authentications;
+using Fin.Infrastructure.AutoServices.Extensions;
 using Fin.Infrastructure.Database.Extensions;
 using Fin.Infrastructure.Redis;
 using Microsoft.Extensions.Configuration;
@@ -12,6 +13,7 @@ public static class AddInfrastructureExtension
     {
         services
             .AddRedis(configuration)
+            .AddFinAuthentication(configuration)
             .AddAutoServices()
             .AddDatabase(configuration);
         

@@ -1,4 +1,6 @@
 using Fin.Infrastructure;
+using Fin.Infrastructure.AmbientDatas;
+using Fin.Infrastructure.Authentications;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +17,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUi();
 }
 
+app.UseMiddleware<TokenBlacklistMiddleware>();
+app.UseMiddleware<AmbientDataMiddleware>();
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.UseHsts();
 app.UseHttpsRedirection();
+
 app.MapControllers();
 app.Run();

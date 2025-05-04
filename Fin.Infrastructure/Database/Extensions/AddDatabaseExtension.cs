@@ -12,18 +12,20 @@ public static class AddDatabaseExtension
     {
         services
             .AddScoped<AuditedEntityInterceptor>()
+            .AddScoped<TenantEntityInterceptor>()
             .AddDbContext<FinDbContext>((serviceProvider, op) =>
             {
                 var auditedEntityInterceptor = serviceProvider.GetRequiredService<AuditedEntityInterceptor>();
+                var tenantEntityInterceptor = serviceProvider.GetRequiredService<TenantEntityInterceptor>();
                 
                 op
                     .UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
-                    .AddInterceptors(auditedEntityInterceptor);
+                    .AddInterceptors(auditedEntityInterceptor)
+                    .AddInterceptors(tenantEntityInterceptor);
             })
             .AddScoped(typeof(IRepository<>), typeof(Repository<>));;
-        
+
         services.AddHostedService<MigrateDatabaseHostedService>();
-        
         
         return services;
     }

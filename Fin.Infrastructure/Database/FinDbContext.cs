@@ -1,7 +1,9 @@
 ﻿using System.Linq.Expressions;
+using System.Reflection;
 using Fin.Domain.Global.Interfaces;
 using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Entities;
+using Fin.Infrastructure.AmbientDatas;
 using Fin.Infrastructure.Database.Configurations;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,12 +16,16 @@ public class FinDbContext: DbContext
     public DbSet<Tenant> Tenants { get; set; }
     public DbSet<TenantUser> TenantUsers { get; set; }
     
-    public FinDbContext()
+    private readonly IAmbientData _ambientData;
+    
+    public FinDbContext(IAmbientData ambientData)
     {
+        _ambientData = ambientData;
     }
     
-    public FinDbContext(DbContextOptions<FinDbContext> options, bool migrate = true) : base(options)
+    public FinDbContext(DbContextOptions<FinDbContext> options, IAmbientData ambientData, bool migrate = true) : base(options)
     {
+        _ambientData = ambientData;
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -30,8 +36,7 @@ public class FinDbContext: DbContext
         UserEntityConfiguration.Configure(modelBuilder);
         TenantEntityConfiguration.Configure(modelBuilder);
      
-        // Configurar quando tiver o AmbientData
-        // ConfigTenantFilter(modelBuilder);
+        ApplyTenantFilter(modelBuilder);
     }
     
     protected override void OnConfiguring(DbContextOptionsBuilder options)
@@ -42,23 +47,23 @@ public class FinDbContext: DbContext
         }
     }
 
-    private void ConfigTenantFilter(ModelBuilder modelBuilder)
+    private void ApplyTenantFilter(ModelBuilder modelBuilder)
     {
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             if (typeof(ITenantEntity).IsAssignableFrom(entityType.ClrType))
             {
-                modelBuilder.Entity(entityType.ClrType)
-                    .HasQueryFilter(BuildTenantFilter(entityType.ClrType));
+                var method = typeof(FinDbContext)
+                    .GetMethod(nameof(SetTenantFilter), BindingFlags.NonPublic | BindingFlags.Instance)
+                    ?.MakeGenericMethod(entityType.ClrType);
+
+                method?.Invoke(this, new object[] { modelBuilder });
             }
         }
     }
-    
-    private static LambdaExpression BuildTenantFilter(Type entityType)
+
+    private void SetTenantFilter<TEntity>(ModelBuilder modelBuilder) where TEntity : class, ITenantEntity
     {
-        var parameter = Expression.Parameter(entityType, "e");
-        var property = Expression.Property(parameter, nameof(ITenantEntity.TenantId));
-        var comparison = Expression.Equal(property, Expression.Constant(Guid.NewGuid()));
-        return Expression.Lambda(comparison, parameter);
+        modelBuilder.Entity<TEntity>().HasQueryFilter(e => e.TenantId == _ambientData.TenantId);
     }
 }
