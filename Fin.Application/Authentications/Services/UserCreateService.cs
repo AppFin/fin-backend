@@ -18,6 +18,7 @@ public interface IUserCreateService
 {
     public Task<ValidationResultDto<UserStartCreateOutput, UserStartCreateErrorCode>> StartCreate(
         UserStartCreateInput input);
+    public Task<ValidationResultDto<DateTime, UserCreateResendConfirmationErrorCode>> ResendConfirmationEmail(string creationToken);
 }
 
 public class UserCreateService : IUserCreateService, IAutoTransient
@@ -54,23 +55,23 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         var isSamePass = input.Password == input.PasswordConfirmation;
 
         if (!isValidPass)
-            return GetStartCreateErrorResult(UserStartCreateErrorCode.InvalidPassword,
+            return GetResultWithError(UserStartCreateErrorCode.InvalidPassword,
                 "Password do not match requirements");
         if (!isSamePass)
-            return GetStartCreateErrorResult(UserStartCreateErrorCode.NotSamePassword,
+            return GetResultWithError(UserStartCreateErrorCode.NotSamePassword,
                 "Password confirmation do not match");
 
         var encryptedEmail = _cryptoHelper.Encrypt(input.Email);
         var emailAlreadyInUse = await _credentialRepository.Query().AnyAsync(c => c.EncryptedEmail == encryptedEmail);
         if (emailAlreadyInUse)
-            return GetStartCreateErrorResult(UserStartCreateErrorCode.EmailAlreadyInUse, "Email already in use");
+            return GetResultWithError(UserStartCreateErrorCode.EmailAlreadyInUse, "Email already in use");
 
         var creationToken = Guid.NewGuid().ToString();
         var encryptedPassword = _cryptoHelper.Encrypt(input.Password);
         var confirmationCode = GenerateConfirmationCode();
         var startDateTime = _dateTimeProvider.UtcNow();
 
-        var proccess = new UserCreateProcess
+        var process = new UserCreateProcess
         {
             EncryptedEmail = encryptedEmail,
             EncryptedPassword = encryptedPassword,
@@ -79,7 +80,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
             StarDateTime = startDateTime,
         };
         
-        await _cache.SetAsync(creationToken, proccess, new DistributedCacheEntryOptions
+        await _cache.SetAsync(creationToken, process, new DistributedCacheEntryOptions
         {
             AbsoluteExpiration = startDateTime.AddMinutes(20)
         });
@@ -98,7 +99,47 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         };
     }
 
-    private ValidationResultDto<UserStartCreateOutput, UserStartCreateErrorCode> GetStartCreateErrorResult(
+    public async Task<ValidationResultDto<DateTime, UserCreateResendConfirmationErrorCode>> ResendConfirmationEmail(string creationToken)
+    {
+        var process = await _cache.GetAsync<UserCreateProcess>(creationToken);
+        if (process == null) return new ValidationResultDto<DateTime, UserCreateResendConfirmationErrorCode>
+        {
+            Success = false,
+            Message = "Not found create process",
+            ErrorCode = UserCreateResendConfirmationErrorCode.NotFoundProcess
+        };
+        
+        var timeSinceLastSend = _dateTimeProvider.UtcNow() - process.StarDateTime;
+        if (timeSinceLastSend < TimeSpan.FromMinutes(1))
+            return new ValidationResultDto<DateTime, UserCreateResendConfirmationErrorCode>
+            {
+                Data = process.StarDateTime,
+                Success = false,
+                Message = "Must to wait 1 minute to resend confirmation email",
+                ErrorCode = UserCreateResendConfirmationErrorCode.LimitedTime
+            };
+        
+        var email = _cryptoHelper.Decrypt(process.EncryptedEmail);
+        var confirmationCode = GenerateConfirmationCode();
+        var startDateTime = _dateTimeProvider.UtcNow();
+        
+        process.EmailConfirmationCode = confirmationCode;
+        process.StarDateTime = startDateTime;
+        await _cache.SetAsync(creationToken, process, new DistributedCacheEntryOptions
+        {
+            AbsoluteExpiration = startDateTime.AddMinutes(20)
+        });
+        await _emailSender.SendEmailAsync(email, "Fin - Email Confirmation", $"Your confirmation code is <b>{confirmationCode}</b>");
+        
+        return new ValidationResultDto<DateTime, UserCreateResendConfirmationErrorCode>
+        {
+            Success = true,
+            Data = startDateTime,
+            Message = "Sent confirmation email",
+        };
+    }
+    
+    private ValidationResultDto<UserStartCreateOutput, UserStartCreateErrorCode> GetResultWithError(
         UserStartCreateErrorCode code, string message)
     {
         return new ValidationResultDto<UserStartCreateOutput, UserStartCreateErrorCode>
