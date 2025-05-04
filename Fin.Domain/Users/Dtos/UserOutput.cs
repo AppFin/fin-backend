@@ -12,7 +12,7 @@ public class UserOutput
     public UserSex Sex { get; set; }
     public DateOnly BirthDate { get; set; }
     public string ImageIdentifier { get; private set; } 
-    public bool Admin { get; } = false;
+    public bool IsAdmin { get; } = false;
     public bool IsActivity { get; private set; }
 
     public UserOutput(User user)
@@ -24,7 +24,7 @@ public class UserOutput
         Sex = user.Sex;
         BirthDate = user.BirthDate;
         ImageIdentifier = user.ImageIdentifier;
-        Admin = user.Admin;
+        IsAdmin = user.IsAdmin;
         IsActivity = user.IsActivity;
     }
 }

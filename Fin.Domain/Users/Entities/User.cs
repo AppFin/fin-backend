@@ -17,7 +17,7 @@ public class User: IEntity
     public DateOnly BirthDate { get; set; }
     public string ImageIdentifier { get; private set; } 
         
-    public bool Admin { get; } = false;
+    public bool IsAdmin { get; private set; } = false;
     public bool IsActivity { get; private set; }
     
     public DateTime CreatedAt { get; private set; }
