@@ -69,7 +69,7 @@ namespace Fin.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateOnly>("BirthDate")
+                    b.Property<DateOnly?>("BirthDate")
                         .HasColumnType("date");
 
                     b.Property<DateTime>("CreatedAt")
@@ -83,7 +83,7 @@ namespace Fin.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<string>("ImageIdentifier")
+                    b.Property<string>("ImagePublicUrl")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 

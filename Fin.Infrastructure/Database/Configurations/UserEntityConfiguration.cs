@@ -14,7 +14,7 @@ public static class UserEntityConfiguration
             u.Property(x => x.FirstName).HasMaxLength(100);
             u.Property(x => x.LastName).HasMaxLength(100);
             u.Property(x => x.DisplayName).HasMaxLength(150);
-            u.Property(x => x.ImageIdentifier).HasMaxLength(200);
+            u.Property(x => x.ImagePublicUrl).HasMaxLength(200);
         });
 
         modelBuilder.Entity<UserCredential>(u =>

@@ -14,8 +14,8 @@ public class User: IEntity
     public string DisplayName { get; set; }
 
     public UserSex Sex { get; set; }
-    public DateOnly BirthDate { get; set; }
-    public string ImageIdentifier { get; private set; } 
+    public DateOnly? BirthDate { get; set; }
+    public string ImagePublicUrl { get; private set; } 
         
     public bool IsAdmin { get; private set; } = false;
     public bool IsActivity { get; private set; }
@@ -66,6 +66,6 @@ public class User: IEntity
     
     public void SetImageIdentifier(string imageIdentifier)
     {
-        ImageIdentifier = imageIdentifier;
+        ImagePublicUrl = imageIdentifier;
     }
 }

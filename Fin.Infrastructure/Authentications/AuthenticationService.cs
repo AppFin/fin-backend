@@ -2,6 +2,8 @@
 using System.Security.Claims;
 using System.Text;
 using Fin.Domain.Global;
+using Fin.Domain.Tenants.Entities;
+using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Entities;
 using Fin.Infrastructure.Authentications.Dtos;
 using Fin.Infrastructure.Authentications.Enums;
@@ -19,6 +21,7 @@ namespace Fin.Infrastructure.Authentications;
 public interface IAuthenticationService
 {
     public Task<LoginOutput> Login(LoginInput input);
+    public Task<LoginWithGoogleOutput> LoginOrSingInWithGoogle(string userName, string email, string googleId);
     public Task<LoginOutput> RefreshToken(string refreshToken);
     public Task Logout(string token);
 }
@@ -27,6 +30,7 @@ public class AuthenticationService: IAuthenticationService, IAutoTransient
 {
     private readonly IRepository<UserCredential> _credentialRepository;
     private readonly IRepository<User> _userRepository;
+    private readonly IRepository<Tenant> _tenantRepository;
     private readonly IRedisCacheService _cache;
     private readonly IConfiguration _configuration;
     private readonly IDateTimeProvider _dateTimeProvider;
@@ -38,13 +42,15 @@ public class AuthenticationService: IAuthenticationService, IAutoTransient
         IConfiguration configuration,
         IRedisCacheService cache,
         IRepository<User> userRepository,
-        IDateTimeProvider dateTimeProvider)
+        IDateTimeProvider dateTimeProvider,
+        IRepository<Tenant> tenantRepository)
     {
         _credentialRepository = credentialRepository;
         _configuration = configuration;
         _cache = cache;
         _userRepository = userRepository;
         _dateTimeProvider = dateTimeProvider;
+        _tenantRepository = tenantRepository;
 
         var encryptKey = configuration.GetSection("ApiSettings:Authentication:Encrypt:Key").Value ?? "";
         var encryptIv = configuration.GetSection("ApiSettings:Authentication:Encrypt:Iv").Value ?? "";
@@ -78,6 +84,72 @@ public class AuthenticationService: IAuthenticationService, IAutoTransient
             return new LoginOutput { ErrorCode = LoginErrorCode.InvalidPassword };
 
         return await GenerateTokenAsync(credential.User);
+    }
+
+    public async Task<LoginWithGoogleOutput> LoginOrSingInWithGoogle(string userName, string email, string googleId)
+    {
+        var encryptedEmail = _cryptoHelper.Encrypt(email);
+        
+        var credential = _credentialRepository.Query()
+            .Include(c => c.User)
+            .ThenInclude(c => c.Tenants)
+            .FirstOrDefault(c => c.EncryptedEmail == encryptedEmail);
+        
+        User user;
+        var mustToCreateUser = false;
+        if (credential != null)
+        {
+            user = credential.User;
+            if (!user.IsActivity)
+                return new LoginWithGoogleOutput { ErrorCode = LoginErrorCode.InactivatedUser };
+
+            if (!credential.HasGoogle)
+            {
+                credential.GoogleId = googleId;
+                await _credentialRepository.UpdateAsync(credential, true);
+            }
+            else if (credential.GoogleId != googleId)
+                return new LoginWithGoogleOutput { ErrorCode = LoginErrorCode.DifferentGoogleAccountLinked };
+        }
+        else
+        {
+            mustToCreateUser = true;
+            var now = _dateTimeProvider.UtcNow();
+            
+            var names = userName.Split(" ");
+            var firstName = names.FirstOrDefault();
+            var lastName = names.Length <= 1 ? "" : names.LastOrDefault();
+        
+            user = new User(new UserUpdateOrCreateDto
+            {
+                DisplayName = userName,
+                FirstName = firstName,
+                LastName = lastName
+            }, now);
+            credential = new UserCredential(user.Id, encryptedEmail);
+
+            var tenant = new Tenant(now);
+            user.Tenants.Add(tenant);
+        
+            await _tenantRepository.AddAsync(tenant);
+            await _userRepository.AddAsync(user);
+            await _credentialRepository.AddAsync(credential);
+        
+        }
+
+        var result = await GenerateTokenAsync(user);
+        if (result.Success && mustToCreateUser)
+            await _credentialRepository.SaveChangesAsync();
+            
+        
+        return new LoginWithGoogleOutput
+        {
+            Success = result.Success,
+            Token = result.Token,
+            RefreshToken = result.RefreshToken,
+            ErrorCode = result.ErrorCode,
+            MustToCreateUser = result.Success && mustToCreateUser,
+        };
     }
 
     public async Task<LoginOutput> RefreshToken(string refreshToken)
@@ -142,7 +214,7 @@ public class AuthenticationService: IAuthenticationService, IAutoTransient
         subject.Add(new Claim(ClaimTypes.Name, user.DisplayName));
         subject.Add(new Claim("userId", user.Id.ToString()));
         subject.Add(new Claim(ClaimTypes.Role, user.IsAdmin ? "Admin" : "User"));
-        subject.Add(new Claim("imageUrl", user.ImageIdentifier ?? ""));
+        subject.Add(new Claim("imageUrl", user.ImagePublicUrl ?? ""));
         subject.Add(new Claim("tenantId", user.Tenants.FirstOrDefault()?.Id.ToString() ?? ""));
         
         var tokenDescriptor = new SecurityTokenDescriptor

@@ -8,4 +8,5 @@ public enum LoginErrorCode
     InactivatedUser = 4,
     InvalidPassword = 5,
     InvalidRefreshToken = 6,
+    DifferentGoogleAccountLinked = 7,
 }

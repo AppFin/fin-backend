@@ -9,17 +9,12 @@ public class UserUpdateOrCreateDto
     [MinLength(2)]
     [MaxLength(100)]
     public string FirstName { get; set; }
-    [Required]
-    [MinLength(2)]
-    [MaxLength(100)]
     public string LastName { get; set; }
     [Required]
     [MinLength(2)]
     [MaxLength(150)]
     public string DisplayName { get; set; }
 
-    [Required]
     public UserSex Sex { get; set; }
-    [Required]
-    public DateOnly BirthDate { get; set; }
+    public DateOnly? BirthDate { get; set; }
 }

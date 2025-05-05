@@ -1,4 +1,6 @@
 ﻿using System.Text;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +16,9 @@ public static class AddAuthenticationExtension
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                // options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             })
+            // .AddCookie()
             .AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -25,9 +29,20 @@ public static class AddAuthenticationExtension
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = configuration.GetSection("ApiSettings:Authentication:Jwt:Issuer").Value ?? "",
                     ValidAudience = configuration.GetSection("ApiSettings:Authentication:Jwt:Audience").Value ?? "",
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetSection("ApiSettings:Authentication:Jwt:Key").Value ?? ""))
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(configuration.GetSection("ApiSettings:Authentication:Jwt:Key").Value ??
+                                               ""))
                 };
             });
+            // .AddGoogle("Google", options =>
+            // {
+            //     options.ClientId = configuration.GetSection("ApiSettings:Authentication:Google:ClientId").Value ?? "";
+            //     options.ClientSecret = configuration.GetSection("ApiSettings:Authentication:Google:ClientSecret").Value ?? "";
+            //     options.CallbackPath = "/authentications/google-callback";
+            //
+            //     options.ClaimActions.MapJsonKey("picture", "picture", "url");
+            //     options.SaveTokens = true;
+            // });
         services.AddAuthorization();
         
         return services;

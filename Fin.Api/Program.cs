@@ -9,6 +9,8 @@ builder.Services
     .AddOpenApiDocument()
     .AddControllers();
 
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

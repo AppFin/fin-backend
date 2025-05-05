@@ -1,8 +1,11 @@
-﻿using Fin.Application.Authentications.Dtos;
-using Fin.Infrastructure.Authentications;
+﻿using System.Security.Claims;
+using Fin.Application.Authentications.Dtos;
 using Fin.Infrastructure.Authentications.Dtos;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using IAuthenticationService = Fin.Infrastructure.Authentications.IAuthenticationService;
 
 namespace Fin.Api.Authentication;
 
@@ -43,5 +46,33 @@ public class AuthenticationController: ControllerBase
         
         await _authenticationService.Logout(token);
         return Ok();
+    }
+    
+    [HttpGet("login-google")]
+    public IActionResult LoginGoogle()
+    {
+        var properties = new AuthenticationProperties { RedirectUri = "/authentications/google-callback" };
+        return Challenge(properties,  GoogleDefaults.AuthenticationScheme);
+    }
+
+    [HttpGet("google-callback")]
+    public async Task<IActionResult> GoogleCallback()
+    {
+        var result = await HttpContext.AuthenticateAsync("Google");
+        if (!result.Succeeded)
+            return Unauthorized();
+
+        var email = result.Principal.FindFirst(ClaimTypes.Email)?.Value;
+        var name = result.Principal.Identity?.Name;
+        var googleId = result.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        var loginResult = await _authenticationService.LoginOrSingInWithGoogle(name, email, googleId);
+
+        if (loginResult.Success)
+        {
+            return loginResult.MustToCreateUser ? Created("", loginResult) : Ok(loginResult);
+        }
+        await HttpContext.SignOutAsync();
+        return UnprocessableEntity();
     }
 }

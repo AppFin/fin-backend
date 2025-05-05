@@ -187,7 +187,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         var user = new User(input, now);
         var credential = new UserCredential(user.Id, process.EncryptedEmail, process.EncryptedPassword);
 
-        var tenant = new Tenant(now, "pt-Br", "America/Sao_Paulo");
+        var tenant = new Tenant(now);
         user.Tenants.Add(tenant);
         
         await _tenantRepository.AddAsync(tenant);
