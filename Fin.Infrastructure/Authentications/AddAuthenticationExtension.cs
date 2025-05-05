@@ -1,6 +1,4 @@
 ﻿using System.Text;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,15 +8,21 @@ namespace Fin.Infrastructure.Authentications;
 
 public static class AddAuthenticationExtension
 {
-    public static IServiceCollection AddFinAuthentication(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddFinAuthentication(this IServiceCollection services,
+        IConfiguration configuration)
     {
         services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                // options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-            // .AddCookie()
+            .AddCookie()
+            .AddGoogle("Google", options =>
+            {
+                options.ClientId = configuration.GetSection("ApiSettings:Authentication:Google:ClientId").Value ?? "";
+                options.ClientSecret = configuration.GetSection("ApiSettings:Authentication:Google:ClientSecret").Value ?? "";
+            })
             .AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -34,17 +38,8 @@ public static class AddAuthenticationExtension
                                                ""))
                 };
             });
-            // .AddGoogle("Google", options =>
-            // {
-            //     options.ClientId = configuration.GetSection("ApiSettings:Authentication:Google:ClientId").Value ?? "";
-            //     options.ClientSecret = configuration.GetSection("ApiSettings:Authentication:Google:ClientSecret").Value ?? "";
-            //     options.CallbackPath = "/authentications/google-callback";
-            //
-            //     options.ClaimActions.MapJsonKey("picture", "picture", "url");
-            //     options.SaveTokens = true;
-            // });
         services.AddAuthorization();
-        
+
         return services;
     }
 }
