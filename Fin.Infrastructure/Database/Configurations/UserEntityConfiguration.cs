@@ -23,7 +23,6 @@ public static class UserEntityConfiguration
             
             u.HasIndex(x => x.EncryptedEmail).IsUnique();
             u.HasIndex(x => x.GoogleId).IsUnique();
-            u.HasIndex(x => x.ResetToken).IsUnique();
             
             u.Property(x => x.EncryptedEmail).HasMaxLength(200);
             u.Property(x => x.EncryptedPassword).HasMaxLength(300);
