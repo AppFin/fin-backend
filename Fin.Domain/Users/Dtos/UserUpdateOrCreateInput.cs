@@ -17,4 +17,6 @@ public class UserUpdateOrCreateInput
 
     public UserSex Sex { get; set; }
     public DateOnly? BirthDate { get; set; }
+    
+    public string ImagePublicUrl { get; set; }
 }

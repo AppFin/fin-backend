@@ -39,6 +39,7 @@ public class User: IEntity
         DisplayName = userUpdateOrCreateInput.DisplayName;
         Sex = userUpdateOrCreateInput.Sex;
         BirthDate = userUpdateOrCreateInput.BirthDate;
+        ImagePublicUrl = userUpdateOrCreateInput.ImagePublicUrl;
         
         IsActivity = true;
         CreatedAt = now;
@@ -52,6 +53,7 @@ public class User: IEntity
         DisplayName = userUpdateOrCreateInput.DisplayName;
         Sex = userUpdateOrCreateInput.Sex;
         BirthDate = userUpdateOrCreateInput.BirthDate;
+        ImagePublicUrl = userUpdateOrCreateInput.ImagePublicUrl;
         
         UpdatedAt = now;
     }

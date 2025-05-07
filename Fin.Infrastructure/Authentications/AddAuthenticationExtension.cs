@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
@@ -25,6 +26,8 @@ public static class AddAuthenticationExtension
                 options.ClientSecret = configuration.GetSection("ApiSettings:Authentication:Google:ClientSecret").Value ?? "";
                 options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.CallbackPath = "/authentications/google-sign-callback";
+                
+                options.ClaimActions.MapJsonKey("picture", "picture", "url");
             })
             .AddJwtBearer(options =>
             {

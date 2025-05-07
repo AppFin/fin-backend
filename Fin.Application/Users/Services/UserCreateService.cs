@@ -212,7 +212,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         var now = _dateTimeProvider.UtcNow();
         
         var user = new User(input, now);
-        var credential = UserCredential.CreateWithGoogle(user.Id, googleId, encryptedEmail);
+        var credential = UserCredential.CreateWithGoogle(user.Id, encryptedEmail, googleId);
 
         var tenant = new Tenant(now);
         user.Tenants.Add(tenant);

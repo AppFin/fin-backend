@@ -25,7 +25,7 @@ public interface IAuthenticationService
     public Task<ValidationResultDto<bool, ResetPasswordErrorCode>> ResetPassword(ResetPasswordInput input);
     
     public Task<LoginOutput> Login(LoginInput input);
-    public Task<LoginWithGoogleOutput> LoginOrSingInWithGoogle(string userName, string email, string googleId);
+    public Task<LoginWithGoogleOutput> LoginOrSingInWithGoogle(LoginWithGoogleInput input);
     public Task<LoginOutput> RefreshToken(string refreshToken);
     public Task Logout(string token);
 }
@@ -134,9 +134,9 @@ public class AuthenticationService : IAuthenticationService, IAutoTransient
         return _tokenService.Login(input);
     }
 
-    public async Task<LoginWithGoogleOutput> LoginOrSingInWithGoogle(string userName, string email, string googleId)
+    public async Task<LoginWithGoogleOutput> LoginOrSingInWithGoogle(LoginWithGoogleInput input)
     {
-       var encryptedEmail = _cryptoHelper.Encrypt(email);
+       var encryptedEmail = _cryptoHelper.Encrypt(input.Email);
         
         var credential = _credentialRepository.Query()
             .Include(c => c.User)
@@ -153,25 +153,22 @@ public class AuthenticationService : IAuthenticationService, IAutoTransient
 
             if (!credential.HasGoogle)
             {
-                credential.GoogleId = googleId;
+                credential.GoogleId = input.GoogleId;
                 await _credentialRepository.UpdateAsync(credential, true);
             }
-            else if (credential.GoogleId != googleId)
+            else if (credential.GoogleId != input.GoogleId)
                 return new LoginWithGoogleOutput { ErrorCode = LoginErrorCode.DifferentGoogleAccountLinked };
         }
         else
         {
             mustToCreateUser = true;
             
-            var names = userName.Split(" ");
-            var firstName = names.FirstOrDefault();
-            var lastName = names.Length <= 1 ? "" : names.LastOrDefault();
-            
-            var createResult = await _userCreateService.CreateUser(googleId, email, new UserUpdateOrCreateInput
+            var createResult = await _userCreateService.CreateUser(input.GoogleId, input.Email, new UserUpdateOrCreateInput
             {
-                DisplayName = userName,
-                FirstName = firstName,
-                LastName = lastName
+                DisplayName = input.DisplayName,
+                FirstName = input.FirstName,
+                LastName = input.LastName,
+                ImagePublicUrl = input.PictureUrl
             });
             
             if (!createResult.Success || createResult.Data == null)
