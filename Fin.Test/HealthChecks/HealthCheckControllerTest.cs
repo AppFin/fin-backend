@@ -14,9 +14,9 @@ public class HealthCheckControllerTest: TestUtils.BaseTest
         // Arrange
         var fakeHealthCheck = new HealthCheckOutput
         {
-            Status = TestUtils.Strings().First(),
-            Version = TestUtils.Strings().Last(),
-            Timestamp = TestUtils.UtcDateTimes().First()
+            Status = TestUtils.Strings.First(),
+            Version = TestUtils.Strings.Last(),
+            Timestamp = TestUtils.UtcDateTimes.First()
         };
         
         var fakeService = new Mock<IHealthCheckService>();

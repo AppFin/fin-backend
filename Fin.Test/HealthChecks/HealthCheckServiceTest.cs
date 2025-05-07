@@ -11,8 +11,8 @@ public class HealthCheckServiceTest: TestUtils.BaseTest
     public void GetHealthCheck()
     {
         // Arrange
-        var fakeVersion = TestUtils.Strings().First();
-        var fakeDateTime = TestUtils.UtcDateTimes().First();
+        var fakeVersion = TestUtils.Strings.First();
+        var fakeDateTime = TestUtils.UtcDateTimes.First();
         
         var fakeConfiguration = new Mock<IConfiguration>();
         fakeConfiguration.Setup(a => a["ApiSettings:Version"]).Returns(fakeVersion);
