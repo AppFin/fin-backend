@@ -2,7 +2,7 @@
 
 namespace Fin.Application.Authentications.Dtos;
 
-public class UserStartResetPasswordInput
+public class SendResetPasswordEmailInput
 {
     [Required]
     [EmailAddress]

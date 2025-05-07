@@ -2,7 +2,7 @@
 
 namespace Fin.Application.Authentications.Dtos;
 
-public class UserResetPasswordInput
+public class ResetPasswordInput
 {
     [Required]
     public string ResetToken { get; set; }

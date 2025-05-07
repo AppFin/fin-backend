@@ -1,6 +1,6 @@
-﻿namespace Fin.Application.Authentications.Dtos;
+﻿namespace Fin.Application.Users.Dtos;
 
-public class UserCreateProcess
+public class UserCreateProcessDto
 {
     public string EncryptedPassword { get; set; }
     public string Token { get; set; }

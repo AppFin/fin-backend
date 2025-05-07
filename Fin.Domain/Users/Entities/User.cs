@@ -30,28 +30,28 @@ public class User: IEntity
     {
     }
 
-    public User(UserUpdateOrCreateDto userUpdateOrCreateDto, DateTime now)
+    public User(UserUpdateOrCreateInput userUpdateOrCreateInput, DateTime now)
     {
         Id = Guid.NewGuid();
         
-        FirstName = userUpdateOrCreateDto.FirstName;
-        LastName = userUpdateOrCreateDto.LastName;
-        DisplayName = userUpdateOrCreateDto.DisplayName;
-        Sex = userUpdateOrCreateDto.Sex;
-        BirthDate = userUpdateOrCreateDto.BirthDate;
+        FirstName = userUpdateOrCreateInput.FirstName;
+        LastName = userUpdateOrCreateInput.LastName;
+        DisplayName = userUpdateOrCreateInput.DisplayName;
+        Sex = userUpdateOrCreateInput.Sex;
+        BirthDate = userUpdateOrCreateInput.BirthDate;
         
         IsActivity = true;
         CreatedAt = now;
         UpdatedAt = now;
     }
     
-    public void Update(UserUpdateOrCreateDto userUpdateOrCreateDto, DateTime now)
+    public void Update(UserUpdateOrCreateInput userUpdateOrCreateInput, DateTime now)
     {
-        FirstName = userUpdateOrCreateDto.FirstName;
-        LastName = userUpdateOrCreateDto.LastName;
-        DisplayName = userUpdateOrCreateDto.DisplayName;
-        Sex = userUpdateOrCreateDto.Sex;
-        BirthDate = userUpdateOrCreateDto.BirthDate;
+        FirstName = userUpdateOrCreateInput.FirstName;
+        LastName = userUpdateOrCreateInput.LastName;
+        DisplayName = userUpdateOrCreateInput.DisplayName;
+        Sex = userUpdateOrCreateInput.Sex;
+        BirthDate = userUpdateOrCreateInput.BirthDate;
         
         UpdatedAt = now;
     }

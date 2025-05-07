@@ -1,13 +1,11 @@
-﻿using Fin.Application.Authentications.Dtos;
-using Fin.Application.Authentications.Enums;
-using Fin.Application.Authentications.Services;
-using Fin.Application.Dtos;
+﻿using Fin.Application.Users.Dtos;
+using Fin.Application.Users.Services;
 using Fin.Domain.Users.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Fin.Api.Authentication;
+namespace Fin.Api.Users;
 
-[Route("authentications/users/create")]
+[Route("users/create")]
 public class UserCreateController : ControllerBase
 {
     private readonly IUserCreateService _userCreateService;
@@ -18,8 +16,7 @@ public class UserCreateController : ControllerBase
     }
 
     [HttpPost("start")]
-    public async Task<ActionResult<UserStartCreateOutput>> StartCreate(
-        [FromBody] UserStartCreateInput input)
+    public async Task<ActionResult<UserStartCreateOutput>> StartCreate([FromBody] UserStartCreateInput input)
     {
         var result = await _userCreateService.StartCreate(input);
         if (result.Success)
@@ -62,8 +59,8 @@ public class UserCreateController : ControllerBase
     }
 
     [HttpPost("create-user")]
-    public async Task<ActionResult<UserOutput>> CreateUser([FromQuery] string creationToken,
-        [FromBody] UserUpdateOrCreateDto input)
+    public async Task<ActionResult<UserDto>> CreateUser([FromQuery] string creationToken,
+        [FromBody] UserUpdateOrCreateInput input)
     {
         try
         {
@@ -76,21 +73,5 @@ public class UserCreateController : ControllerBase
         {
             return Unauthorized(e.Message);
         }
-    }
-    
-    [HttpPost("start-reset-password")]
-    public async Task<ActionResult> StartResetPassword([FromBody] UserStartResetPasswordInput input)
-    {
-        await _userCreateService.StartResetPassword(input.Email);
-        return Ok();
-    }
-    
-    [HttpPost("reset-password")]
-    public async Task<ActionResult> ResetPassword([FromBody] UserResetPasswordInput input)
-    {
-        var result = await _userCreateService.ResetPassword(input);
-        if (result.Success)
-            return Ok(result.Data);
-        return UnprocessableEntity(result);
     }
 }

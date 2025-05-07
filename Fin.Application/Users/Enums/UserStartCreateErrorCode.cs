@@ -1,4 +1,4 @@
-﻿namespace Fin.Application.Authentications.Enums;
+﻿namespace Fin.Application.Users.Enums;
 
 public enum UserStartCreateErrorCode
 {

@@ -1,6 +1,6 @@
 ﻿namespace Fin.Application.Authentications.Enums;
 
-public enum UserResetPasswordErrorCode
+public enum ResetPasswordErrorCode
 {
     InvalidPassword = 1,
     NotSamePassword = 2,

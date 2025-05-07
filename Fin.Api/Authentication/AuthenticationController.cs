@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using IAuthenticationService = Fin.Infrastructure.Authentications.IAuthenticationService;
+using IAuthenticationService = Fin.Application.Authentications.Services.IAuthenticationService;
 
 namespace Fin.Api.Authentication;
 
@@ -29,7 +29,7 @@ public class AuthenticationController: ControllerBase
     }
     
     [HttpPost("refresh-token")]
-    public async Task<ActionResult<LoginOutput>> RefreshToken([FromBody] UserRefreshTokenInput input)
+    public async Task<ActionResult<LoginOutput>> RefreshToken([FromBody] RefreshTokenInput input)
     {
         var result = await _authenticationService.RefreshToken(input.RefreshToken);
         if (result.Success)
@@ -74,5 +74,21 @@ public class AuthenticationController: ControllerBase
         }
         await HttpContext.SignOutAsync();
         return UnprocessableEntity();
+    }
+    
+    [HttpPost("send-reset-password-email")]
+    public async Task<ActionResult> StartResetPassword([FromBody] SendResetPasswordEmailInput input)
+    {
+        await _authenticationService.SendResetPasswordEmail(input);
+        return Ok();
+    }
+    
+    [HttpPost("reset-password")]
+    public async Task<ActionResult> ResetPassword([FromBody] ResetPasswordInput input)
+    {
+        var result = await _authenticationService.ResetPassword(input);
+        if (result.Success)
+            return Ok(result.Data);
+        return UnprocessableEntity(result);
     }
 }

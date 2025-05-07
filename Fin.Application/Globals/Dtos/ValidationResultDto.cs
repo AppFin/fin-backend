@@ -1,4 +1,4 @@
-﻿namespace Fin.Application.Dtos;
+﻿namespace Fin.Application.Globals.Dtos;
 
 public class ValidationResultDto<D, E>
 {

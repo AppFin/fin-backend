@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Fin.Application.Authentications.Dtos;
+namespace Fin.Application.Users.Dtos;
 
 public class UserStartCreateInput
 {

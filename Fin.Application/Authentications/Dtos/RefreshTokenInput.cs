@@ -2,7 +2,7 @@
 
 namespace Fin.Application.Authentications.Dtos;
 
-public class UserRefreshTokenInput
+public class RefreshTokenInput
 {
     [Required]
     public string RefreshToken { get; set; }

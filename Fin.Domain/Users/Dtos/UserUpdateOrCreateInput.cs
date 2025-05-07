@@ -3,7 +3,7 @@ using Fin.Domain.Users.Enums;
 
 namespace Fin.Domain.Users.Dtos;
 
-public class UserUpdateOrCreateDto
+public class UserUpdateOrCreateInput
 {
     [Required]
     [MinLength(2)]

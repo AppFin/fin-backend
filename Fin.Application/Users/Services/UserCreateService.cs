@@ -1,6 +1,7 @@
 ﻿using Fin.Application.Authentications.Dtos;
-using Fin.Application.Authentications.Enums;
-using Fin.Application.Dtos;
+using Fin.Application.Globals.Dtos;
+using Fin.Application.Users.Dtos;
+using Fin.Application.Users.Enums;
 using Fin.Domain.Global;
 using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Dtos;
@@ -14,20 +15,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 
-namespace Fin.Application.Authentications.Services;
+namespace Fin.Application.Users.Services;
 
 public interface IUserCreateService
 {
-    public Task<ValidationResultDto<UserStartCreateOutput, UserStartCreateErrorCode>> StartCreate(
-        UserStartCreateInput input);
-    
+    public Task<ValidationResultDto<UserStartCreateOutput, UserStartCreateErrorCode>> StartCreate(UserStartCreateInput input);
     public Task<ValidationResultDto<DateTime>> ResendConfirmationEmail(string creationToken);
     public Task<ValidationResultDto<bool>> ValidateEmailCode(string creationToken, string emailConfirmationCode);
-    
-    public Task<ValidationResultDto<UserOutput>> CreateUser(string creationToken, UserUpdateOrCreateDto input);
-    
-    public Task StartResetPassword(string email);
-    public Task<ValidationResultDto<bool, UserResetPasswordErrorCode>> ResetPassword(UserResetPasswordInput input);
+    public Task<ValidationResultDto<UserDto>> CreateUser(string creationToken, UserUpdateOrCreateInput input);
+    public Task<ValidationResultDto<UserDto>> CreateUser(string googleId, string email, UserUpdateOrCreateInput input);
 }
 
 public class UserCreateService : IUserCreateService, IAutoTransient
@@ -65,18 +61,15 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         _cryptoHelper = new CryptoHelper(encryptKey, encryptIv);
     }
 
-    public async Task<ValidationResultDto<UserStartCreateOutput, UserStartCreateErrorCode>> StartCreate(
-        UserStartCreateInput input)
+    public async Task<ValidationResultDto<UserStartCreateOutput, UserStartCreateErrorCode>> StartCreate(UserStartCreateInput input)
     {
         var isValidPass = UserCredential.IsValidPassword(input.Password);
         var isSamePass = input.Password == input.PasswordConfirmation;
 
         if (!isValidPass)
-            return GetResultWithError(UserStartCreateErrorCode.InvalidPassword,
-                "Password do not match requirements");
+            return GetResultWithError(UserStartCreateErrorCode.InvalidPassword, "Password do not match requirements");
         if (!isSamePass)
-            return GetResultWithError(UserStartCreateErrorCode.NotSamePassword,
-                "Password confirmation do not match");
+            return GetResultWithError(UserStartCreateErrorCode.NotSamePassword, "Password confirmation do not match");
 
         var encryptedEmail = _cryptoHelper.Encrypt(input.Email);
         var emailAlreadyInUse = await _credentialRepository.Query().AnyAsync(c => c.EncryptedEmail == encryptedEmail);
@@ -88,7 +81,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         var confirmationCode = GenerateConfirmationCode();
         var sentDateTime = _dateTimeProvider.UtcNow();
 
-        var process = new UserCreateProcess
+        var process = new UserCreateProcessDto
         {
             EncryptedEmail = encryptedEmail,
             EncryptedPassword = encryptedPassword,
@@ -113,14 +106,14 @@ public class UserCreateService : IUserCreateService, IAutoTransient
             {
                 CreationToken = creationToken,
                 Email = input.Email,
-                SentEmaiDateTime = sentDateTime,
+                SentEmailDateTime = sentDateTime,
             }
         };
     }
     
     public async Task<ValidationResultDto<DateTime>> ResendConfirmationEmail(string creationToken)
     {
-        var process = await _cache.GetAsync<UserCreateProcess>(GenerateProcessCacheKey(creationToken));
+        var process = await _cache.GetAsync<UserCreateProcessDto>(GenerateProcessCacheKey(creationToken));
         if (process == null) 
             throw new UnauthorizedAccessException("Not found process with this creationToken");
         
@@ -135,28 +128,28 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         
         var email = _cryptoHelper.Decrypt(process.EncryptedEmail);
         var confirmationCode = GenerateConfirmationCode();
-        var sentDateTime = _dateTimeProvider.UtcNow();
+        var sentEmailDateTime = _dateTimeProvider.UtcNow();
         
         process.EmailConfirmationCode = confirmationCode;
-        process.EmailSentDateTime = sentDateTime;
+        process.EmailSentDateTime = sentEmailDateTime;
         process.ValidatedEmail = false;
         await _cache.SetAsync(GenerateProcessCacheKey(creationToken), process, new DistributedCacheEntryOptions
         {
-            AbsoluteExpiration = sentDateTime.AddMinutes(20)
+            AbsoluteExpiration = sentEmailDateTime.AddMinutes(20)
         });
         await _emailSender.SendEmailAsync(email, "Fin - Email Confirmation", $"Your confirmation code is <b>{confirmationCode}</b>");
         
         return new ValidationResultDto<DateTime>
         {
             Success = true,
-            Data = sentDateTime,
+            Data = sentEmailDateTime,
             Message = "Sent confirmation email",
         };
     }
 
     public async Task<ValidationResultDto<bool>> ValidateEmailCode(string creationToken, string emailConfirmationCode)
     {
-        var process = await _cache.GetAsync<UserCreateProcess>(GenerateProcessCacheKey(creationToken));
+        var process = await _cache.GetAsync<UserCreateProcessDto>(GenerateProcessCacheKey(creationToken));
         if (process == null) 
             throw new UnauthorizedAccessException("Not found process with this creationToken");
         
@@ -174,9 +167,9 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         };
     }
 
-    public async Task<ValidationResultDto<UserOutput>> CreateUser(string creationToken, UserUpdateOrCreateDto input)
+    public async Task<ValidationResultDto<UserDto>> CreateUser(string creationToken, UserUpdateOrCreateInput input)
     {
-        var process = await _cache.GetAsync<UserCreateProcess>(GenerateProcessCacheKey(creationToken));
+        var process = await _cache.GetAsync<UserCreateProcessDto>(GenerateProcessCacheKey(creationToken));
         if (process == null) 
             throw new UnauthorizedAccessException("Not found process with this creationToken");
         if (!process.ValidatedEmail)
@@ -198,83 +191,46 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         
         await _cache.RemoveAsync(GenerateProcessCacheKey(creationToken));
         
-        return new ValidationResultDto<UserOutput>
+        return new ValidationResultDto<UserDto>
         {
             Success = true,
-            Data = new UserOutput(user),
+            Data = new UserDto(user),
             Message = "Created user"
         };
     }
 
-    public async Task StartResetPassword(string email)
+    public async Task<ValidationResultDto<UserDto>> CreateUser(string googleId, string email, UserUpdateOrCreateInput input)
     {
         var encryptedEmail = _cryptoHelper.Encrypt(email);
-        var credential = _credentialRepository.Query()
-            .Include(c => c.User)
-            .FirstOrDefault(c => c.EncryptedEmail == encryptedEmail);
-        
-        if (credential == null || !credential.User.IsActivity)
-            return;
-
-        var token = $"{Guid.NewGuid()}-{Guid.NewGuid()}";
-
-        credential.ResetToken = token;
-        await _cache.SetAsync(GetResetTokenCacheKey(token), credential.UserId, new DistributedCacheEntryOptions
-        {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6)
-        });
-        await _credentialRepository.UpdateAsync(credential, true);
-        
-        await _emailSender.SendEmailAsync(email, "Fin - Reset Password", $"Your reset token is <b>{token}</b>");
-    }
-
-    public async Task<ValidationResultDto<bool, UserResetPasswordErrorCode>> ResetPassword(UserResetPasswordInput input)
-    {
-        var isValidPass = UserCredential.IsValidPassword(input.Password);
-        var isSamePass = input.Password == input.PasswordConfirmation;
-
-        if (!isValidPass)
-            return new ValidationResultDto<bool, UserResetPasswordErrorCode>
+        if (await _credentialRepository.Query().AnyAsync(c => c.EncryptedEmail == encryptedEmail))
+            return new ValidationResultDto<UserDto>
             {
-                Message = "Invalid password",
-                ErrorCode = UserResetPasswordErrorCode.InvalidPassword
+                Success = false,
+                Message = "Email already in use"
             };
         
-        if (!isSamePass)
-            return new ValidationResultDto<bool, UserResetPasswordErrorCode>
-            {
-                Message = "Not same password",
-                ErrorCode = UserResetPasswordErrorCode.NotSamePassword
-            };
+        var now = _dateTimeProvider.UtcNow();
         
-        var credential = await _credentialRepository.Query().FirstOrDefaultAsync(c => c.ResetToken == input.ResetToken);
-        if (credential == null)
-            return new ValidationResultDto<bool, UserResetPasswordErrorCode>
-            {
-                Message = "Invalid reset token",
-                ErrorCode = UserResetPasswordErrorCode.InvalidToken
-            };
+        var user = new User(input, now);
+        var credential = UserCredential.CreateWithGoogle(user.Id, googleId, encryptedEmail);
+
+        var tenant = new Tenant(now);
+        user.Tenants.Add(tenant);
         
-        var userId = await _cache.GetAsync<Guid>(GetResetTokenCacheKey(input.ResetToken));
-        if (userId == Guid.Empty || userId != credential.UserId)
-            return new ValidationResultDto<bool, UserResetPasswordErrorCode>
-            {
-                Message = userId == Guid.Empty ? "Reset token has expired" : "Invalid reset token",
-                ErrorCode = userId == Guid.Empty ?  UserResetPasswordErrorCode.ExpiredToken : UserResetPasswordErrorCode.InvalidToken
-            };
-
-        var encryptedPassword = _cryptoHelper.Encrypt(input.Password);
-        credential.ResetPassword(encryptedPassword, input.ResetToken);
-        await _credentialRepository.UpdateAsync(credential, true);
-
-        return new ValidationResultDto<bool, UserResetPasswordErrorCode>
+        await _tenantRepository.AddAsync(tenant);
+        await _userRepository.AddAsync(user);
+        await _credentialRepository.AddAsync(credential);
+        
+        await _credentialRepository.SaveChangesAsync();
+        
+        return new ValidationResultDto<UserDto>
         {
             Success = true,
-            Data = true,
-            Message = "Success"
+            Data = new UserDto(user),
+            Message = "Created user"
         };
     }
-
+    
     private string GenerateProcessCacheKey(string creationToken) => $"user-create-process-{creationToken}";
 
     private ValidationResultDto<UserStartCreateOutput, UserStartCreateErrorCode> GetResultWithError(
@@ -302,6 +258,4 @@ public class UserCreateService : IUserCreateService, IAutoTransient
 
         return new string(result);
     }
-    
-    private static string GetResetTokenCacheKey(string token) => $"reset-token-{token}";
 }

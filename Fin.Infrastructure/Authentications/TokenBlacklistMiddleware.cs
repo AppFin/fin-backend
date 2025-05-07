@@ -20,7 +20,7 @@ public class TokenBlacklistMiddleware: IMiddleware
         {
             var token = authHeader["Bearer ".Length..];
 
-            var isLoggedOut = await _cache.GetAsync<bool>(AuthenticationService.GetLogoutTokenCacheKey(token));
+            var isLoggedOut = await _cache.GetAsync<bool>(AuthenticationTokenService.GetLogoutTokenCacheKey(token));
 
             if (isLoggedOut)
             {
