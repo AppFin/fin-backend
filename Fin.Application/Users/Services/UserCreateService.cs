@@ -6,6 +6,7 @@ using Fin.Domain.Global;
 using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Entities;
+using Fin.Infrastructure.Authentications.Consts;
 using Fin.Infrastructure.AutoServices.Interfaces;
 using Fin.Infrastructure.Database.IRepositories;
 using Fin.Infrastructure.DateTimes;
@@ -55,8 +56,8 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         _tenantRepository = tenantRepository;
         _userRepository = userRepository;
 
-        var encryptKey = configuration.GetSection("ApiSettings:Authentication:Encrypt:Key").Value ?? "";
-        var encryptIv = configuration.GetSection("ApiSettings:Authentication:Encrypt:Iv").Value ?? "";
+        var encryptKey = configuration.GetSection(AuthenticationConsts.EncryptKeyConfigKey).Value ?? "";
+        var encryptIv = configuration.GetSection(AuthenticationConsts.EncryptIvConfigKey).Value ?? "";
 
         _cryptoHelper = new CryptoHelper(encryptKey, encryptIv);
     }

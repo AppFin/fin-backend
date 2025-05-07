@@ -14,6 +14,9 @@ public interface IEmailSenderService
 public class EmailSenderService: IEmailSenderService, IAutoTransient
 {
     private readonly IConfiguration _configuration;
+    
+    private const string EmailConfigKey = "ApiSettings:EmailSender:EmailAddress";
+    private const string PasswordConfigKey = "ApiSettings:EmailSender:Password";
 
     public EmailSenderService(IConfiguration configuration)
     {
@@ -22,8 +25,8 @@ public class EmailSenderService: IEmailSenderService, IAutoTransient
 
     public async Task SendEmailAsync(string toEmail, string subject, string body)
     {
-        var emailAddress = _configuration.GetSection("ApiSettings:EmailSender:EmailAddress").Value ?? "";
-        var emailPassword = _configuration.GetSection("ApiSettings:EmailSender:Password").Value ?? "";
+        var emailAddress = _configuration.GetSection(EmailConfigKey).Value ?? "";
+        var emailPassword = _configuration.GetSection(PasswordConfigKey).Value ?? "";
         
         var email = new MimeMessage();
         email.From.Add(MailboxAddress.Parse(emailAddress));

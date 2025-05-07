@@ -7,6 +7,7 @@ using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Entities;
 using Fin.Infrastructure.Authentications;
+using Fin.Infrastructure.Authentications.Consts;
 using Fin.Infrastructure.Authentications.Dtos;
 using Fin.Infrastructure.Authentications.Enums;
 using Fin.Infrastructure.AutoServices.Interfaces;
@@ -54,8 +55,8 @@ public class AuthenticationService : IAuthenticationService, IAutoTransient
         _tokenService = tokenService;
         _userCreateService = userCreateService;
 
-        var encryptKey = configuration.GetSection("ApiSettings:Authentication:Encrypt:Key").Value ?? "";
-        var encryptIv = configuration.GetSection("ApiSettings:Authentication:Encrypt:Iv").Value ?? "";
+        var encryptKey = configuration.GetSection(AuthenticationConsts.EncryptKeyConfigKey).Value ?? "";
+        var encryptIv = configuration.GetSection(AuthenticationConsts.EncryptIvConfigKey).Value ?? "";
 
         _cryptoHelper = new CryptoHelper(encryptKey, encryptIv);
     }

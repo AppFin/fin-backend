@@ -5,6 +5,7 @@ using Fin.Domain.Global;
 using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Entities;
+using Fin.Infrastructure.Authentications.Consts;
 using Fin.Infrastructure.Authentications.Dtos;
 using Fin.Infrastructure.Authentications.Enums;
 using Fin.Infrastructure.AutoServices.Interfaces;
@@ -52,8 +53,8 @@ public class AuthenticationTokenService: IAuthenticationTokenService, IAutoTrans
         _dateTimeProvider = dateTimeProvider;
         _tenantRepository = tenantRepository;
 
-        var encryptKey = configuration.GetSection("ApiSettings:Authentication:Encrypt:Key").Value ?? "";
-        var encryptIv = configuration.GetSection("ApiSettings:Authentication:Encrypt:Iv").Value ?? "";
+        var encryptKey = configuration.GetSection(AuthenticationConsts.EncryptKeyConfigKey).Value ?? "";
+        var encryptIv = configuration.GetSection(AuthenticationConsts.EncryptIvConfigKey).Value ?? "";
 
         _cryptoHelper = new CryptoHelper(encryptKey, encryptIv);
     }
@@ -110,7 +111,7 @@ public class AuthenticationTokenService: IAuthenticationTokenService, IAutoTrans
         var now = _dateTimeProvider.UtcNow();
 
         var expiration = GetExpirationFromToken(token) ??
-                         now.AddMinutes(double.Parse(_configuration.GetSection("ApiSettings:Authentication:Jwt:ExpireMinutes").Value ?? "120"));
+                         now.AddMinutes(double.Parse(_configuration.GetSection(AuthenticationConsts.TokenExpireInMinutesConfigKey).Value ?? "120"));
 
         await _cache.SetAsync(GetLogoutTokenCacheKey(token), true, new DistributedCacheEntryOptions
         {
@@ -133,15 +134,15 @@ public class AuthenticationTokenService: IAuthenticationTokenService, IAutoTrans
     public async Task<LoginOutput> GenerateTokenAsync(UserDto user)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.UTF8.GetBytes(_configuration.GetSection("ApiSettings:Authentication:Jwt:Key").Value ?? "");
+        var key = Encoding.UTF8.GetBytes(_configuration.GetSection(AuthenticationConsts.TokenJwtKeyConfigKey).Value ?? "");
         
-        var minutesToExpire = double.Parse(_configuration.GetSection("ApiSettings:Authentication:Jwt:ExpireMinutes").Value ?? "120");
+        var minutesToExpire = double.Parse(_configuration.GetSection(AuthenticationConsts.TokenExpireInMinutesConfigKey).Value ?? "120");
         var expiration = _dateTimeProvider.UtcNow().AddMinutes(minutesToExpire);
 
         var credent = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);
 
-        var issuer = _configuration.GetSection("ApiSettings:Authentication:Jwt:Issuer").Value ?? "";
-        var audience = _configuration.GetSection("ApiSettings:Authentication:Jwt:Audience").Value ?? "";
+        var issuer = _configuration.GetSection(AuthenticationConsts.TokenJwtIssuerConfigKey).Value ?? "";
+        var audience = _configuration.GetSection(AuthenticationConsts.TokenJwtAudienceConfigKey).Value ?? "";
 
         var subject = new List<Claim>();
         subject.Add(new Claim(ClaimTypes.Name, user.DisplayName));
