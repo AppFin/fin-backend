@@ -74,7 +74,7 @@ public class AuthenticationTokenServiceTest : TestUtils.BaseTestWithContext
         });
 
         // Assert
-        result.Success.Should().BeFalse();
+        result.Success.Should().BeTrue();
         result.ErrorCode.Should().BeNull();
         result.Token.Should().NotBeNullOrEmpty();
         result.RefreshToken.Should().NotBeNullOrEmpty();
