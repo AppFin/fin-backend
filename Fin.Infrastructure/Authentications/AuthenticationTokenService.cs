@@ -31,7 +31,6 @@ public class AuthenticationTokenService: IAuthenticationTokenService, IAutoTrans
 {
     private readonly IRepository<UserCredential> _credentialRepository;
     private readonly IRepository<User> _userRepository;
-    private readonly IRepository<Tenant> _tenantRepository;
     private readonly IRedisCacheService _cache;
     private readonly IConfiguration _configuration;
     private readonly IDateTimeProvider _dateTimeProvider;
@@ -40,18 +39,16 @@ public class AuthenticationTokenService: IAuthenticationTokenService, IAutoTrans
 
     public AuthenticationTokenService(
         IRepository<UserCredential> credentialRepository,
+        IRepository<User> userRepository,
         IConfiguration configuration,
         IRedisCacheService cache,
-        IRepository<User> userRepository,
-        IDateTimeProvider dateTimeProvider,
-        IRepository<Tenant> tenantRepository)
+        IDateTimeProvider dateTimeProvider)
     {
         _credentialRepository = credentialRepository;
         _configuration = configuration;
         _cache = cache;
         _userRepository = userRepository;
         _dateTimeProvider = dateTimeProvider;
-        _tenantRepository = tenantRepository;
 
         var encryptKey = configuration.GetSection(AuthenticationConsts.EncryptKeyConfigKey).Value ?? "";
         var encryptIv = configuration.GetSection(AuthenticationConsts.EncryptIvConfigKey).Value ?? "";
@@ -97,6 +94,8 @@ public class AuthenticationTokenService: IAuthenticationTokenService, IAutoTrans
             .FirstOrDefaultAsync(c => c.Id == userId);
         if (user == null)
             return new LoginOutput { ErrorCode = LoginErrorCode.InvalidRefreshToken };
+        if (!user.IsActivity)
+            return new LoginOutput { ErrorCode = LoginErrorCode.InactivatedUser };
 
         await _cache.RemoveAsync(GetRefreshTokenCacheKey(refreshToken));
         return await GenerateTokenAsync(new UserDto(user));
@@ -117,18 +116,6 @@ public class AuthenticationTokenService: IAuthenticationTokenService, IAutoTrans
         {
             AbsoluteExpiration = expiration
         });
-    }
-
-    public DateTime? GetExpirationFromToken(string token)
-    {
-        var handler = new JwtSecurityTokenHandler();
-
-        if (!handler.CanReadToken(token))
-            return null;
-
-        var jwtToken = handler.ReadJwtToken(token);
-
-        return jwtToken.ValidTo; 
     }
     
     public async Task<LoginOutput> GenerateTokenAsync(UserDto user)
@@ -169,6 +156,18 @@ public class AuthenticationTokenService: IAuthenticationTokenService, IAutoTrans
             Token = tokenString,
             RefreshToken = await GenerateRefreshTokenAsync(user.Id, tokenString)
         };
+    }
+    
+    private DateTime? GetExpirationFromToken(string token)
+    {
+        var handler = new JwtSecurityTokenHandler();
+
+        if (!handler.CanReadToken(token))
+            return null;
+
+        var jwtToken = handler.ReadJwtToken(token);
+
+        return jwtToken.ValidTo; 
     }
     
     private async Task<string> GenerateRefreshTokenAsync(Guid userId, string token)

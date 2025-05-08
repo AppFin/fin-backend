@@ -25,16 +25,17 @@ public class TestUtils
     {
         protected readonly FinDbContext Context;
         private readonly SqliteConnection _connection;
+        private readonly string _dbFilePath;
         
         protected BaseTestWithContext()
         {
-            Context = TestDbContextFactory.Create(out _connection, AmbientData, useFile: true);
+            Context = TestDbContextFactory.Create(out _connection, out _dbFilePath, AmbientData, useFile: true);
         }
 
         public void Dispose()
         {
             Context.Dispose();
-            TestDbContextFactory.Destroy(_connection);
+            TestDbContextFactory.Destroy(_connection, _dbFilePath);;
         }
         
         public IRepository<T> GetRepository<T>() where T : class, IEntity

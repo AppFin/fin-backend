@@ -8,11 +8,18 @@ namespace Fin.Test;
 
 public static class TestDbContextFactory
 {
-    public static FinDbContext Create(out SqliteConnection connection, IAmbientData ambientData, bool useFile = false)
+    public static FinDbContext Create(out SqliteConnection connection, out string dbFilePath, IAmbientData ambientData, bool useFile = false)
     {
-        connection = new SqliteConnection(useFile
-            ? $"DataSource=test_{Guid.NewGuid()}.db"
-            : "DataSource=:memory:");
+        if (useFile)
+        {
+            dbFilePath = $"test_{Guid.NewGuid()}.db";
+            connection = new SqliteConnection($"Data Source={dbFilePath}");
+        }
+        else
+        {
+            dbFilePath = null;
+            connection = new SqliteConnection("DataSource=:memory:");
+        }
         
         connection.Open();
 
@@ -25,8 +32,20 @@ public static class TestDbContextFactory
         return context;
     }
 
-    public static void Destroy(SqliteConnection connection)
+    public static void Destroy(SqliteConnection connection, string dbFilePath)
     {
         connection?.Dispose();
+        
+        if (!string.IsNullOrEmpty(dbFilePath) && File.Exists(dbFilePath))
+        {
+            try
+            {
+                File.Delete(dbFilePath);
+            }
+            catch
+            {
+                // Handle or log as needed
+            }
+        }
     }
 }

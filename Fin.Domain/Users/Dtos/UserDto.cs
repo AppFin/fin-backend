@@ -17,6 +17,10 @@ public class UserDto
     public bool IsActivity { get; private set; }
     public List<Tenant> Tenants { get; private set; } = [];
 
+    public UserDto()
+    {
+    }
+    
     public UserDto(User user)
     {
         Id = user.Id;
