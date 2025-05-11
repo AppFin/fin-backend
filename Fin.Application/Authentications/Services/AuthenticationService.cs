@@ -179,8 +179,6 @@ public class AuthenticationService : IAuthenticationService, IAutoTransient
         }
 
         var result = await _tokenService.GenerateTokenAsync(user);
-        if (result.Success && mustToCreateUser)
-            await _credentialRepository.SaveChangesAsync();
         
         return new LoginWithGoogleOutput
         {
