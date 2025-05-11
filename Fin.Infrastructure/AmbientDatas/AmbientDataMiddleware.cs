@@ -1,6 +1,4 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using Fin.Infrastructure.AutoServices.Interfaces;
 using Microsoft.AspNetCore.Http;
 
 namespace Fin.Infrastructure.AmbientDatas;

@@ -1,7 +1,7 @@
 ﻿using Fin.Domain.Global.Interfaces;
 using Fin.Infrastructure.AmbientDatas;
 using Fin.Infrastructure.Database;
-using Fin.Infrastructure.Database.IRepositories;
+using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.DateTimes;
 using Microsoft.Data.Sqlite;
 using Moq;

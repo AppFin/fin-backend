@@ -8,7 +8,7 @@ using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Entities;
 using Fin.Infrastructure.Authentications.Consts;
 using Fin.Infrastructure.AutoServices.Interfaces;
-using Fin.Infrastructure.Database.IRepositories;
+using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.DateTimes;
 using Fin.Infrastructure.EmailSenders;
 using Fin.Infrastructure.Redis;

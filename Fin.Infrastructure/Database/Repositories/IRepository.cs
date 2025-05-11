@@ -1,6 +1,6 @@
 ﻿using Fin.Domain.Global.Interfaces;
 
-namespace Fin.Infrastructure.Database.IRepositories;
+namespace Fin.Infrastructure.Database.Repositories;
 
 public interface IRepository<T> where T : class, IEntity
 {

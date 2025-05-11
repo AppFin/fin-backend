@@ -6,7 +6,7 @@ using Fin.Infrastructure.Authentications;
 using Fin.Infrastructure.Authentications.Consts;
 using Fin.Infrastructure.Authentications.Dtos;
 using Fin.Infrastructure.Authentications.Enums;
-using Fin.Infrastructure.Database.IRepositories;
+using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.Redis;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;

@@ -1,7 +1,7 @@
 ﻿using Fin.Domain.Global.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace Fin.Infrastructure.Database.IRepositories;
+namespace Fin.Infrastructure.Database.Repositories;
 
 public class Repository<T> : IRepository<T> where T : class, IEntity
 {

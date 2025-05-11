@@ -11,7 +11,7 @@ using Fin.Infrastructure.Authentications.Consts;
 using Fin.Infrastructure.Authentications.Dtos;
 using Fin.Infrastructure.Authentications.Enums;
 using Fin.Infrastructure.AutoServices.Interfaces;
-using Fin.Infrastructure.Database.IRepositories;
+using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.EmailSenders;
 using Fin.Infrastructure.Redis;
 using Microsoft.EntityFrameworkCore;

@@ -6,7 +6,7 @@ public class AmbientData: IAmbientData, IAutoScoped
 {
     public Guid? TenantId { get; private set; }
     public Guid? UserId { get; private set; }
-    public string? DisplayName { get; private set; }
+    public string DisplayName { get; private set; }
     public bool IsAdmin { get; private set; }
     public bool IsLogged => UserId.HasValue && TenantId.HasValue;   
 
