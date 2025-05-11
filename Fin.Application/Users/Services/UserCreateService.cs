@@ -1,5 +1,5 @@
-﻿using Fin.Application.Authentications.Dtos;
-using Fin.Application.Globals.Dtos;
+﻿using Fin.Application.Globals.Dtos;
+using Fin.Application.Globals.Services;
 using Fin.Application.Users.Dtos;
 using Fin.Application.Users.Enums;
 using Fin.Domain.Global;
@@ -36,6 +36,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
     private readonly IDateTimeProvider _dateTimeProvider;
     private readonly IRedisCacheService _cache;
     private readonly IEmailSenderService _emailSender;
+    private readonly IConfirmationCodeGenerator _codeGenerator;
 
     private readonly CryptoHelper _cryptoHelper;
 
@@ -46,13 +47,13 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         IDateTimeProvider dateTimeProvider,
         IConfiguration configuration,
         IRedisCacheService cache,
-        IEmailSenderService emailSender
-        )
+        IEmailSenderService emailSender, IConfirmationCodeGenerator codeGenerator)
     {
         _credentialRepository = credentialRepository;
         _dateTimeProvider = dateTimeProvider;
         _cache = cache;
         _emailSender = emailSender;
+        _codeGenerator = codeGenerator;
         _tenantRepository = tenantRepository;
         _userRepository = userRepository;
 
@@ -79,7 +80,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
 
         var creationToken = Guid.NewGuid().ToString();
         var encryptedPassword = _cryptoHelper.Encrypt(input.Password);
-        var confirmationCode = GenerateConfirmationCode();
+        var confirmationCode = _codeGenerator.Generate();
         var sentDateTime = _dateTimeProvider.UtcNow();
 
         var process = new UserCreateProcessDto
@@ -118,7 +119,9 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         if (process == null) 
             throw new UnauthorizedAccessException("Not found process with this creationToken");
         
-        var timeSinceLastSend = _dateTimeProvider.UtcNow() - process.EmailSentDateTime;
+        var now = _dateTimeProvider.UtcNow();
+        
+        var timeSinceLastSend = now - process.EmailSentDateTime;
         if (timeSinceLastSend < TimeSpan.FromMinutes(1))
             return new ValidationResultDto<DateTime>
             {
@@ -128,22 +131,21 @@ public class UserCreateService : IUserCreateService, IAutoTransient
             };
         
         var email = _cryptoHelper.Decrypt(process.EncryptedEmail);
-        var confirmationCode = GenerateConfirmationCode();
-        var sentEmailDateTime = _dateTimeProvider.UtcNow();
-        
+        var confirmationCode = _codeGenerator.Generate();
+
         process.EmailConfirmationCode = confirmationCode;
-        process.EmailSentDateTime = sentEmailDateTime;
+        process.EmailSentDateTime = now;
         process.ValidatedEmail = false;
         await _cache.SetAsync(GenerateProcessCacheKey(creationToken), process, new DistributedCacheEntryOptions
         {
-            AbsoluteExpiration = sentEmailDateTime.AddMinutes(20)
+            AbsoluteExpiration = now.AddMinutes(20)
         });
         await _emailSender.SendEmailAsync(email, "Fin - Email Confirmation", $"Your confirmation code is <b>{confirmationCode}</b>");
         
         return new ValidationResultDto<DateTime>
         {
             Success = true,
-            Data = sentEmailDateTime,
+            Data = now,
             Message = "Sent confirmation email",
         };
     }
@@ -243,20 +245,5 @@ public class UserCreateService : IUserCreateService, IAutoTransient
             ErrorCode = code,
             Message = message
         };
-    }
-
-    private static string GenerateConfirmationCode()
-    {
-        var random = new Random();
-        var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        var length = 6;
-
-        var result = new char[length];
-        for (int i = 0; i < length; i++)
-        {
-            result[i] = characters[random.Next(characters.Length)];
-        }
-
-        return new string(result);
     }
 }
