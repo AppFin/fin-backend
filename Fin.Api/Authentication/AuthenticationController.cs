@@ -10,19 +10,12 @@ using IAuthenticationService = Fin.Application.Authentications.Services.IAuthent
 namespace Fin.Api.Authentication;
 
 [Route("authentications")]
-public class AuthenticationController : ControllerBase
+public class AuthenticationController(IAuthenticationService authenticationService) : ControllerBase
 {
-    private readonly IAuthenticationService _authenticationService;
-
-    public AuthenticationController(IAuthenticationService authenticationService)
-    {
-        _authenticationService = authenticationService;
-    }
-
     [HttpPost("login")]
     public async Task<ActionResult<LoginOutput>> Login([FromBody] LoginInput input)
     {
-        var result = await _authenticationService.Login(input);
+        var result = await authenticationService.Login(input);
         if (result.Success)
             return Ok(result);
         return UnprocessableEntity(result);
@@ -31,7 +24,7 @@ public class AuthenticationController : ControllerBase
     [HttpPost("refresh-token")]
     public async Task<ActionResult<LoginOutput>> RefreshToken([FromBody] RefreshTokenInput input)
     {
-        var result = await _authenticationService.RefreshToken(input.RefreshToken);
+        var result = await authenticationService.RefreshToken(input.RefreshToken);
         if (result.Success)
             return Ok(result);
         return UnprocessableEntity(result);
@@ -44,7 +37,7 @@ public class AuthenticationController : ControllerBase
         var token = Request.Headers["Authorization"].ToString();
         token = token["Bearer ".Length..];
 
-        await _authenticationService.Logout(token);
+        await authenticationService.Logout(token);
         return Ok();
     }
 
@@ -62,7 +55,7 @@ public class AuthenticationController : ControllerBase
         if (!result.Succeeded)
             return Unauthorized();
 
-        var loginResult = await _authenticationService.LoginOrSingInWithGoogle(new LoginWithGoogleInput
+        var loginResult = await authenticationService.LoginOrSingInWithGoogle(new LoginWithGoogleInput
         {
             GoogleId = result.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value,
             DisplayName = result.Principal.Identity?.Name,
@@ -81,14 +74,14 @@ public class AuthenticationController : ControllerBase
     [HttpPost("send-reset-password-email")]
     public async Task<ActionResult> StartResetPassword([FromBody] SendResetPasswordEmailInput input)
     {
-        await _authenticationService.SendResetPasswordEmail(input);
+        await authenticationService.SendResetPasswordEmail(input);
         return Ok();
     }
 
     [HttpPost("reset-password")]
     public async Task<ActionResult> ResetPassword([FromBody] ResetPasswordInput input)
     {
-        var result = await _authenticationService.ResetPassword(input);
+        var result = await authenticationService.ResetPassword(input);
         if (result.Success)
             return Ok(result.Data);
         return UnprocessableEntity(result);

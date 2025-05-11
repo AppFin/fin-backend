@@ -1,6 +1,7 @@
 using Fin.Infrastructure;
 using Fin.Infrastructure.AmbientDatas;
 using Fin.Infrastructure.Authentications;
+using Fin.Infrastructure.Errors;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUi();
 }
 
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<TokenBlacklistMiddleware>();
 app.UseMiddleware<AmbientDataMiddleware>();
 app.UseAuthentication();
