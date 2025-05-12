@@ -4,12 +4,14 @@ using Fin.Application.Users.Enums;
 using Fin.Application.Users.Services;
 using Fin.Domain.Global;
 using Fin.Domain.Tenants.Entities;
+using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Entities;
 using Fin.Infrastructure.Authentications.Consts;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.EmailSenders;
 using Fin.Infrastructure.Redis;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Moq;
@@ -438,7 +440,152 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
                         p.EmailConfirmationCode == process.EmailConfirmationCode),
                     It.IsAny<DistributedCacheEntryOptions>()), Times.Once);
     }
-    
+
+    #endregion
+
+    #region CreateUser
+
+    [Fact]
+    public async Task CreateUser_InvalidCreationToken()
+    {
+        // Arrange
+        var resources = GetResources();
+        var service = GetService(resources);
+
+        var erro = false;
+
+        var creationToken = TestUtils.Strings.First();
+
+        // Act
+        try
+        {
+            await service.CreateUser(creationToken, new UserUpdateOrCreateInput());
+        }
+        catch (UnauthorizedAccessException)
+        {
+            erro = true;
+        }
+
+        // Assert
+        erro.Should().BeTrue();
+
+        resources.FakeCache
+            .Verify(c => c.GetAsync<UserCreateProcessDto>(It.Is<string>(k => k.Contains(creationToken))), Times.Once);
+
+        DateTimeProvider.Verify(d => d.UtcNow(), Times.Never);
+
+        resources.FakeCache
+            .Verify(c => c.RemoveAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateUser_NotValidatedEmail()
+    {
+        // Arrange
+        var resources = GetResources();
+        var service = GetService(resources);
+
+        var creationToken = TestUtils.Strings.First();
+
+        var process = new UserCreateProcessDto
+        {
+            ValidatedEmail = false,
+            Token = creationToken
+        };
+
+        resources.FakeCache
+            .Setup(c => c.GetAsync<UserCreateProcessDto>(It.Is<string>(k => k.Contains(creationToken))))
+            .ReturnsAsync(process);
+
+        var erro = false;
+
+        // Act
+        try
+        {
+            await service.CreateUser(creationToken, new UserUpdateOrCreateInput());
+        }
+        catch (UnauthorizedAccessException)
+        {
+            erro = true;
+        }
+
+        // Assert
+        erro.Should().BeTrue();
+
+        resources.FakeCache
+            .Verify(c => c.GetAsync<UserCreateProcessDto>(It.Is<string>(k => k.Contains(creationToken))), Times.Once);
+
+        DateTimeProvider.Verify(d => d.UtcNow(), Times.Never);
+
+        resources.FakeCache
+            .Verify(c => c.RemoveAsync(It.IsAny<string>()), Times.Never);
+    }
+
+
+    [Fact]
+    public async Task CreateUser_Success()
+    {
+        // Arrange
+        var resources = GetResources();
+        var service = GetService(resources);
+
+        var now = TestUtils.UtcDateTimes[0];
+        DateTimeProvider.Setup(d => d.UtcNow()).Returns(now);
+
+        var process = new UserCreateProcessDto
+        {
+            ValidatedEmail = true,
+            Token = TestUtils.Strings.First(),
+            EncryptedEmail = TestUtils.Strings[1],
+            EncryptedPassword = TestUtils.Strings[2],
+        };
+        resources.FakeCache
+            .Setup(c => c.GetAsync<UserCreateProcessDto>(It.Is<string>(k => k.Contains(process.Token))))
+            .ReturnsAsync(process);
+
+        var input = new UserUpdateOrCreateInput
+        {
+            DisplayName = TestUtils.Strings[3],
+            LastName = TestUtils.Strings[4],
+            FirstName = TestUtils.Strings[5],
+            BirthDate = DateOnly.FromDateTime(TestUtils.UtcDateTimes[1]),
+            ImagePublicUrl = TestUtils.Strings[6],
+        };
+
+        // Act
+        await service.CreateUser(process.Token, input);
+        
+        // Assert
+        var tenant = await resources.TenantRepository.Query(false).Include(t => t.Users).FirstAsync();
+        var credential = await resources.CredentialRepository.Query(false).FirstAsync();
+        var user = await resources.UserRepository.Query(false).FirstAsync();
+        
+        credential.EncryptedEmail.Should().Be(process.EncryptedEmail);
+        credential.EncryptedPassword.Should().Be(process.EncryptedPassword);
+        credential.FailLoginAttempts.Should().Be(0);
+        credential.UserId.Should().Be(user.Id);
+        
+        user.IsActivity.Should().BeTrue();
+        user.CreatedAt.Should().Be(now);
+        user.UpdatedAt.Should().Be(now);
+        user.DisplayName.Should().Be(input.DisplayName);
+        user.FirstName.Should().Be(input.FirstName);
+        user.LastName.Should().Be(input.LastName);
+        user.BirthDate.Should().Be(input.BirthDate);
+        user.Sex.Should().Be(input.Sex);
+        user.ImagePublicUrl.Should().Be(input.ImagePublicUrl);
+
+        tenant.Locale.Should().Be("pt-Br");
+        tenant.Timezone.Should().Be("America/Sao_Paulo");
+        tenant.Users.First().Id.Should().Be(user.Id);
+        
+        resources.FakeCache
+            .Verify(c => c.GetAsync<UserCreateProcessDto>(It.Is<string>(k => k.Contains(process.Token))), Times.Once);
+        DateTimeProvider.Verify(d => d.UtcNow(), Times.Once);
+        resources.FakeCache
+            .Verify(c => c.RemoveAsync(It.Is<string>(k => k.Contains(process.Token))), Times.Once);
+    }
+
     #endregion
 
     private UserCreateService GetService(Resources resources)

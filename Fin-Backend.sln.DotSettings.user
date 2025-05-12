@@ -28,19 +28,10 @@
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AString_002EManipulation_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2025_002E1_003Fresharper_002Dhost_003FSourcesCache_003Fe75a5575ba872c8ea754c015cb363850e6c661f39569712d5b74aaca67263c_003FString_002EManipulation_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003ATextPart_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2025_002E1_003Fresharper_002Dhost_003FSourcesCache_003Faada45263c6c5af36101b4a543c51bc1cb93b51fed40bcbb2de7cb8bc1681e_003FTextPart_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AType_002ECoreCLR_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2025_002E1_003Fresharper_002Dhost_003FSourcesCache_003F5cde391207de75962d7bacb899ca2bd3985c86911b152d185b58999a422bf0_003FType_002ECoreCLR_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=1abf7737_002D0f67_002D4d06_002Da9c7_002D831517bd16a6/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="All tests from HealthCheckServiceTest.cs" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=1abf7737_002D0f67_002D4d06_002Da9c7_002D831517bd16a6/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="All tests from HealthCheckServiceTest.cs" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;Project Location="C:\Users\Rafael Chicovis\git\fin-backend\Fin.Test" Presentation="&amp;lt;Fin.Test&amp;gt;" /&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=39273fd1_002Db43c_002D42c8_002Dae77_002Db3ca3d1788e4/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Refresh token with fail, no user" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;Or&gt;&#xD;
-    &lt;TestAncestor&gt;&#xD;
-      &lt;TestId&gt;xUnit::0BE34FA3-159B-439C-A440-6D9D7F4EF764::net9.0::Fin.Test.Authentications.AuthenticationTokenServiceTest&lt;/TestId&gt;&#xD;
-      &lt;TestId&gt;xUnit::0BE34FA3-159B-439C-A440-6D9D7F4EF764::net9.0::Fin.Test.AmbientDatas.AmbientDataTest&lt;/TestId&gt;&#xD;
-      &lt;TestId&gt;xUnit::0BE34FA3-159B-439C-A440-6D9D7F4EF764::net9.0::Fin.Test.AmbientDatas.AmbientDataMiddlewareTest&lt;/TestId&gt;&#xD;
-      &lt;TestId&gt;xUnit::0BE34FA3-159B-439C-A440-6D9D7F4EF764::net9.0::Fin.Test.Authentications.TokenBlacklistMiddlewareTest.InvokeAsync_Should_CallNext_When_TokenNotLoggedOut&lt;/TestId&gt;&#xD;
-      &lt;TestId&gt;xUnit::0BE34FA3-159B-439C-A440-6D9D7F4EF764::net9.0::Fin.Test.Authentications.TokenBlacklistMiddlewareTest&lt;/TestId&gt;&#xD;
-    &lt;/TestAncestor&gt;&#xD;
-    &lt;ProjectFolder&gt;0BE34FA3-159B-439C-A440-6D9D7F4EF764/d:HealthChecks&lt;/ProjectFolder&gt;&#xD;
-  &lt;/Or&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=39273fd1_002Db43c_002D42c8_002Dae77_002Db3ca3d1788e4/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Refresh token with fail, no user" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;Project Location="C:\Users\Rafael Chicovis\git\fin-backend\Fin.Test" Presentation="&amp;lt;Fin.Test&amp;gt;" /&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	</wpf:ResourceDictionary>
