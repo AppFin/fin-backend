@@ -22,7 +22,7 @@ public class FinDbContext : DbContext
     {
     }
 
-    public FinDbContext(DbContextOptions<FinDbContext> options, IAmbientData ambientData, bool migrate = true) :
+    public FinDbContext(DbContextOptions<FinDbContext> options, IAmbientData ambientData) :
         base(options)
     {
         _ambientData = ambientData;
