@@ -1,33 +1,44 @@
 ﻿using System.Linq.Expressions;
+using System.Reflection;
 using Fin.Domain.Global.Interfaces;
+using Fin.Domain.Tenants.Entities;
+using Fin.Domain.Users.Entities;
+using Fin.Infrastructure.AmbientDatas;
+using Fin.Infrastructure.Database.Configurations;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fin.Infrastructure.Database;
 
-public class FinDbContext: DbContext
+public class FinDbContext : DbContext
 {
+    public DbSet<User> Users { get; set; }
+    public DbSet<UserCredential> Credentials { get; set; }
+    public DbSet<Tenant> Tenants { get; set; }
+    public DbSet<TenantUser> TenantUsers { get; set; }
+
+    private readonly IAmbientData _ambientData;
+
     public FinDbContext()
     {
-        
     }
-    
-    public FinDbContext(DbContextOptions<FinDbContext> options, bool migrate = true) : base(options)
+
+    public FinDbContext(DbContextOptions<FinDbContext> options, IAmbientData ambientData) :
+        base(options)
     {
-        if (migrate)
-        {
-            Database.Migrate();
-        }
+        _ambientData = ambientData;
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.HasDefaultSchema("public");
-     
-        // Configurar quando tiver o AmbientData
-        // ConfigTenantFilter(modelBuilder);
+
+        UserEntityConfiguration.Configure(modelBuilder);
+        TenantEntityConfiguration.Configure(modelBuilder);
+
+        ApplyTenantFilter(modelBuilder);
     }
-    
+
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
         if (!options.IsConfigured)
@@ -36,23 +47,24 @@ public class FinDbContext: DbContext
         }
     }
 
-    private void ConfigTenantFilter(ModelBuilder modelBuilder)
+    private void ApplyTenantFilter(ModelBuilder modelBuilder)
     {
+        if (!(_ambientData?.IsLogged ?? false)) return;
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             if (typeof(ITenantEntity).IsAssignableFrom(entityType.ClrType))
             {
-                modelBuilder.Entity(entityType.ClrType)
-                    .HasQueryFilter(BuildTenantFilter(entityType.ClrType));
+                var method = typeof(FinDbContext)
+                    .GetMethod(nameof(SetTenantFilter), BindingFlags.NonPublic | BindingFlags.Instance)
+                    ?.MakeGenericMethod(entityType.ClrType);
+
+                method?.Invoke(this, new object[] { modelBuilder });
             }
         }
     }
-    
-    private static LambdaExpression BuildTenantFilter(Type entityType)
+
+    private void SetTenantFilter<TEntity>(ModelBuilder modelBuilder) where TEntity : class, ITenantEntity
     {
-        var parameter = Expression.Parameter(entityType, "e");
-        var property = Expression.Property(parameter, nameof(ITenantEntity.TenantId));
-        var comparison = Expression.Equal(property, Expression.Constant(Guid.NewGuid()));
-        return Expression.Lambda(comparison, parameter);
+        modelBuilder.Entity<TEntity>().HasQueryFilter(e => e.TenantId == _ambientData.TenantId);
     }
 }
