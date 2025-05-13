@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Fin.Infrastructure.Authentications.Consts;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -22,8 +23,8 @@ public static class AddAuthenticationExtension
             .AddCookie()
             .AddGoogle("Google", options =>
             {
-                options.ClientId = configuration.GetSection("ApiSettings:Authentication:Google:ClientId").Value ?? "";
-                options.ClientSecret = configuration.GetSection("ApiSettings:Authentication:Google:ClientSecret").Value ?? "";
+                options.ClientId = configuration.GetSection(AuthenticationConsts.GoogleClientIdConfigKey).Value ?? "";
+                options.ClientSecret = configuration.GetSection(AuthenticationConsts.GoogleClientSecretConfigKey).Value ?? "";
                 options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.CallbackPath = "/authentications/google-sign-callback";
                 
@@ -37,11 +38,9 @@ public static class AddAuthenticationExtension
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = configuration.GetSection("ApiSettings:Authentication:Jwt:Issuer").Value ?? "",
-                    ValidAudience = configuration.GetSection("ApiSettings:Authentication:Jwt:Audience").Value ?? "",
-                    IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(configuration.GetSection("ApiSettings:Authentication:Jwt:Key").Value ??
-                                               ""))
+                    ValidIssuer = configuration.GetSection(AuthenticationConsts.TokenJwtIssuerConfigKey).Value ?? "",
+                    ValidAudience = configuration.GetSection(AuthenticationConsts.TokenJwtAudienceConfigKey).Value ?? "",
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetSection(AuthenticationConsts.TokenJwtKeyConfigKey).Value ?? ""))
                 };
             });
         services.AddAuthorization();
