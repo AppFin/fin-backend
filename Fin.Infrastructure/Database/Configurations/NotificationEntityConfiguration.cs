@@ -27,6 +27,11 @@ public static class NotificationEntityConfiguration
                     r => r.HasOne(e => e.Notification).WithMany().HasForeignKey(e => e.NotificationId));
         });
         
+        modelBuilder.Entity<NotificationUserDelivery>(n => 
+        {
+           n.HasKey(x => new { x.NotificationId, x.UserId });
+        });
+        
         modelBuilder.Entity<UserNotificationSettings>(n =>
         {
             n.HasKey(x => x.Id);
