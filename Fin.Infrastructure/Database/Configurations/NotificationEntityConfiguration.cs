@@ -23,13 +23,22 @@ public static class NotificationEntityConfiguration
                 .HasMany<User>()
                 .WithMany()
                 .UsingEntity<NotificationUserDelivery>(
-                    l => l.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId),
-                    r => r.HasOne(e => e.Notification).WithMany().HasForeignKey(e => e.NotificationId));
+                    l => l.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).HasPrincipalKey(x => x.Id),
+                    r => r.HasOne(e => e.Notification).WithMany().HasForeignKey(e => e.NotificationId).HasPrincipalKey(x => x.Id));
         });
         
         modelBuilder.Entity<NotificationUserDelivery>(n => 
         {
            n.HasKey(x => new { x.NotificationId, x.UserId });
+           n.HasOne(u => u.User)
+               .WithMany()
+               .HasForeignKey(u => u.UserId)
+               .HasPrincipalKey(u => u.Id);;
+           
+           n.HasOne(u => u.Notification)
+               .WithMany(nd => nd.UserDeliveries)
+               .HasForeignKey(u => u.NotificationId)
+               .HasPrincipalKey(nd => nd.Id);
         });
         
         modelBuilder.Entity<UserNotificationSettings>(n =>
