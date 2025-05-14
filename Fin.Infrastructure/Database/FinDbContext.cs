@@ -1,6 +1,7 @@
-﻿using System.Linq.Expressions;
-using System.Reflection;
+﻿using System.Reflection;
 using Fin.Domain.Global.Interfaces;
+using Fin.Domain.Notifications;
+using Fin.Domain.Notifications.Entities;
 using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Entities;
 using Fin.Infrastructure.AmbientDatas;
@@ -13,8 +14,12 @@ public class FinDbContext : DbContext
 {
     public DbSet<User> Users { get; set; }
     public DbSet<UserCredential> Credentials { get; set; }
+    
     public DbSet<Tenant> Tenants { get; set; }
     public DbSet<TenantUser> TenantUsers { get; set; }
+    
+    public DbSet<UserNotificationSettings> UserNotificationSettings { get; set; }
+    public DbSet<UserRememberUseSetting> UserRememberUseSettings { get; set; }
 
     private readonly IAmbientData _ambientData;
 
@@ -35,6 +40,7 @@ public class FinDbContext : DbContext
 
         UserEntityConfiguration.Configure(modelBuilder);
         TenantEntityConfiguration.Configure(modelBuilder);
+        NotificationEntityConfiguration.Configure(modelBuilder);
 
         ApplyTenantFilter(modelBuilder);
     }
