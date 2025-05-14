@@ -41,9 +41,9 @@ public static class NotificationEntityConfiguration
         {
             n.HasKey(x => x.Id);
             n.Property(x => x.Ways)
-                .HasConversion<EnumListToStringConverter<DayOfWeek>>();
-            n.Property(x => x.WeekDays)
                 .HasConversion<EnumListToStringConverter<NotificationWay>>();
+            n.Property(x => x.WeekDays)
+                .HasConversion<EnumListToStringConverter<DayOfWeek>>();
             n.HasOne(u => u.User)
                 .WithMany()
                 .HasForeignKey(u => u.UserId);
