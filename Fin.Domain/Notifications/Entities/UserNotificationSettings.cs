@@ -25,6 +25,8 @@ public class UserNotificationSettings: IAuditedTenantEntity
     
     public UserNotificationSettings(Guid userId)
     {
+        Id = Guid.NewGuid();
+        
         UserId = userId;
         Enabled = true;
         AllowedWays = new List<NotificationWay>

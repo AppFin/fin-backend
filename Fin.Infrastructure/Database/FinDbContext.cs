@@ -20,6 +20,8 @@ public class FinDbContext : DbContext
     
     public DbSet<UserNotificationSettings> UserNotificationSettings { get; set; }
     public DbSet<UserRememberUseSetting> UserRememberUseSettings { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
+    public DbSet<NotificationUserDelivery> NotificationUserDeliveries { get; set; }
 
     private readonly IAmbientData _ambientData;
 

@@ -1,6 +1,7 @@
-﻿using Fin.Domain.Notifications;
-using Fin.Domain.Notifications.Entities;
+﻿using Fin.Domain.Notifications.Entities;
 using Fin.Domain.Notifications.Enums;
+using Fin.Domain.Tenants.Entities;
+using Fin.Domain.Users.Entities;
 using Fin.Infrastructure.Database.ValueConverters;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +11,22 @@ public static class NotificationEntityConfiguration
 {
     public static void Configure(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Notification>(n =>
+        {
+            n.HasKey(x => x.Id);
+            n.Property(x => x.Ways)
+                .HasConversion<EnumListToStringConverter<NotificationWay>>();
+            n.Property(x => x.Title)
+                .HasMaxLength(250);
+            
+            n
+                .HasMany<User>()
+                .WithMany()
+                .UsingEntity<NotificationUserDelivery>(
+                    l => l.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId),
+                    r => r.HasOne(e => e.Notification).WithMany().HasForeignKey(e => e.NotificationId));
+        });
+        
         modelBuilder.Entity<UserNotificationSettings>(n =>
         {
             n.HasKey(x => x.Id);
