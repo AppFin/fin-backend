@@ -238,7 +238,9 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         await _notificationSettingsRepository.AddAsync(notificationSetting);
         
         await _credentialRepository.SaveChangesAsync();
-        
+
+        user.Tenants.First().Users = null;
+        user.Credential.User = null;
         return new ValidationResultDto<UserDto>
         {
             Success = true,
