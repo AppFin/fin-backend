@@ -1,4 +1,5 @@
 ﻿using Fin.Domain.Global.Interfaces;
+using Fin.Domain.Notifications.Dtos;
 using Fin.Domain.Notifications.Enums;
 using Fin.Domain.Users.Entities;
 
@@ -38,7 +39,7 @@ public class UserNotificationSettings: IAuditedTenantEntity
         };
     }
 
-    public void Update(UserNotificationSettings input)
+    public void Update(UserNotificationSettingsInput input)
     {
         Enabled = input.Enabled;
         AllowedWays = input.AllowedWays;

@@ -28,7 +28,7 @@ public class UserRememberUseSetting : IAuditedTenantEntity
     public UserRememberUseSetting(Guid userId)
     {
         Id = Guid.NewGuid();
-        UserId = UserId;
+        UserId = userId;
     }
 
     public void Update(UserRememberUseSettingInput input)

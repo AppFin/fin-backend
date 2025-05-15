@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Fin.Infrastructure.Database.Repositories;
 
-public class Repository<T> : IRepository<T> where T : class, IEntity
+public class Repository<T> : IRepository<T> where T : class
 {
     private readonly FinDbContext _context;
     private readonly DbSet<T> _dbSet;
@@ -17,11 +17,6 @@ public class Repository<T> : IRepository<T> where T : class, IEntity
     public IQueryable<T> Query(bool tracking = true)
     {
         return tracking ? _dbSet : _dbSet.AsNoTracking();
-    }
-
-    public async Task<T> FindAsync(Guid entityId, bool tracking = true)
-    {
-        return await Query(tracking).FirstOrDefaultAsync(x => x.Id == entityId);
     }
 
     public async Task AddAsync(T entity, bool autoSave = false)

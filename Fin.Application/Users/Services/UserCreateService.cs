@@ -3,6 +3,7 @@ using Fin.Application.Globals.Services;
 using Fin.Application.Users.Dtos;
 using Fin.Application.Users.Enums;
 using Fin.Domain.Global;
+using Fin.Domain.Notifications.Entities;
 using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Entities;
@@ -32,6 +33,8 @@ public class UserCreateService : IUserCreateService, IAutoTransient
     private readonly IRepository<UserCredential> _credentialRepository;
     private readonly IRepository<User> _userRepository;
     private readonly IRepository<Tenant> _tenantRepository;
+    private readonly IRepository<UserNotificationSettings> _notificationSettingsRepository;
+    private readonly IRepository<UserRememberUseSetting> _userRememberUseSettingRepository;
     
     private readonly IDateTimeProvider _dateTimeProvider;
     private readonly IRedisCacheService _cache;
@@ -47,13 +50,18 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         IDateTimeProvider dateTimeProvider,
         IConfiguration configuration,
         IRedisCacheService cache,
-        IEmailSenderService emailSender, IConfirmationCodeGenerator codeGenerator)
+        IEmailSenderService emailSender,
+        IConfirmationCodeGenerator codeGenerator,
+        IRepository<UserNotificationSettings> notificationSettingsRepository,
+        IRepository<UserRememberUseSetting> userRememberUseSettingRepository)
     {
         _credentialRepository = credentialRepository;
         _dateTimeProvider = dateTimeProvider;
         _cache = cache;
         _emailSender = emailSender;
         _codeGenerator = codeGenerator;
+        _notificationSettingsRepository = notificationSettingsRepository;
+        _userRememberUseSettingRepository = userRememberUseSettingRepository;
         _tenantRepository = tenantRepository;
         _userRepository = userRepository;
 
@@ -219,10 +227,15 @@ public class UserCreateService : IUserCreateService, IAutoTransient
 
         var tenant = new Tenant(now);
         user.Tenants.Add(tenant);
+
+        var notificationSetting = new UserNotificationSettings(user.Id);
+        var rememberUseSetting = new UserRememberUseSetting(user.Id);
         
         await _tenantRepository.AddAsync(tenant);
         await _userRepository.AddAsync(user);
         await _credentialRepository.AddAsync(credential);
+        await _userRememberUseSettingRepository.AddAsync(rememberUseSetting);
+        await _notificationSettingsRepository.AddAsync(notificationSetting);
         
         await _credentialRepository.SaveChangesAsync();
         
