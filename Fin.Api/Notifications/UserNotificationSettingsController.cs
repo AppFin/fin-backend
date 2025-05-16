@@ -18,7 +18,7 @@ public class UserNotificationSettingsController(IUserNotificationSettingService 
     [HttpPut]
     public async Task<ActionResult> Update([FromBody] UserNotificationSettingsInput input)
     {
-        var success = await service.UpdateByCurrentUser(input);   
+        var success = await service.UpdateByCurrentUser(input, true);   
         if (success) return Ok();
         return UnprocessableEntity();  
     }

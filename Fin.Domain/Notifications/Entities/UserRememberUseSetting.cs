@@ -10,7 +10,7 @@ public class UserRememberUseSetting : IAuditedTenantEntity
     public Guid UserId { get; set; }
     public List<NotificationWay> Ways { get; set; } = new();
     public TimeSpan NotifyOn { get; set; }
-    public List<DayOfWeek> WeekDays { get; set; }
+    public List<DayOfWeek> WeekDays { get; set; } = new();
 
     public virtual User User { get; set; }
 

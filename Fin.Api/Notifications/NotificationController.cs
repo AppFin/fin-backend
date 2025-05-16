@@ -26,21 +26,21 @@ public class NotificationController(INotificationService service): ControllerBas
     [HttpPost]
     public async Task<ActionResult<NotificationOutput>> Create([FromBody] NotificationInput input)
     {
-        var notification = await service.Create(input);
+        var notification = await service.Create(input, true);
         return notification != null ? Created($"notifications/{notification.Id}", notification) : UnprocessableEntity();   
     }
     
     [HttpPut("id:guid")]
     public async Task<ActionResult> Update([FromRoute] Guid id, [FromBody] NotificationInput input)
     {
-        var updated = await service.Update(id, input);
+        var updated = await service.Update(id, input, true);
         return updated  ? Ok() : UnprocessableEntity();   
     }
     
     [HttpDelete("id:guid")]
     public async Task<ActionResult> Delete([FromRoute] Guid id)
     {
-        var deleted = await service.Delete(id);
+        var deleted = await service.Delete(id, true);
         return deleted  ? Ok() : UnprocessableEntity();   
     }
 }

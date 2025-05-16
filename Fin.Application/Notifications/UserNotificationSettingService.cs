@@ -19,9 +19,9 @@ public class UserNotificationSettingService(IRepository<UserNotificationSettings
 {
     public async Task<UserNotificationSettingsOutput> GetByCurrentUser()
     {
-        return await repository.Query()
-            .Select(u => new UserNotificationSettingsOutput(u))
+         var entidade = await repository.Query()
             .FirstOrDefaultAsync(u => u.UserId == ambientData.UserId);
+         return new UserNotificationSettingsOutput(entidade);
     }
 
     public async Task<bool> UpdateByCurrentUser(UserNotificationSettingsInput input, bool autoSave = false)

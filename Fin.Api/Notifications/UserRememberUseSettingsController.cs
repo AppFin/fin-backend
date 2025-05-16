@@ -18,7 +18,7 @@ public class UserRememberUseSettingsController(IUserRememberUseSettingsService s
     [HttpPut]
     public async Task<ActionResult> Update([FromBody] UserRememberUseSettingInput input)
     {
-        var success = await service.UpdateByCurrentUser(input);   
+        var success = await service.UpdateByCurrentUser(input, true);   
         if (success) return Ok();
         return UnprocessableEntity();  
     }
