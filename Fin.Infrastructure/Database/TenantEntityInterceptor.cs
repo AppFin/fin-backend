@@ -22,7 +22,12 @@ public class TenantEntityInterceptor: SaveChangesInterceptor
         var context = eventData.Context;
 
         if (context == null || !_ambientData.IsLogged) return base.SavingChangesAsync(eventData, result, cancellationToken);
-
+        
+        var tenantId = _ambientData.TenantId.GetValueOrDefault();
+        var hasTenantId = tenantId != Guid.Empty;
+        
+        if (!hasTenantId) return base.SavingChangesAsync(eventData, result, cancellationToken);
+        
         foreach (var entry in context.ChangeTracker.Entries<ITenantEntity>())
         {
             if (entry.State == EntityState.Added)

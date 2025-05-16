@@ -24,9 +24,13 @@ public class UserNotificationSettings: IAuditedTenantEntity
     {
     }
     
-    public UserNotificationSettings(Guid userId)
+    public UserNotificationSettings(Guid userId, Guid tenantId)
     {
         Id = Guid.NewGuid();
+        
+        TenantId = tenantId;
+        CreatedBy = userId;
+        UpdatedBy = userId;
         
         UserId = userId;
         Enabled = true;

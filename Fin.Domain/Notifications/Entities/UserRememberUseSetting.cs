@@ -25,10 +25,14 @@ public class UserRememberUseSetting : IAuditedTenantEntity
     {
     }
 
-    public UserRememberUseSetting(Guid userId)
+    public UserRememberUseSetting(Guid userId, Guid tenantId)
     {
         Id = Guid.NewGuid();
         UserId = userId;
+        
+        TenantId = tenantId;
+        CreatedBy = userId;
+        UpdatedBy = userId;
     }
 
     public void Update(UserRememberUseSettingInput input)

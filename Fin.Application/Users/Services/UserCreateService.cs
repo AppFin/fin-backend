@@ -194,13 +194,21 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         var tenant = new Tenant(now);
         user.Tenants.Add(tenant);
         
+        var notificationSetting = new UserNotificationSettings(user.Id, tenant.Id);
+        var rememberUseSetting = new UserRememberUseSetting(user.Id, tenant.Id);
+        
         await _tenantRepository.AddAsync(tenant);
         await _userRepository.AddAsync(user);
         await _credentialRepository.AddAsync(credential);
+        await _userRememberUseSettingRepository.AddAsync(rememberUseSetting);
+        await _notificationSettingsRepository.AddAsync(notificationSetting);
         
         await _credentialRepository.SaveChangesAsync();
         
         await _cache.RemoveAsync(GenerateProcessCacheKey(creationToken));
+        
+        user.Tenants.First().Users = null;
+        user.Credential.User = null;
         
         return new ValidationResultDto<UserDto>
         {
@@ -228,8 +236,8 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         var tenant = new Tenant(now);
         user.Tenants.Add(tenant);
 
-        var notificationSetting = new UserNotificationSettings(user.Id);
-        var rememberUseSetting = new UserRememberUseSetting(user.Id);
+        var notificationSetting = new UserNotificationSettings(user.Id, tenant.Id);
+        var rememberUseSetting = new UserRememberUseSetting(user.Id, tenant.Id);
         
         await _tenantRepository.AddAsync(tenant);
         await _userRepository.AddAsync(user);
