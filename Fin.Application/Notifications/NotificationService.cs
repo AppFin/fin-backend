@@ -21,16 +21,16 @@ public class NotificationService(IRepository<Notification> repository, IReposito
 {
     public async Task<NotificationOutput> Get(Guid id)
     {
-        return await repository.Query()
-            .Select(n => new NotificationOutput(n))
+        var entity = await repository.Query()
             .FirstOrDefaultAsync(n => n.Id == id);
+        return entity != null ? new NotificationOutput(entity) : null;
     }
 
     public async Task<PagedOutput<NotificationOutput>> GetList(PagedFilteredAndSortedInput input)
     {
         return await repository.Query(false)
-            .Select(n => new NotificationOutput(n))
             .ApplyFilterAndSorter(input)
+            .Select(n => new NotificationOutput(n))
             .ToPagedResult(input);
     }
 
@@ -44,6 +44,7 @@ public class NotificationService(IRepository<Notification> repository, IReposito
     public async Task<bool> Update(Guid id, NotificationInput input, bool autoSave = false)
     {
         var notification = await repository.Query()
+            .Include(u => u.UserDeliveries)
             .FirstOrDefaultAsync(u => u.Id == id);
         if (notification == null) return false;
         

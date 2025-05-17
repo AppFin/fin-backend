@@ -18,9 +18,9 @@ public class UserRememberUseSettingsService(IRepository<UserRememberUseSetting> 
 {
     public async Task<UserRememberUseSettingOutput> GetByCurrentUser()
     {
-        var entidade = await repository.Query()
+        var entity = await repository.Query()
             .FirstOrDefaultAsync(u => u.UserId == ambientData.UserId);
-        return new UserRememberUseSettingOutput(entidade);
+        return entity == null ? null : new UserRememberUseSettingOutput(entity);
     }
 
     public async Task<bool> UpdateByCurrentUser(UserRememberUseSettingInput input, bool autoSave = false)

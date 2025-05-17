@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using Fin.Domain.Global.Extensions;
 using Fin.Domain.Global.Interfaces;
 using Fin.Domain.Notifications.Dtos;
 using Fin.Domain.Notifications.Enums;
@@ -10,7 +11,9 @@ public class Notification: IAuditedEntity
     public List<NotificationWay> Ways { get; set; }
     public string TextBody { get; set; }
     public string HtmlBody { get; set; }
+    public string NormalizedTextBody { get; set; }
     public string Title { get; set; }
+    public string NormalizedTitle { get; set; }
     public DateTime StartToDelivery { get; set; }
     public DateTime? StopToDelivery { get; set; }
     
@@ -33,7 +36,10 @@ public class Notification: IAuditedEntity
         Ways = input.Ways;
         TextBody = input.TextBody;
         HtmlBody = input.HtmlBody;
+        NormalizedTextBody = TextBody.NormalizeForComparison();
+        
         Title = input.Title;
+        NormalizedTitle = Title.NormalizeForComparison();
         StartToDelivery = input.StartToDelivery;
         StopToDelivery = input.StopToDelivery;
         
