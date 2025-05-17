@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Fin.Api.Notifications;
 
 [Route("notifications")]
-[Authorize]
+[Authorize(Roles = "Admin")]
 public class NotificationController(INotificationService service): ControllerBase
 {
     [HttpGet]
