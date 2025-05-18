@@ -1,4 +1,4 @@
-﻿namespace Fin.Infrastructure.Notifications;
+﻿namespace Fin.Application.Notifications.SchedulerServices;
 
 public static class NotificationBackgroundJobConsts
 {

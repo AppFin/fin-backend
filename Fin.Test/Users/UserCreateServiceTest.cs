@@ -3,6 +3,7 @@ using Fin.Application.Users.Dtos;
 using Fin.Application.Users.Enums;
 using Fin.Application.Users.Services;
 using Fin.Domain.Global;
+using Fin.Domain.Notifications.Entities;
 using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Entities;
@@ -598,7 +599,9 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
             resources.FakeConfiguration.Object,
             resources.FakeCache.Object,
             resources.FakeEmailSender.Object,
-            resources.FakeCodeGenerator.Object
+            resources.FakeCodeGenerator.Object,
+            resources.UserNotificationSettings,
+            resources.UserRememberUseSettings
         );
     }
 
@@ -609,6 +612,8 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
             CredentialRepository = GetRepository<UserCredential>(),
             UserRepository = GetRepository<User>(),
             TenantRepository = GetRepository<Tenant>(),
+            UserNotificationSettings = GetRepository<UserNotificationSettings>(),
+            UserRememberUseSettings = GetRepository<UserRememberUseSetting>(),
             FakeCache = new Mock<IRedisCacheService>(),
             FakeEmailSender = new Mock<IEmailSenderService>(),
             FakeConfiguration = new Mock<IConfiguration>(),
@@ -637,6 +642,8 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
         public IRepository<UserCredential> CredentialRepository { get; init; }
         public IRepository<User> UserRepository { get; init; }
         public IRepository<Tenant> TenantRepository { get; init; }
+        public IRepository<UserNotificationSettings> UserNotificationSettings { get; init; }
+        public IRepository<UserRememberUseSetting> UserRememberUseSettings { get; init; }
         public Mock<IRedisCacheService> FakeCache { get; init; }
         public Mock<IConfiguration> FakeConfiguration { get; init; }
         public Mock<IEmailSenderService> FakeEmailSender { get; init; }

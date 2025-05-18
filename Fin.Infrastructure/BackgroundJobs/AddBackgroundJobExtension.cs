@@ -1,5 +1,4 @@
-﻿using Fin.Infrastructure.Notifications;
-using Hangfire;
+﻿using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Fin.Infrastructure.BackgroundJobs;
@@ -10,8 +9,7 @@ public static class AddBackgroundJobExtension
     {
         services
             .AddHangfire(x => x.UseSqlServerStorage("DefaultConnection"))
-            .AddHangfireServer()
-            .AddNotifications();
+            .AddHangfireServer();
 
         return services;
     }

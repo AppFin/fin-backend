@@ -6,7 +6,7 @@ using Fin.Infrastructure.Database.Extensions;
 using Fin.Infrastructure.Database.Repositories;
 using Microsoft.EntityFrameworkCore;
 
-namespace Fin.Application.Notifications;
+namespace Fin.Application.Notifications.CrudServices;
 
 public interface INotificationService
 {

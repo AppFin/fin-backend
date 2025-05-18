@@ -10,6 +10,7 @@ public class NotificationOutput(Notification input)
     public string TextBody { get; set; } = input.TextBody;
     public string HtmlBody { get; set; } = input.HtmlBody;
     public string Title { get; set; } = input.Title;
+    public bool Continuous { get; set; } = input.Continuous;
     public DateTime StartToDelivery { get; set; } = input.StartToDelivery;
     public DateTime? StopToDelivery { get; set; } = input.StopToDelivery;
 }

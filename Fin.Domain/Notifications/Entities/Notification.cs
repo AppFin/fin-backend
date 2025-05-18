@@ -13,6 +13,7 @@ public class Notification: IAuditedEntity
     public string HtmlBody { get; set; }
     public string NormalizedTextBody { get; set; }
     public string Title { get; set; }
+    public bool Continuous { get; set; }
     public string NormalizedTitle { get; set; }
     public DateTime StartToDelivery { get; set; }
     public DateTime? StopToDelivery { get; set; }
@@ -37,7 +38,8 @@ public class Notification: IAuditedEntity
         TextBody = input.TextBody;
         HtmlBody = input.HtmlBody;
         NormalizedTextBody = TextBody.NormalizeForComparison();
-        
+        Continuous = input.Continuous;
+
         Title = input.Title;
         NormalizedTitle = Title.NormalizeForComparison();
         StartToDelivery = input.StartToDelivery;
@@ -56,6 +58,7 @@ public class Notification: IAuditedEntity
         Title = input.Title;
         StartToDelivery = input.StartToDelivery;
         StopToDelivery = input.StopToDelivery;
+        Continuous = input.Continuous;
 
         var updatedDeliveries = input.UserIds.Select(userId => new NotificationUserDelivery(userId, Id)).ToList();
         

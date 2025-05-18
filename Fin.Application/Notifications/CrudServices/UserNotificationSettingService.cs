@@ -1,12 +1,11 @@
-﻿using Fin.Application.Globals.Dtos;
-using Fin.Domain.Notifications.Dtos;
+﻿using Fin.Domain.Notifications.Dtos;
 using Fin.Domain.Notifications.Entities;
 using Fin.Infrastructure.AmbientDatas;
 using Fin.Infrastructure.AutoServices.Interfaces;
 using Fin.Infrastructure.Database.Repositories;
 using Microsoft.EntityFrameworkCore;
 
-namespace Fin.Application.Notifications;
+namespace Fin.Application.Notifications.CrudServices;
 
 public interface IUserNotificationSettingService
 {

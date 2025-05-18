@@ -8,6 +8,7 @@ public class NotificationInput
     public string TextBody { get; set; }
     public string HtmlBody { get; set; }
     public string Title { get; set; }
+    public bool Continuous { get; set; }
     public DateTime StartToDelivery { get; set; }
     public DateTime? StopToDelivery { get; set; }
     public List<Guid> UserIds { get; set; } = new();

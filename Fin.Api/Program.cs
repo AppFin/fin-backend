@@ -1,3 +1,4 @@
+using Fin.Application.Notifications.Extensions;
 using Fin.Infrastructure;
 using Fin.Infrastructure.AmbientDatas;
 using Fin.Infrastructure.Authentications;
@@ -8,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
     .AddInfrastructure(builder.Configuration)
+    .AddNotifications()
     .AddOpenApiDocument()
     .AddControllers();
 
