@@ -16,12 +16,12 @@ public static class AddInfrastructureExtension
         services
             .AddRedis(configuration)
             .AddFinAuthentication(configuration)
+            .AddBackgroundJobs(configuration)
             .AddAutoServices()
             .AddScoped<TokenBlacklistMiddleware>()
             .AddScoped<AmbientDataMiddleware>()
-            .AddDatabase(configuration)
-            .AddBackgroundJobs();
-        
+            .AddDatabase(configuration);
+
         return services;
     }
 }

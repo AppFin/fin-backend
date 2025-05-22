@@ -17,7 +17,7 @@ public interface IUserSchedulerService
 
 public class UserSchedulerService(
     IRepository<Notification> notificationRepository,
-    DateTimeProvider dateTimeProvider) : IUserSchedulerService, IAutoTransient
+    IDateTimeProvider dateTimeProvider) : IUserSchedulerService, IAutoTransient
 {
     public async Task ScheduleDailyNotifications()
     {
