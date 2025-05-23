@@ -1,4 +1,5 @@
-﻿using Fin.Application.Notifications.SchedulerServices;
+﻿using Fin.Application.Notifications.Hubs;
+using Fin.Application.Notifications.SchedulerServices;
 using Hangfire;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,6 +10,8 @@ public static class UseNotificationBackgroundJob
 {
     public static void UseNotifications(this WebApplication app)
     {
+        app.MapHub<NotificationHub>("/notifications");
+
         using var scope = app.Services.CreateScope();
 
         var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();

@@ -6,9 +6,9 @@ using Fin.Infrastructure.Errors;
 using Hangfire;
 var builder = WebApplication.CreateBuilder(args);
 
-
 builder.Services
     .AddInfrastructure(builder.Configuration)
+    .AddNotifications()
     .AddOpenApiDocument()
     .AddControllers();
 
