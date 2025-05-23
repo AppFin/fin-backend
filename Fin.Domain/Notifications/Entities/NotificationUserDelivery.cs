@@ -27,7 +27,7 @@ public class NotificationUserDelivery
         Delivery = true;
     }
     
-    public void MarkAsNotVisualized()
+    public void MarkAsVisualized()
     {
         Delivery = true;
     }

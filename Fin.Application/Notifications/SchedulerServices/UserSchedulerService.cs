@@ -17,7 +17,8 @@ public interface IUserSchedulerService
 
 public class UserSchedulerService(
     IRepository<Notification> notificationRepository,
-    IDateTimeProvider dateTimeProvider) : IUserSchedulerService, IAutoTransient
+    IDateTimeProvider dateTimeProvider,
+    IRecurringJobManager recurringJobManager) : IUserSchedulerService, IAutoTransient
 {
     public async Task ScheduleDailyNotifications()
     {
@@ -44,9 +45,12 @@ public class UserSchedulerService(
     {
         foreach (var userDelivery in notification.UserDeliveries)
         {
+            var jobId = $"{notification.Id}-{userDelivery.UserId}";
+
+            BackgroundJob.Delete(jobId);
             BackgroundJob.Schedule<INotificationDeliveryService>(
-                "",
-                service => service.SendNotification(new NotifyUserDto(notification, userDelivery)),
+                jobId,
+                service => service.SendNotification(new NotifyUserDto(notification, userDelivery), true),
                 notification.StartToDelivery);
         }
     }
