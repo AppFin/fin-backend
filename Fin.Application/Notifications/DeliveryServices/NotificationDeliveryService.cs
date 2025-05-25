@@ -97,6 +97,8 @@ public class NotificationDeliveryService(
 
     private async Task SendPush(NotifyUserDto notify, UserNotificationSettings userSettings, bool autoSave)
     {
+        await hubContext.Clients.User(userSettings.UserId.ToString()).SendAsync(SEND_NOTIFICATION_ACTION, notify);
+
         var messages = userSettings.FirebaseTokens
             .Select(t => new Message
             {
@@ -116,14 +118,14 @@ public class NotificationDeliveryService(
             })
             .ToList();
 
+        if (!messages.Any()) return;
+
         var tokensToRemove = await firebaseNotification.SendPushNotificationAsync(messages);
         if (tokensToRemove.Any())
         {
             userSettings.RemoveTokens(tokensToRemove);
             await userSettingsRepository.UpdateAsync(userSettings, autoSave);
         }
-
-        await hubContext.Clients.User(userSettings.UserId.ToString()).SendAsync(SEND_NOTIFICATION_ACTION, notify);
     }
 
     private async Task SendEmail(NotifyUserDto notification)
