@@ -10,7 +10,8 @@ public class UserNotificationSettings: IAuditedTenantEntity
     public Guid UserId { get; set; }
     public bool Enabled { get; set; }
     public List<NotificationWay> AllowedWays { get; set; }
-    
+    public List<string> FirebaseTokens { get; set; }
+
     public virtual User User { get; set; }
 
     public Guid Id { get; set; }
@@ -47,5 +48,17 @@ public class UserNotificationSettings: IAuditedTenantEntity
     {
         Enabled = input.Enabled;
         AllowedWays = input.AllowedWays;
+    }
+
+    public bool AddTokenIfNotExist(string token)
+    {
+        if (FirebaseTokens.Contains(token)) return false;
+        FirebaseTokens.Add(token);
+        return true;
+    }
+
+    public void RemoveTokens(List<string> tokens)
+    {
+        FirebaseTokens = FirebaseTokens.Except(tokens).ToList();
     }
 }

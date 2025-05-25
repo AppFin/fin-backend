@@ -15,7 +15,7 @@ public static class NotificationEntityConfiguration
         {
             n.HasKey(x => x.Id);
             n.Property(x => x.Ways)
-                .HasConversion<EnumListToStringConverter<NotificationWay>>();
+                .HasConversion<ListToStringConverter<NotificationWay>>();
             n.Property(x => x.Title)
                 .HasMaxLength(250);
             
@@ -45,7 +45,9 @@ public static class NotificationEntityConfiguration
         {
             n.HasKey(x => x.Id);
             n.Property(x => x.AllowedWays)
-                .HasConversion<EnumListToStringConverter<NotificationWay>>();
+                .HasConversion<ListToStringConverter<NotificationWay>>();
+            n.Property(x => x.FirebaseTokens)
+                .HasConversion<ListToStringConverter>();
             n.HasOne(u => u.User)
                 .WithMany()
                 .HasForeignKey(u => u.UserId);
@@ -55,9 +57,9 @@ public static class NotificationEntityConfiguration
         {
             n.HasKey(x => x.Id);
             n.Property(x => x.Ways)
-                .HasConversion<EnumListToStringConverter<NotificationWay>>();
+                .HasConversion<ListToStringConverter<NotificationWay>>();
             n.Property(x => x.WeekDays)
-                .HasConversion<EnumListToStringConverter<DayOfWeek>>();
+                .HasConversion<ListToStringConverter<DayOfWeek>>();
             n.HasOne(u => u.User)
                 .WithMany()
                 .HasForeignKey(u => u.UserId);

@@ -22,4 +22,12 @@ public class UserNotificationSettingsController(IUserNotificationSettingService 
         if (success) return Ok();
         return UnprocessableEntity();  
     }
+
+    [HttpPost("add-firebase-token/{token}")]
+    public async Task<ActionResult> AddFirebaseToken([FromRoute] string token)
+    {
+        var success = await service.AddFirebaseToken(token, true);
+        if (success) return Ok();
+        return UnprocessableEntity();
+    }
 }

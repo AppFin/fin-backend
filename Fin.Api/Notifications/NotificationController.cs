@@ -1,4 +1,5 @@
 ﻿using Fin.Application.Notifications.CrudServices;
+using Fin.Application.Notifications.DeliveryServices;
 using Fin.Domain.Global.Classes;
 using Fin.Domain.Notifications.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -8,7 +9,10 @@ namespace Fin.Api.Notifications;
 
 [Route("notifications")]
 [Authorize(Roles = "Admin")]
-public class NotificationController(INotificationService service): ControllerBase
+public class NotificationController(
+    INotificationService service,
+    INotificationDeliveryService deliveryService
+    ): ControllerBase
 {
     [HttpGet]
     public async Task<PagedOutput<NotificationOutput>> GetList([FromQuery] PagedFilteredAndSortedInput input)
@@ -42,5 +46,13 @@ public class NotificationController(INotificationService service): ControllerBas
     {
         var deleted = await service.Delete(id, true);
         return deleted  ? Ok() : UnprocessableEntity();   
+    }
+
+    [HttpPut("mark-visualized/{notificationId:guid}")]
+    [Authorize]
+    public async Task<ActionResult> MarkVisualized([FromRoute] Guid notificationId)
+    {
+        var marked = await deliveryService.MarkAsVisualized(notificationId);
+        return marked  ? Ok() : NotFound();
     }
 }

@@ -3,6 +3,7 @@ using Fin.Infrastructure.Authentications;
 using Fin.Infrastructure.AutoServices.Extensions;
 using Fin.Infrastructure.BackgroundJobs;
 using Fin.Infrastructure.Database.Extensions;
+using Fin.Infrastructure.Firebases;
 using Fin.Infrastructure.Redis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,7 +21,8 @@ public static class AddInfrastructureExtension
             .AddAutoServices()
             .AddScoped<TokenBlacklistMiddleware>()
             .AddScoped<AmbientDataMiddleware>()
-            .AddDatabase(configuration);
+            .AddDatabase(configuration)
+            .AddFirebase(configuration);
 
         return services;
     }

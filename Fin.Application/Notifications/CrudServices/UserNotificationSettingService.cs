@@ -11,6 +11,7 @@ public interface IUserNotificationSettingService
 {
     public Task<UserNotificationSettingsOutput> GetByCurrentUser();
     public Task<bool> UpdateByCurrentUser(UserNotificationSettingsInput input, bool autoSave = false);
+    public Task<bool> AddFirebaseToken(string token, bool autoSave = false);
 }
 
 public class UserNotificationSettingService(IRepository<UserNotificationSettings> repository, IAmbientData ambientData)
@@ -32,5 +33,17 @@ public class UserNotificationSettingService(IRepository<UserNotificationSettings
         setting.Update(input);
         await repository.UpdateAsync(setting, autoSave);
         return true;       
+    }
+
+    public async Task<bool> AddFirebaseToken(string token, bool autoSave = false)
+    {
+        var setting = await repository.Query()
+            .FirstOrDefaultAsync(u => u.UserId == ambientData.UserId);
+        if (setting == null) return false;
+
+        var add = setting.AddTokenIfNotExist(token);
+        if (add)
+            await repository.UpdateAsync(setting, autoSave);
+        return true;
     }
 }
