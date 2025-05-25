@@ -13,6 +13,8 @@ namespace Fin.Application.Notifications.SchedulerServices;
 public interface IUserSchedulerService
 {
     public Task ScheduleDailyNotifications();
+    public void ScheduleNotification(Notification notification);
+    public void UnscheduleNotification(Guid notificationId, List<Guid> userIds);
 }
 
 public class UserSchedulerService(
@@ -37,15 +39,15 @@ public class UserSchedulerService(
         {
             notification.UserDeliveries =
                 new Collection<NotificationUserDelivery>(notification.UserDeliveries.Where(n => !n.Delivery).ToList());
-            SchedulerNotification(notification);
+            ScheduleNotification(notification);
         }
     }
 
-    private void SchedulerNotification(Notification notification)
+    public void ScheduleNotification(Notification notification)
     {
         foreach (var userDelivery in notification.UserDeliveries)
         {
-            var jobId = $"{notification.Id}-{userDelivery.UserId}";
+            var jobId = GetJobIb(notification.Id, userDelivery.UserId);;
 
             BackgroundJob.Delete(jobId);
             BackgroundJob.Schedule<INotificationDeliveryService>(
@@ -53,5 +55,18 @@ public class UserSchedulerService(
                 service => service.SendNotification(new NotifyUserDto(notification, userDelivery), true),
                 notification.StartToDelivery);
         }
+    }
+
+    public void UnscheduleNotification(Guid notificationId, List<Guid> userIds)
+    {
+        foreach (var userId in userIds)
+        {
+            BackgroundJob.Delete(GetJobIb(notificationId, userId));
+        }
+    }
+
+    private string GetJobIb(Guid notificationId, Guid userId)
+    {
+        return $"notification:{notificationId}/user:{userId}";
     }
 }

@@ -1,10 +1,13 @@
-﻿using Fin.Domain.Global.Classes;
+﻿using Fin.Application.Notifications.SchedulerServices;
+using Fin.Domain.Global.Classes;
 using Fin.Domain.Notifications.Dtos;
 using Fin.Domain.Notifications.Entities;
 using Fin.Infrastructure.AutoServices.Interfaces;
 using Fin.Infrastructure.Database.Extensions;
 using Fin.Infrastructure.Database.Repositories;
+using Fin.Infrastructure.DateTimes;
 using Microsoft.EntityFrameworkCore;
+using SQLitePCL;
 
 namespace Fin.Application.Notifications.CrudServices;
 
@@ -17,7 +20,12 @@ public interface INotificationService
     public Task<bool> Delete(Guid id, bool autoSave = false);
 }
 
-public class NotificationService(IRepository<Notification> repository, IRepository<NotificationUserDelivery> deliveriesRepository) : INotificationService, IAutoTransient
+public class NotificationService(
+    IRepository<Notification> repository,
+    IRepository<NotificationUserDelivery> deliveriesRepository,
+    IDateTimeProvider dateTimeProvider,
+    IUserSchedulerService _schedulerService
+    ) : INotificationService, IAutoTransient
 {
     public async Task<NotificationOutput> Get(Guid id)
     {
@@ -38,6 +46,11 @@ public class NotificationService(IRepository<Notification> repository, IReposito
     {
         var notification = new Notification(input);
         await repository.AddAsync(notification, autoSave);
+
+        var forToday = IsNotificationForToday(notification.StartToDelivery);
+        if (forToday)
+            _schedulerService.ScheduleNotification(notification);
+
         return new NotificationOutput(notification);
     }
 
@@ -47,10 +60,15 @@ public class NotificationService(IRepository<Notification> repository, IReposito
             .Include(u => u.UserDeliveries)
             .FirstOrDefaultAsync(u => u.Id == id);
         if (notification == null) return false;
-        
+
+        var isOldForToday = IsNotificationForToday(notification.StartToDelivery);
+        var isNewForToday = IsNotificationForToday(input.StartToDelivery);
+
+        var oldDeliveries = notification.UserDeliveries.Select(d => d.UserId).ToList();
+
         var toDeleteDeliveries = notification.UpdateAndReturnToRemoveDeliveries(input);
         var toDeleteDeliveriesIds = toDeleteDeliveries.Select(d => d.UserId).ToList();
-        
+
         await repository.UpdateAsync(notification);
         await deliveriesRepository.Query()
             .Where(d => d.NotificationId == notification.Id && toDeleteDeliveriesIds.Contains(d.UserId))
@@ -58,6 +76,16 @@ public class NotificationService(IRepository<Notification> repository, IReposito
 
         if (autoSave)
             await repository.SaveChangesAsync();
+
+        if (isOldForToday && !isNewForToday)
+            _schedulerService.UnscheduleNotification(notification.Id, oldDeliveries);
+        else if (!isOldForToday && isNewForToday)
+            _schedulerService.ScheduleNotification(notification);
+        else if (isOldForToday && isNewForToday)
+        {
+            _schedulerService.UnscheduleNotification(notification.Id, toDeleteDeliveriesIds);
+            _schedulerService.ScheduleNotification(notification);
+        }
         
         return true;   
     }
@@ -65,10 +93,22 @@ public class NotificationService(IRepository<Notification> repository, IReposito
     public async Task<bool> Delete(Guid id, bool autoSave = false)
     {
         var notification = await repository.Query()
+            .Include(n => n.UserDeliveries)
             .FirstOrDefaultAsync(u => u.Id == id);
         if (notification == null) return false;
 
+        var forToday = IsNotificationForToday(notification.StartToDelivery);
+        if (forToday)
+            _schedulerService.UnscheduleNotification(notification.Id, notification.UserDeliveries.Select(d => d.UserId).ToList());
+
         await repository.DeleteAsync(notification, autoSave);
         return true;
+    }
+
+    private bool IsNotificationForToday(DateTime notificationDate)
+    {
+        var now = dateTimeProvider.UtcNow();
+        var endOfDay = now.Date.AddDays(1).AddTicks(-1);
+        return notificationDate >= now && notificationDate <= endOfDay;
     }
 }
