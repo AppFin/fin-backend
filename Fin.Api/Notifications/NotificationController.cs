@@ -1,5 +1,5 @@
-﻿using Fin.Application.Notifications.CrudServices;
-using Fin.Application.Notifications.DeliveryServices;
+﻿using Fin.Application.Notifications.Services.CrudServices;
+using Fin.Application.Notifications.Services.DeliveryServices;
 using Fin.Domain.Global.Classes;
 using Fin.Domain.Notifications.Dtos;
 using Microsoft.AspNetCore.Authorization;
@@ -54,5 +54,12 @@ public class NotificationController(
     {
         var marked = await deliveryService.MarkAsVisualized(notificationId);
         return marked  ? Ok() : NotFound();
+    }
+
+    [HttpPut("get-unvisualized-notifications")]
+    [Authorize]
+    public async Task<ActionResult<List<NotifyUserDto>>> GetUnvisualizedNotification()
+    {
+        return await deliveryService.GetUnvisualizedNotifications();
     }
 }

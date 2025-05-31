@@ -1,5 +1,5 @@
 ﻿using System.Collections.ObjectModel;
-using Fin.Application.Notifications.DeliveryServices;
+using Fin.Application.Notifications.Services.DeliveryServices;
 using Fin.Domain.Notifications.Dtos;
 using Fin.Domain.Notifications.Entities;
 using Fin.Infrastructure.AutoServices.Interfaces;
@@ -8,7 +8,7 @@ using Fin.Infrastructure.DateTimes;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 
-namespace Fin.Application.Notifications.SchedulerServices;
+namespace Fin.Application.Notifications.Services.SchedulerServices;
 
 public interface IUserSchedulerService
 {

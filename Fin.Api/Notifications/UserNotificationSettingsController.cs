@@ -1,4 +1,4 @@
-﻿using Fin.Application.Notifications.CrudServices;
+﻿using Fin.Application.Notifications.Services.CrudServices;
 using Fin.Domain.Notifications.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

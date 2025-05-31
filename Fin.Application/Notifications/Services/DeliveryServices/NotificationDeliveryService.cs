@@ -8,6 +8,7 @@ using Fin.Infrastructure.AmbientDatas;
 using Fin.Infrastructure.Authentications.Consts;
 using Fin.Infrastructure.AutoServices.Interfaces;
 using Fin.Infrastructure.Database.Repositories;
+using Fin.Infrastructure.DateTimes;
 using Fin.Infrastructure.EmailSenders;
 using Fin.Infrastructure.Firebases;
 using FirebaseAdmin.Messaging;
@@ -16,12 +17,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Notification = FirebaseAdmin.Messaging.Notification;
 
-namespace Fin.Application.Notifications.DeliveryServices;
+namespace Fin.Application.Notifications.Services.DeliveryServices;
 
 public interface INotificationDeliveryService
 {
     public Task SendNotification(NotifyUserDto notifyUser, bool autoSave = true);
     public Task<bool> MarkAsVisualized(Guid notificationId, bool autoSave = true);
+    public Task<List<NotifyUserDto>> GetUnvisualizedNotifications(bool autoSave = true);
 }
 
 public class NotificationDeliveryService(
@@ -30,6 +32,7 @@ public class NotificationDeliveryService(
     IRepository<UserNotificationSettings> userSettingsRepository,
     IConfiguration configuration,
     IAmbientData ambientData,
+    IDateTimeProvider _dateTimeProvider,
 
     IHubContext<NotificationHub> hubContext,
     IEmailSenderService emailSenderService,
@@ -93,6 +96,33 @@ public class NotificationDeliveryService(
         notification.MarkAsVisualized();
         await deliveryRepository.UpdateAsync(notification, autoSave);
         return true;
+    }
+
+    public async Task<List<NotifyUserDto>> GetUnvisualizedNotifications(bool autoSave = true)
+    {
+        var userId = ambientData.UserId;
+        var now = _dateTimeProvider.UtcNow();
+
+        var notificationsQuery = deliveryRepository.Query()
+            .Include(u => u.Notification)
+            .Where(n => !n.Visualized && n.UserId == userId)
+            .Where(n => n.Notification.StartToDelivery >= now)
+            .Where(n => !n.Notification.StopToDelivery.HasValue ||
+                        n.Notification.StopToDelivery.Value <= now)
+            .Where(n => n.Notification.Ways.Contains(NotificationWay.Push) ||
+                        n.Notification.Ways.Contains(NotificationWay.Message) ||
+                        n.Notification.Ways.Contains(NotificationWay.Snack));
+
+        var notifications = await notificationsQuery
+            .Select(n => new NotifyUserDto(n.Notification, n))
+            .ToListAsync();
+
+        await notificationsQuery
+            .ExecuteUpdateAsync(x => x
+                .SetProperty(a => a.Visualized, true));
+        if (autoSave) await deliveryRepository.SaveChangesAsync();
+
+        return notifications;
     }
 
     private async Task SendPush(NotifyUserDto notify, UserNotificationSettings userSettings, bool autoSave)

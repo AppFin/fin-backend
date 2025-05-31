@@ -1,4 +1,4 @@
-﻿using Fin.Application.Notifications.SchedulerServices;
+﻿using Fin.Application.Notifications.Services.SchedulerServices;
 using Fin.Domain.Global.Classes;
 using Fin.Domain.Notifications.Dtos;
 using Fin.Domain.Notifications.Entities;
@@ -7,9 +7,8 @@ using Fin.Infrastructure.Database.Extensions;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.DateTimes;
 using Microsoft.EntityFrameworkCore;
-using SQLitePCL;
 
-namespace Fin.Application.Notifications.CrudServices;
+namespace Fin.Application.Notifications.Services.CrudServices;
 
 public interface INotificationService
 {

@@ -4,7 +4,4 @@ namespace Fin.Application.Notifications.Hubs;
 
 public class NotificationHub: Hub
 {
-    public void GetNotifications()
-    {
-    }
 }

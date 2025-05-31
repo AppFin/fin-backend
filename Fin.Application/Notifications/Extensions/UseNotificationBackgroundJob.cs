@@ -1,5 +1,5 @@
 ﻿using Fin.Application.Notifications.Hubs;
-using Fin.Application.Notifications.SchedulerServices;
+using Fin.Application.Notifications.Services.SchedulerServices;
 using Hangfire;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;

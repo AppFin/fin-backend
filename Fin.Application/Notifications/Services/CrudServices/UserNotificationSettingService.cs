@@ -5,7 +5,7 @@ using Fin.Infrastructure.AutoServices.Interfaces;
 using Fin.Infrastructure.Database.Repositories;
 using Microsoft.EntityFrameworkCore;
 
-namespace Fin.Application.Notifications.CrudServices;
+namespace Fin.Application.Notifications.Services.CrudServices;
 
 public interface IUserNotificationSettingService
 {
