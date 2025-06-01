@@ -20,10 +20,12 @@ public interface IUserSchedulerService
 public class UserSchedulerService(
     IRepository<Notification> notificationRepository,
     IDateTimeProvider dateTimeProvider,
-    IRecurringJobManager recurringJobManager) : IUserSchedulerService, IAutoTransient
+    IUserRememberUseSchedulerService rememberUseSchedulerService) : IUserSchedulerService, IAutoTransient
 {
     public async Task ScheduleDailyNotifications()
     {
+        await rememberUseSchedulerService.ScheduleTodayNotification();
+
         var startOfDay = dateTimeProvider.UtcNow().Date;
         var endOfDay = startOfDay.AddDays(1).AddTicks(-1);
 

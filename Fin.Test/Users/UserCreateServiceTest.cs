@@ -560,7 +560,9 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
         var tenant = await resources.TenantRepository.Query(false).Include(t => t.Users).FirstAsync();
         var credential = await resources.CredentialRepository.Query(false).FirstAsync();
         var user = await resources.UserRepository.Query(false).FirstAsync();
-        
+        var notificationSettings = await resources.UserNotificationSettings.Query(false).FirstAsync();
+        var userRemember = await resources.UserRememberUseSettings.Query(false).FirstAsync();
+
         credential.EncryptedEmail.Should().Be(process.EncryptedEmail);
         credential.EncryptedPassword.Should().Be(process.EncryptedPassword);
         credential.FailLoginAttempts.Should().Be(0);
@@ -579,7 +581,10 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
         tenant.Locale.Should().Be("pt-Br");
         tenant.Timezone.Should().Be("America/Sao_Paulo");
         tenant.Users.First().Id.Should().Be(user.Id);
-        
+
+        notificationSettings.UserId.Should().Be(user.Id);
+        userRemember.UserId.Should().Be(user.Id);
+
         resources.FakeCache
             .Verify(c => c.GetAsync<UserCreateProcessDto>(It.Is<string>(k => k.Contains(process.Token))), Times.Once);
         DateTimeProvider.Verify(d => d.UtcNow(), Times.Once);
