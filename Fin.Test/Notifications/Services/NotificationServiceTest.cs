@@ -89,7 +89,7 @@ public class NotificationServiceTest : TestUtils.BaseTestWithContext
         var input = new NotificationInput
         {
             Title = "Test",
-            StartToDelivery = TestUtils.UtcDateTimes[0].AddHours(1) // Date is for "today"
+            StartToDelivery = TestUtils.UtcDateTimes[0].AddHours(1) //
         };
 
         // Act
@@ -116,7 +116,7 @@ public class NotificationServiceTest : TestUtils.BaseTestWithContext
         var input = new NotificationInput
         {
             Title = "Test",
-            StartToDelivery = TestUtils.UtcDateTimes[0].AddDays(2) // Date is NOT for "today"
+            StartToDelivery = TestUtils.UtcDateTimes[0].AddDays(2)
         };
 
         // Act
@@ -232,10 +232,10 @@ public class NotificationServiceTest : TestUtils.BaseTestWithContext
 
         // Assert
         result.Should().BeTrue();
-        // Unschedule should be called only for the removed user
+
         resources.FakeSchedulerService
             .Verify(s => s.UnscheduleNotification(notification.Id, It.Is<List<Guid>>(l => l.Count == 1 && l.Contains(TestUtils.Guids[2]))), Times.Once);
-        // Schedule should be called for the whole updated notification
+
         resources.FakeSchedulerService
             .Verify(s => s.ScheduleNotification(It.Is<Notification>(n => n.Id == notification.Id)), Times.Once);
     }

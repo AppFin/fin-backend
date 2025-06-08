@@ -8,7 +8,7 @@ namespace Fin.Domain.Notifications.Entities;
 
 public class Notification: IAuditedEntity
 {
-    public List<NotificationWay> Ways { get; set; }
+    public List<NotificationWay> Ways { get; set; } = [];
     public string TextBody { get; set; }
     public string HtmlBody { get; set; }
     public string NormalizedTextBody { get; set; }

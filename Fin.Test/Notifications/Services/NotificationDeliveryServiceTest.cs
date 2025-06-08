@@ -42,8 +42,13 @@ public class NotificationDeliveryServiceTest : TestUtils.BaseTestWithContext
         var resources = GetResources();
         var service = GetService(resources);
 
-        var notifyDto = new NotifyUserDto { NotificationId = TestUtils.Guids[1], UserId = TestUtils.Guids[2] };
-        var delivery = new NotificationUserDelivery(notifyDto.NotificationId, notifyDto.UserId);
+        await ConfigureLoggedAmbientAsync();
+
+        var notifyDto = new NotifyUserDto { NotificationId = TestUtils.Guids[1], UserId = AmbientData.UserId.Value };
+        var delivery = new NotificationUserDelivery(notifyDto.UserId, notifyDto.NotificationId)
+        {
+            Notification = new Notification { Id = notifyDto.NotificationId }
+        };
         await resources.DeliveryRepository.AddAsync(delivery, true);
 
         // Act & Assert
@@ -57,8 +62,15 @@ public class NotificationDeliveryServiceTest : TestUtils.BaseTestWithContext
         var resources = GetResources();
         var service = GetService(resources);
 
-        var notifyDto = new NotifyUserDto { NotificationId = TestUtils.Guids[1], UserId = TestUtils.Guids[2], Ways = [NotificationWay.Snack]};
-        var delivery = new NotificationUserDelivery(notifyDto.NotificationId, notifyDto.UserId);
+        await ConfigureLoggedAmbientAsync();
+
+        var userId = AmbientData.UserId.Value;
+
+        var notifyDto = new NotifyUserDto { NotificationId = TestUtils.Guids[1], UserId = userId, Ways = [NotificationWay.Snack]};
+        var delivery = new NotificationUserDelivery(notifyDto.UserId, notifyDto.NotificationId)
+        {
+            Notification = new Notification { Id = notifyDto.NotificationId }
+        };
         var settings = new UserNotificationSettings() { UserId = notifyDto.UserId };
         await resources.DeliveryRepository.AddAsync(delivery, true);
         await resources.UserSettingsRepository.AddAsync(settings, true);
@@ -79,12 +91,19 @@ public class NotificationDeliveryServiceTest : TestUtils.BaseTestWithContext
         var resources = GetResources();
         var service = GetService(resources);
 
-        var userId = TestUtils.Guids[1];
+        await ConfigureLoggedAmbientAsync();
+
+        var userId = AmbientData.UserId.Value;
+
         var token1 = "valid-token";
         var token2 = "invalid-token";
 
-        var notifyDto = new NotifyUserDto { NotificationId = TestUtils.Guids[1], UserId = userId, Ways = [NotificationWay.Push]};
-        var delivery = new NotificationUserDelivery(notifyDto.NotificationId, userId);
+        var notifyDto = new NotifyUserDto
+            { NotificationId = TestUtils.Guids[1], UserId = userId, Ways = [NotificationWay.Push] };
+        var delivery = new NotificationUserDelivery(userId, notifyDto.NotificationId)
+        {
+            Notification = new Notification { Id = notifyDto.NotificationId }
+        };
         var settings = new UserNotificationSettings() { UserId = notifyDto.UserId, Enabled = true, AllowedWays = [NotificationWay.Push]};
         settings.AddTokenIfNotExist(token1);
         settings.AddTokenIfNotExist(token2);
@@ -115,12 +134,17 @@ public class NotificationDeliveryServiceTest : TestUtils.BaseTestWithContext
         var resources = GetResources();
         var service = GetService(resources);
 
-        var userId = TestUtils.Guids[1];
+        await ConfigureLoggedAmbientAsync();
+
+        var userId = AmbientData.UserId.Value;
         var email = "test@email.com";
         var encryptedEmail = resources.CryptoHelper.Encrypt(email);
 
         var notifyDto = new NotifyUserDto { NotificationId = TestUtils.Guids[1], UserId = userId, Ways = [NotificationWay.Email], Title = "Email Title", HtmlBody = "<p>Email Body</p>"};
-        var delivery = new NotificationUserDelivery(notifyDto.NotificationId, userId);
+        var delivery = new NotificationUserDelivery(userId, notifyDto.NotificationId)
+        {
+            Notification = new Notification { Id = notifyDto.NotificationId }
+        };
         var settings = new UserNotificationSettings() { UserId = userId, Enabled = true, AllowedWays = [NotificationWay.Email]};
         var credential = new UserCredential(userId, encryptedEmail, null);
 
@@ -155,6 +179,8 @@ public class NotificationDeliveryServiceTest : TestUtils.BaseTestWithContext
     public async Task MarkAsVisualized_ShouldReturnFalse_WhenDeliveryNotFound()
     {
         // Arrange
+        await ConfigureLoggedAmbientAsync();
+
         var resources = GetResources();
         var service = GetService(resources);
 
@@ -176,7 +202,10 @@ public class NotificationDeliveryServiceTest : TestUtils.BaseTestWithContext
         var userId = AmbientData.UserId.Value;
         var notificationId = TestUtils.Guids[1];
 
-        var delivery = new NotificationUserDelivery(notificationId, userId);
+        var delivery = new NotificationUserDelivery(userId, notificationId)
+        {
+            Notification = new Notification { Id = notificationId }
+        };
         await resources.DeliveryRepository.AddAsync(delivery, true);
 
         // Act
@@ -205,16 +234,16 @@ public class NotificationDeliveryServiceTest : TestUtils.BaseTestWithContext
         DateTimeProvider.Setup(d => d.UtcNow()).Returns(now);
 
         // 1. Active & Unvisualized (Should be returned)
-        var activeNotification = new Notification { StartToDelivery = now.AddHours(-1), Ways = [NotificationWay.Message]};
-        var activeDelivery = new NotificationUserDelivery(activeNotification.Id, userId) { Notification = activeNotification, Visualized = false };
+        var activeNotification = new Notification { Id = TestUtils.Guids[0], StartToDelivery = now.AddHours(-1), Ways = [NotificationWay.Message]};
+        var activeDelivery = new NotificationUserDelivery(userId, activeNotification.Id) { Notification = activeNotification, Visualized = false };
 
         // 2. Already Visualized
-        var visualizedNotification = new Notification { StartToDelivery = now.AddHours(-1) };
-        var visualizedDelivery = new NotificationUserDelivery(visualizedNotification.Id, userId) { Notification = visualizedNotification, Visualized = true };
+        var visualizedNotification = new Notification { StartToDelivery = now.AddHours(-1), Ways = [NotificationWay.Message] };
+        var visualizedDelivery = new NotificationUserDelivery(userId, visualizedNotification.Id) { Notification = visualizedNotification, Visualized = true };
 
         // 3. Not yet started
-        var futureNotification = new Notification { StartToDelivery = now.AddHours(1) };
-        var futureDelivery = new NotificationUserDelivery(futureNotification.Id, userId) { Notification = futureNotification, Visualized = false };
+        var futureNotification = new Notification { StartToDelivery = now.AddDays(1), Ways = [NotificationWay.Message] };
+        var futureDelivery = new NotificationUserDelivery(userId, futureNotification.Id) { Notification = futureNotification, Visualized = false };
 
         await resources.DeliveryRepository.AddRangeAsync([activeDelivery, visualizedDelivery, futureDelivery], true);
 
@@ -249,7 +278,6 @@ public class NotificationDeliveryServiceTest : TestUtils.BaseTestWithContext
 
     private Resources GetResources()
     {
-        // Mocking IHubContext is multi-layered
         var fakeClientProxy = new Mock<IClientProxy>();
         var fakeHubClients = new Mock<IHubClients>();
         fakeHubClients.Setup(c => c.User(It.IsAny<string>())).Returns(fakeClientProxy.Object);

@@ -29,6 +29,6 @@ public class NotificationUserDelivery
     
     public void MarkAsVisualized()
     {
-        Delivery = true;
+        Visualized = true;
     }
 }

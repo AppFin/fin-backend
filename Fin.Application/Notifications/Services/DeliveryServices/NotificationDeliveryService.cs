@@ -103,26 +103,28 @@ public class NotificationDeliveryService(
         var userId = ambientData.UserId;
         var now = _dateTimeProvider.UtcNow();
 
-        var notificationsQuery = deliveryRepository.Query()
+        var notifications = await deliveryRepository.Query(tracking: false)
             .Include(u => u.Notification)
             .Where(n => !n.Visualized && n.UserId == userId)
-            .Where(n => n.Notification.StartToDelivery >= now)
+            .Where(n => n.Notification.StartToDelivery <= now)
             .Where(n => !n.Notification.StopToDelivery.HasValue ||
-                        n.Notification.StopToDelivery.Value <= now)
+                        n.Notification.StopToDelivery.Value >= now)
+            .ToListAsync();
+        var userNotification = notifications
             .Where(n => n.Notification.Ways.Contains(NotificationWay.Push) ||
                         n.Notification.Ways.Contains(NotificationWay.Message) ||
-                        n.Notification.Ways.Contains(NotificationWay.Snack));
-
-        var notifications = await notificationsQuery
+                        n.Notification.Ways.Contains(NotificationWay.Snack))
             .Select(n => new NotifyUserDto(n.Notification, n))
-            .ToListAsync();
+            .ToList();
 
-        await notificationsQuery
+        await deliveryRepository.Query()
+            .Where(n => userNotification.Select(u => u.NotificationId).Contains(n.NotificationId))
             .ExecuteUpdateAsync(x => x
                 .SetProperty(a => a.Visualized, true));
+
         if (autoSave) await deliveryRepository.SaveChangesAsync();
 
-        return notifications;
+        return userNotification;
     }
 
     private async Task SendPush(NotifyUserDto notify, UserNotificationSettings userSettings, bool autoSave)
