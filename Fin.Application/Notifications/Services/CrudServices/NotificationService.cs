@@ -68,13 +68,7 @@ public class NotificationService(
         var toDeleteDeliveries = notification.UpdateAndReturnToRemoveDeliveries(input);
         var toDeleteDeliveriesIds = toDeleteDeliveries.Select(d => d.UserId).ToList();
 
-        await repository.UpdateAsync(notification);
-        await deliveriesRepository.Query()
-            .Where(d => d.NotificationId == notification.Id && toDeleteDeliveriesIds.Contains(d.UserId))
-            .ExecuteDeleteAsync();
-
-        if (autoSave)
-            await repository.SaveChangesAsync();
+        await repository.UpdateAsync(notification, autoSave);
 
         if (isOldForToday && !isNewForToday)
             _schedulerService.UnscheduleNotification(notification.Id, oldDeliveries);

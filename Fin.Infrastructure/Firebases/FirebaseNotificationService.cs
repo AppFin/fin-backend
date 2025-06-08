@@ -8,11 +8,12 @@ public interface IFirebaseNotificationService
     Task<List<string>> SendPushNotificationAsync(List<Message> messages);
 }
 
-public class FirebaseNotificationService: IFirebaseNotificationService, IAutoTransient
+public class FirebaseNotificationService(IFirebaseClient firebaseClient): IFirebaseNotificationService, IAutoTransient
 {
     public async Task<List<string>> SendPushNotificationAsync(List<Message> messages)
     {
-        var response = await FirebaseMessaging.DefaultInstance.SendEachAsync(messages);
+        var (failureCount, responses) = await firebaseClient.SendEachAsync(messages);
+
         var toRemoveTokenErrors = new List<MessagingErrorCode>
         {
             MessagingErrorCode.InvalidArgument,
@@ -21,11 +22,12 @@ public class FirebaseNotificationService: IFirebaseNotificationService, IAutoTra
         };
 
         var tokensToRemove = new List<string>();
-        for (var i = 0; i < response.FailureCount; i++)
+        for (var i = 0; i < responses.Count; i++)
         {
-            var result = response.Responses[i];
+            var result = responses[i];
             if (result.IsSuccess) continue;
-            var errorCode = result.Exception?.MessagingErrorCode;
+
+            var errorCode = result.ErrorCode;
             var token = messages[i].Token;
 
             if (!errorCode.HasValue || !toRemoveTokenErrors.Contains(errorCode.Value)) continue;

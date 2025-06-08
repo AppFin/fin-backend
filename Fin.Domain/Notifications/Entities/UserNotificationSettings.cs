@@ -10,7 +10,7 @@ public class UserNotificationSettings: IAuditedTenantEntity
     public Guid UserId { get; set; }
     public bool Enabled { get; set; }
     public List<NotificationWay> AllowedWays { get; set; }
-    public List<string> FirebaseTokens { get; set; }
+    public List<string> FirebaseTokens { get; set; } = [];
 
     public virtual User User { get; set; }
 

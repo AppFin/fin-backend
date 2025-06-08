@@ -13,4 +13,8 @@ public class NotificationOutput(Notification input)
     public bool Continuous { get; set; } = input.Continuous;
     public DateTime StartToDelivery { get; set; } = input.StartToDelivery;
     public DateTime? StopToDelivery { get; set; } = input.StopToDelivery;
+
+    public NotificationOutput() : this(new Notification())
+    {
+    }
 }

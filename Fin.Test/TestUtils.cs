@@ -1,10 +1,13 @@
 ﻿using Fin.Domain.Global.Interfaces;
+using Fin.Domain.Tenants.Entities;
+using Fin.Domain.Users.Entities;
 using Fin.Infrastructure.AmbientDatas;
 using Fin.Infrastructure.Database;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.DateTimes;
 using Fin.Infrastructure.UnitOfWorks;
 using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 
 namespace Fin.Test;
@@ -18,7 +21,12 @@ public abstract class TestUtils
 
         protected BaseTest()
         {
-            AmbientData.SetData(Guids[0], Guids[1], Strings[0], true);
+        }
+
+        protected async Task ConfigureLoggedAmbientAsync(bool isAdmin = true)
+        {
+            AmbientData.SetData(Guids[0], Guids[1], Strings[0], isAdmin);
+            await Task.CompletedTask;
         }
     }
     
@@ -42,9 +50,24 @@ public abstract class TestUtils
             TestDbContextFactory.Destroy(_connection, _dbFilePath);;
         }
         
-        protected IRepository<T> GetRepository<T>() where T : class, IEntity
+        protected IRepository<T> GetRepository<T>() where T : class
         {
             return new Repository<T>(Context);
+        }
+
+        protected new async Task ConfigureLoggedAmbientAsync(bool isAdmin = true)
+        {
+            var user = new User
+            {
+                Id = Guids[0],
+                Tenants = [ new Tenant() ],
+                Credential = new UserCredential()
+            };
+            if (isAdmin) user.MakeAdmin();
+
+            await Context.Users.AddAsync(user);
+            await Context.SaveChangesAsync();
+            AmbientData.SetData(user.Tenants.First().Id, user.Id, user.DisplayName, user.IsAdmin);
         }
     }
     
@@ -88,5 +111,19 @@ public abstract class TestUtils
         new(2027, 07, 04, 22, 10, 0, DateTimeKind.Utc),
         new(2028, 11, 11, 11, 11, 11, DateTimeKind.Utc),
         new(2030, 01, 01, 0, 0, 0, DateTimeKind.Utc)
+    ];
+
+    public static List<TimeSpan> TimeSpans =>
+    [
+        new(0, 0, 0), // 00:00:00
+        new(1, 30, 0), // 01:30:00
+        new(5, 45, 15), // 05:45:15
+        new(12, 0, 0), // 12:00:00
+        new(18, 15, 30), // 18:15:30
+        new(23, 59, 59), // 23:59:59
+        new(2, 0, 0), // 02:00:00
+        new(0, 45, 0), // 00:45:00
+        new(10, 10, 10), // 10:10:10
+        new(7, 20, 5)
     ];
 }

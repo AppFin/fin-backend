@@ -9,4 +9,8 @@ public class UserNotificationSettingsOutput(UserNotificationSettings input)
     public Guid UserId { get; set; } = input.UserId;
     public bool Enabled { get; set; } = input.Enabled;
     public List<NotificationWay> AllowedWays { get; set; } = input.AllowedWays;
+
+    public UserNotificationSettingsOutput():this(new UserNotificationSettings())
+    {
+    }
 }

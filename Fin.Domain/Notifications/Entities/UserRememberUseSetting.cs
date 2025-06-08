@@ -40,5 +40,6 @@ public class UserRememberUseSetting : IAuditedTenantEntity
         Ways = input.Ways;
         WeekDays = input.WeekDays;
         WeekDays = input.WeekDays;
+        NotifyOn = input.NotifyOn;
     }
 }

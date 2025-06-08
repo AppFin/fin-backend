@@ -12,7 +12,7 @@ public class UserNotificationSettingsController(IUserNotificationSettingService 
     [HttpGet]
     public async Task<ActionResult<UserNotificationSettingsOutput>> Get()
     {
-        return await service.GetByCurrentUser();   
+        return Ok(await service.GetByCurrentUser());
     }
     
     [HttpPut]

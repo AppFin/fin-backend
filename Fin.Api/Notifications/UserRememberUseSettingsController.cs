@@ -13,7 +13,7 @@ public class UserRememberUseSettingsController(IUserRememberUseSettingsService s
     [HttpGet]
     public async Task<ActionResult<UserRememberUseSettingOutput>> Get()
     {
-        return await service.GetByCurrentUser();   
+        return Ok(await service.GetByCurrentUser());
     }
     
     [HttpPut]

@@ -30,21 +30,21 @@ public class NotificationController(
     [HttpPost]
     public async Task<ActionResult<NotificationOutput>> Create([FromBody] NotificationInput input)
     {
-        var notification = await service.Create(input, true);
+        var notification = await service.Create(input, autoSave: true);
         return notification != null ? Created($"notifications/{notification.Id}", notification) : UnprocessableEntity();   
     }
     
     [HttpPut("{id:guid}")]
     public async Task<ActionResult> Update([FromRoute] Guid id, [FromBody] NotificationInput input)
     {
-        var updated = await service.Update(id, input, true);
+        var updated = await service.Update(id, input, autoSave: true);
         return updated  ? Ok() : UnprocessableEntity();   
     }
     
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult> Delete([FromRoute] Guid id)
     {
-        var deleted = await service.Delete(id, true);
+        var deleted = await service.Delete(id, autoSave: true);
         return deleted  ? Ok() : UnprocessableEntity();   
     }
 
@@ -52,7 +52,7 @@ public class NotificationController(
     [Authorize]
     public async Task<ActionResult> MarkVisualized([FromRoute] Guid notificationId)
     {
-        var marked = await deliveryService.MarkAsVisualized(notificationId);
+        var marked = await deliveryService.MarkAsVisualized(notificationId, autoSave: true);
         return marked  ? Ok() : NotFound();
     }
 
@@ -60,6 +60,6 @@ public class NotificationController(
     [Authorize]
     public async Task<ActionResult<List<NotifyUserDto>>> GetUnvisualizedNotification()
     {
-        return await deliveryService.GetUnvisualizedNotifications();
+        return Ok(await deliveryService.GetUnvisualizedNotifications(autoSave: true));
     }
 }

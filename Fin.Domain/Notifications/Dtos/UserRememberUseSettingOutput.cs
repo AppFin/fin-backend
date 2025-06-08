@@ -10,4 +10,8 @@ public class UserRememberUseSettingOutput(UserRememberUseSetting input)
     public List<NotificationWay> Ways { get; set; } = input.Ways;
     public List<DayOfWeek> WeekDays { get; set; } = input.WeekDays;
     public TimeSpan NotifyOn { get; set; } = input.NotifyOn;
+
+    public UserRememberUseSettingOutput():this(new UserRememberUseSetting())
+    {
+    }
 }

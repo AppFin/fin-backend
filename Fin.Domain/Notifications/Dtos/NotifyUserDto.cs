@@ -12,4 +12,8 @@ public class NotifyUserDto(Notification notification, NotificationUserDelivery n
     
     public Guid NotificationId { get; set; } = notification.Id;
     public Guid UserId { get; set; } = notificationUserDelivery.UserId;
+
+    public NotifyUserDto(): this(new Notification(), new NotificationUserDelivery())
+    {
+    }
 }

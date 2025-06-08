@@ -24,6 +24,7 @@ public class UserRememberUseSchedulerService(
         var dayOfWeek = startOfDay.DayOfWeek;
 
         var remembers = await rememberRepository.Query(false)
+            // Here weekdays is a string of a [] in database, like '[1,2,3,...]'. We neeed to convert this to a string include in database
             .Where(n => n.WeekDays.Contains(dayOfWeek) && n.Ways.Count > 1)
             .ToListAsync();
 

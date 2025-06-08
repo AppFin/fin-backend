@@ -3,6 +3,7 @@ using Fin.Application.Notifications.Services.DeliveryServices;
 using Fin.Domain.Notifications.Dtos;
 using Fin.Domain.Notifications.Entities;
 using Fin.Infrastructure.AutoServices.Interfaces;
+using Fin.Infrastructure.BackgroundJobs;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.DateTimes;
 using Hangfire;
@@ -20,11 +21,13 @@ public interface IUserSchedulerService
 public class UserSchedulerService(
     IRepository<Notification> notificationRepository,
     IDateTimeProvider dateTimeProvider,
-    IUserRememberUseSchedulerService rememberUseSchedulerService) : IUserSchedulerService, IAutoTransient
+    IUserRememberUseSchedulerService rememberUseSchedulerService,
+    IBackgroundJobManager backgroundJobManager
+    ) : IUserSchedulerService, IAutoTransient
 {
     public async Task ScheduleDailyNotifications()
     {
-        await rememberUseSchedulerService.ScheduleTodayNotification();
+        await rememberUseSchedulerService.ScheduleTodayNotification(autoSave: true);
 
         var startOfDay = dateTimeProvider.UtcNow().Date;
         var endOfDay = startOfDay.AddDays(1).AddTicks(-1);
@@ -51,8 +54,8 @@ public class UserSchedulerService(
         {
             var jobId = GetJobIb(notification.Id, userDelivery.UserId);;
 
-            BackgroundJob.Delete(jobId);
-            BackgroundJob.Schedule<INotificationDeliveryService>(
+            backgroundJobManager.Delete(jobId);
+            backgroundJobManager.Schedule<INotificationDeliveryService>(
                 jobId,
                 service => service.SendNotification(new NotifyUserDto(notification, userDelivery), true),
                 notification.StartToDelivery);
@@ -63,7 +66,7 @@ public class UserSchedulerService(
     {
         foreach (var userId in userIds)
         {
-            BackgroundJob.Delete(GetJobIb(notificationId, userId));
+            backgroundJobManager.Delete(GetJobIb(notificationId, userId));
         }
     }
 

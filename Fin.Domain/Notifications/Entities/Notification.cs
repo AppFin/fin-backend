@@ -67,8 +67,12 @@ public class Notification: IAuditedEntity
         {
             var index = updatedDeliveries.FindIndex(c => c.UserId == currentDelivery.UserId);
             if (index != -1) continue;
-            UserDeliveries.Remove(currentDelivery);
             deliveriesToDelete.Add(currentDelivery);
+        }
+
+        foreach (var currentDelivery in deliveriesToDelete)
+        {
+            UserDeliveries.Remove(currentDelivery);
         }
 
         foreach (var updatedDelivery in updatedDeliveries)
