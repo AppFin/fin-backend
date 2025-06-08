@@ -554,7 +554,7 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
         };
 
         // Act
-        await service.CreateUser(process.Token, input);
+        var result = await service.CreateUser(process.Token, input);
         
         // Assert
         var tenant = await resources.TenantRepository.Query(false).Include(t => t.Users).FirstAsync();
@@ -590,6 +590,126 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
         DateTimeProvider.Verify(d => d.UtcNow(), Times.Once);
         resources.FakeCache
             .Verify(c => c.RemoveAsync(It.Is<string>(k => k.Contains(process.Token))), Times.Once);
+
+        result.Success.Should().BeTrue();
+        result.Data.Id.Should().Be(user.Id);
+        result.Data.DisplayName.Should().Be(user.DisplayName);
+        result.Data.FirstName.Should().Be(user.FirstName);
+        result.Data.LastName.Should().Be(user.LastName);
+        result.Data.BirthDate.Should().Be(user.BirthDate);
+        result.Data.Sex.Should().Be(user.Sex);
+        result.Data.ImagePublicUrl.Should().Be(user.ImagePublicUrl);
+        result.Data.IsActivity.Should().Be(user.IsActivity);
+        result.Data.IsAdmin.Should().Be(user.IsAdmin);
+    }
+
+    #endregion
+
+    #region CreateUser With Google
+
+    [Fact]
+    public async Task CreateUser_WithGoogle_Success()
+    {
+        // Arrange
+        var resources = GetResources();
+        var service = GetService(resources);
+
+        var input = new UserUpdateOrCreateInput
+        {
+            DisplayName = TestUtils.Strings[3],
+            LastName = TestUtils.Strings[4],
+            FirstName = TestUtils.Strings[5],
+            BirthDate = DateOnly.FromDateTime(TestUtils.UtcDateTimes[1]),
+            ImagePublicUrl = TestUtils.Strings[6],
+        };
+
+        var googleId = TestUtils.Strings[1];
+        var email = TestUtils.Strings[2];
+
+        var encryptedEmail = resources.CryptoHelper.Encrypt(email);
+
+        var now = TestUtils.UtcDateTimes[0];
+        DateTimeProvider.Setup(d => d.UtcNow()).Returns(now);
+
+        // Act
+        var result = await service.CreateUser(googleId, email, input);
+
+        // Assert
+        var tenant = await resources.TenantRepository.Query(false).Include(t => t.Users).FirstAsync();
+        var credential = await resources.CredentialRepository.Query(false).FirstAsync();
+        var user = await resources.UserRepository.Query(false).FirstAsync();
+        var notificationSettings = await resources.UserNotificationSettings.Query(false).FirstAsync();
+        var userRemember = await resources.UserRememberUseSettings.Query(false).FirstAsync();
+
+        credential.EncryptedEmail.Should().Be(encryptedEmail);
+        credential.EncryptedPassword.Should().BeNullOrEmpty();
+        credential.GoogleId.Should().Be(googleId);
+        credential.FailLoginAttempts.Should().Be(0);
+        credential.UserId.Should().Be(user.Id);
+
+        user.IsActivity.Should().BeTrue();
+        user.CreatedAt.Should().Be(now);
+        user.UpdatedAt.Should().Be(now);
+        user.DisplayName.Should().Be(input.DisplayName);
+        user.FirstName.Should().Be(input.FirstName);
+        user.LastName.Should().Be(input.LastName);
+        user.BirthDate.Should().Be(input.BirthDate);
+        user.Sex.Should().Be(input.Sex);
+        user.ImagePublicUrl.Should().Be(input.ImagePublicUrl);
+
+
+        tenant.Locale.Should().Be("pt-Br");
+        tenant.Timezone.Should().Be("America/Sao_Paulo");
+        tenant.Users.First().Id.Should().Be(user.Id);
+
+        notificationSettings.UserId.Should().Be(user.Id);
+        userRemember.UserId.Should().Be(user.Id);
+
+        DateTimeProvider.Verify(d => d.UtcNow(), Times.Once);
+
+        result.Success.Should().BeTrue();
+        result.Data.Id.Should().Be(user.Id);
+        result.Data.DisplayName.Should().Be(user.DisplayName);
+        result.Data.FirstName.Should().Be(user.FirstName);
+        result.Data.LastName.Should().Be(user.LastName);
+        result.Data.BirthDate.Should().Be(user.BirthDate);
+        result.Data.Sex.Should().Be(user.Sex);
+        result.Data.ImagePublicUrl.Should().Be(user.ImagePublicUrl);
+        result.Data.IsActivity.Should().Be(user.IsActivity);
+        result.Data.IsAdmin.Should().Be(user.IsAdmin);
+    }
+
+     [Fact]
+    public async Task CreateUser_WithGoogle_EmailAlreadyInUse()
+    {
+        // Arrange
+        var resources = GetResources();
+        var service = GetService(resources);
+
+        var input = new UserUpdateOrCreateInput
+        {
+        };
+
+        var googleId = TestUtils.Strings[1];
+        var email = TestUtils.Strings[2];
+        var encryptedEmail = resources.CryptoHelper.Encrypt(email);
+
+        var userId = TestUtils.Guids[3];
+        var user = new User()
+        {
+            Id = userId,
+            Credential = UserCredential.CreateWithGoogle(userId, encryptedEmail, googleId)
+        };
+        await resources.UserRepository.AddAsync(user, true);
+
+        // Act
+        var result = await service.CreateUser(googleId, email, input);
+
+        // Assert
+        DateTimeProvider.Verify(d => d.UtcNow(), Times.Never);
+
+        result.Success.Should().BeFalse();
+        result.Data.Should().BeNull();
     }
 
     #endregion
@@ -606,7 +726,8 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
             resources.FakeEmailSender.Object,
             resources.FakeCodeGenerator.Object,
             resources.UserNotificationSettings,
-            resources.UserRememberUseSettings
+            resources.UserRememberUseSettings,
+            UnitOfWork
         );
     }
 

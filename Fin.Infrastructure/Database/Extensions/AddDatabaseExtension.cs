@@ -1,4 +1,5 @@
-﻿using Fin.Infrastructure.Database.Repositories;
+﻿using Fin.Infrastructure.Database.Interceptors;
+using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.Database.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

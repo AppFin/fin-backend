@@ -13,6 +13,7 @@ using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.DateTimes;
 using Fin.Infrastructure.EmailSenders;
 using Fin.Infrastructure.Redis;
+using Fin.Infrastructure.UnitOfWorks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
@@ -40,6 +41,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
     private readonly IRedisCacheService _cache;
     private readonly IEmailSenderService _emailSender;
     private readonly IConfirmationCodeGenerator _codeGenerator;
+    private readonly IUnitOfWork _unitOfWork;
 
     private readonly CryptoHelper _cryptoHelper;
 
@@ -53,7 +55,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         IEmailSenderService emailSender,
         IConfirmationCodeGenerator codeGenerator,
         IRepository<UserNotificationSettings> notificationSettingsRepository,
-        IRepository<UserRememberUseSetting> userRememberUseSettingRepository)
+        IRepository<UserRememberUseSetting> userRememberUseSettingRepository, IUnitOfWork unitOfWork)
     {
         _credentialRepository = credentialRepository;
         _dateTimeProvider = dateTimeProvider;
@@ -62,6 +64,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         _codeGenerator = codeGenerator;
         _notificationSettingsRepository = notificationSettingsRepository;
         _userRememberUseSettingRepository = userRememberUseSettingRepository;
+        _unitOfWork = unitOfWork;
         _tenantRepository = tenantRepository;
         _userRepository = userRepository;
 
@@ -196,15 +199,17 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         
         var notificationSetting = new UserNotificationSettings(user.Id, tenant.Id);
         var rememberUseSetting = new UserRememberUseSetting(user.Id, tenant.Id);
-        
+
+        await _unitOfWork.BeginTransactionAsync();
+
         await _tenantRepository.AddAsync(tenant);
         await _userRepository.AddAsync(user);
         await _credentialRepository.AddAsync(credential);
         await _userRememberUseSettingRepository.AddAsync(rememberUseSetting);
         await _notificationSettingsRepository.AddAsync(notificationSetting);
-        
-        await _credentialRepository.SaveChangesAsync();
-        
+        await _unitOfWork.CommitAsync();
+
+
         await _cache.RemoveAsync(GenerateProcessCacheKey(creationToken));
         
         user.Tenants.First().Users = null;
@@ -238,14 +243,15 @@ public class UserCreateService : IUserCreateService, IAutoTransient
 
         var notificationSetting = new UserNotificationSettings(user.Id, tenant.Id);
         var rememberUseSetting = new UserRememberUseSetting(user.Id, tenant.Id);
-        
+
+        await _unitOfWork.BeginTransactionAsync();
         await _tenantRepository.AddAsync(tenant);
         await _userRepository.AddAsync(user);
         await _credentialRepository.AddAsync(credential);
         await _userRememberUseSettingRepository.AddAsync(rememberUseSetting);
         await _notificationSettingsRepository.AddAsync(notificationSetting);
-        
-        await _credentialRepository.SaveChangesAsync();
+        await _unitOfWork.CommitAsync();
+
 
         user.Tenants.First().Users = null;
         user.Credential.User = null;

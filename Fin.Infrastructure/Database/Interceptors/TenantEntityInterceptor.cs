@@ -3,7 +3,7 @@ using Fin.Infrastructure.AmbientDatas;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
-namespace Fin.Infrastructure.Database;
+namespace Fin.Infrastructure.Database.Interceptors;
 
 public class TenantEntityInterceptor: SaveChangesInterceptor
 {

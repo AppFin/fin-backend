@@ -4,7 +4,7 @@ using Fin.Infrastructure.DateTimes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
-namespace Fin.Infrastructure.Database;
+namespace Fin.Infrastructure.Database.Interceptors;
 
 public class AuditedEntityInterceptor: SaveChangesInterceptor
 {
