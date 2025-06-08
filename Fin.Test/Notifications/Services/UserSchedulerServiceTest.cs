@@ -57,16 +57,13 @@ public class UserSchedulerServiceTest : TestUtils.BaseTestWithContext
         await service.ScheduleDailyNotifications();
 
         // Assert
-        // It should first call the remember use scheduler
         resources.FakeRememberUseSchedulerService.Verify(r => r.ScheduleTodayNotification(true), Times.Once);
 
-        // It should schedule a job ONLY for the single undelivered user in the target notification
         var expectedJobId = $"notification:{targetNotification.Id}/user:{TestUtils.Guids[6]}";
         resources.FakeBackgroundJobManager.Verify(b => b.Delete(expectedJobId), Times.Once);
-        resources.FakeBackgroundJobManager.Verify(b => b.Schedule<INotificationDeliveryService>(
+        resources.FakeBackgroundJobManager.Verify(b => b.Schedule(
             expectedJobId, It.IsAny<Expression<Action<INotificationDeliveryService>>>(), targetNotification.StartToDelivery), Times.Once);
 
-        // Verify it was only called once for all notifications
         resources.FakeBackgroundJobManager.VerifyNoOtherCalls();
     }
 

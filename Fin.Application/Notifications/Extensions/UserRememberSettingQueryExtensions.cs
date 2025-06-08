@@ -16,7 +16,7 @@ public static class UserRememberSettingQueryExtensions
         var dayOfWeekString = dayOfWeek.ToString();
         var databaseProvider = repository.Context.Database.ProviderName;
 
-        string sql = databaseProvider switch
+        var sql = databaseProvider switch
         {
             "Npgsql.EntityFrameworkCore.PostgreSQL" => @"
                 SELECT * FROM ""UserRememberUseSettings""
