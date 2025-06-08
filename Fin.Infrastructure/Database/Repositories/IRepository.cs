@@ -8,4 +8,5 @@ public interface IRepository<T> where T : class
     Task UpdateAsync(T entity, bool autoSave = false);
     Task DeleteAsync(T entity, bool autoSave = false);
     Task SaveChangesAsync();
+    FinDbContext Context { get; }
 }

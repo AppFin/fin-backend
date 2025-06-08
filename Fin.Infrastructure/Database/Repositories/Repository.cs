@@ -50,5 +50,7 @@ public class Repository<T> : IRepository<T> where T : class
     public async Task SaveChangesAsync()
     {
         await _context.SaveChangesAsync();
-    } 
+    }
+
+    public FinDbContext Context => _context;
 }
