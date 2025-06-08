@@ -41,9 +41,7 @@ public class FinDbContext : DbContext
         base.OnModelCreating(modelBuilder);
         modelBuilder.HasDefaultSchema("public");
 
-        UserEntityConfiguration.Configure(modelBuilder);
-        TenantEntityConfiguration.Configure(modelBuilder);
-        NotificationEntityConfiguration.Configure(modelBuilder);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(FinDbContext).Assembly);
 
         ApplyTenantFilter(modelBuilder);
         ApplyUtcConverterToDateTime(modelBuilder);
