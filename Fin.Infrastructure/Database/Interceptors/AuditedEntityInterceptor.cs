@@ -1,11 +1,10 @@
 ﻿using Fin.Domain.Global.Interfaces;
 using Fin.Infrastructure.AmbientDatas;
-using Fin.Infrastructure.AutoServices;
 using Fin.Infrastructure.DateTimes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
-namespace Fin.Infrastructure.Database;
+namespace Fin.Infrastructure.Database.Interceptors;
 
 public class AuditedEntityInterceptor: SaveChangesInterceptor
 {
@@ -28,7 +27,8 @@ public class AuditedEntityInterceptor: SaveChangesInterceptor
         if (context == null) return base.SavingChangesAsync(eventData, result, cancellationToken);
 
         var now = _dateTimeProvider.UtcNow();
-        var useId = _ambientData.UserId;
+        var userId = _ambientData.UserId.GetValueOrDefault();
+        var hasUserId = userId != Guid.Empty;
         
 
         foreach (var entry in context.ChangeTracker.Entries<IAuditedEntity>())
@@ -36,15 +36,15 @@ public class AuditedEntityInterceptor: SaveChangesInterceptor
             if (entry.State == EntityState.Added)
             {
                 entry.Entity.CreatedAt = now;
-                entry.Entity.CreatedBy = useId ?? entry.Entity.CreatedBy;
+                entry.Entity.CreatedBy = hasUserId ? userId : entry.Entity.CreatedBy;
                 
                 entry.Entity.UpdatedAt = now;
-                entry.Entity.UpdatedBy = useId ?? entry.Entity.UpdatedBy;
+                entry.Entity.UpdatedBy = hasUserId ? userId : entry.Entity.UpdatedBy;
             }
             else if (entry.State == EntityState.Modified)
             {
                 entry.Entity.UpdatedAt = now;
-                entry.Entity.UpdatedBy = useId ?? entry.Entity.UpdatedBy;
+                entry.Entity.UpdatedBy = hasUserId ? userId : entry.Entity.UpdatedBy;
                 
                 entry.Property(x => x.CreatedAt).IsModified = false;
                 entry.Property(x => x.CreatedBy).IsModified = false;

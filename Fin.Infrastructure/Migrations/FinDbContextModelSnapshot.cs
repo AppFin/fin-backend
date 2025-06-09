@@ -23,6 +23,158 @@ namespace Fin.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Fin.Domain.Notifications.Entities.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Continuous")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("HtmlBody")
+                        .HasColumnType("text");
+
+                    b.Property<string>("NormalizedTextBody")
+                        .HasColumnType("text");
+
+                    b.Property<string>("NormalizedTitle")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("StartToDelivery")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("StopToDelivery")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TextBody")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Ways")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Notifications", "public");
+                });
+
+            modelBuilder.Entity("Fin.Domain.Notifications.Entities.NotificationUserDelivery", b =>
+                {
+                    b.Property<Guid>("NotificationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Delivery")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("Visualized")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("NotificationId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("NotificationUserDeliveries", "public");
+                });
+
+            modelBuilder.Entity("Fin.Domain.Notifications.Entities.UserNotificationSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AllowedWays")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("FirebaseTokens")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserNotificationSettings", "public");
+                });
+
+            modelBuilder.Entity("Fin.Domain.Notifications.Entities.UserRememberUseSetting", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<TimeSpan>("NotifyOn")
+                        .HasColumnType("interval");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Ways")
+                        .HasColumnType("text");
+
+                    b.Property<string>("WeekDays")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserRememberUseSettings", "public");
+                });
+
             modelBuilder.Entity("Fin.Domain.Tenants.Entities.Tenant", b =>
                 {
                     b.Property<Guid>("Id")
@@ -150,6 +302,47 @@ namespace Fin.Infrastructure.Migrations
                     b.ToTable("Credentials", "public");
                 });
 
+            modelBuilder.Entity("Fin.Domain.Notifications.Entities.NotificationUserDelivery", b =>
+                {
+                    b.HasOne("Fin.Domain.Notifications.Entities.Notification", "Notification")
+                        .WithMany("UserDeliveries")
+                        .HasForeignKey("NotificationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Fin.Domain.Users.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Notification");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Fin.Domain.Notifications.Entities.UserNotificationSettings", b =>
+                {
+                    b.HasOne("Fin.Domain.Users.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Fin.Domain.Notifications.Entities.UserRememberUseSetting", b =>
+                {
+                    b.HasOne("Fin.Domain.Users.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Fin.Domain.Tenants.Entities.TenantUser", b =>
                 {
                     b.HasOne("Fin.Domain.Tenants.Entities.Tenant", null)
@@ -174,6 +367,11 @@ namespace Fin.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Fin.Domain.Notifications.Entities.Notification", b =>
+                {
+                    b.Navigation("UserDeliveries");
                 });
 
             modelBuilder.Entity("Fin.Domain.Users.Entities.User", b =>

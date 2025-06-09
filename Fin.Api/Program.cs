@@ -1,12 +1,14 @@
+using Fin.Application.Notifications.Extensions;
 using Fin.Infrastructure;
 using Fin.Infrastructure.AmbientDatas;
 using Fin.Infrastructure.Authentications;
 using Fin.Infrastructure.Errors;
-
+using Hangfire;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
     .AddInfrastructure(builder.Configuration)
+    .AddNotifications()
     .AddOpenApiDocument()
     .AddControllers();
 
@@ -20,14 +22,19 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUi();
 }
 
+app.UseNotifications();
+
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<TokenBlacklistMiddleware>();
 app.UseMiddleware<AmbientDataMiddleware>();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseHsts();
 app.UseHttpsRedirection();
+
+app.UseHangfireDashboard();
 
 app.MapControllers();
 app.Run();

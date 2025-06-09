@@ -70,4 +70,9 @@ public class User: IEntity
     {
         ImagePublicUrl = imageIdentifier;
     }
+
+    public void MakeAdmin()
+    {
+        IsAdmin = true;
+    }
 }

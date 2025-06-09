@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Fin.Infrastructure.Database.Repositories;
 
-public class Repository<T> : IRepository<T> where T : class, IEntity
+public class Repository<T> : IRepository<T> where T : class
 {
     private readonly FinDbContext _context;
     private readonly DbSet<T> _dbSet;
@@ -19,14 +19,16 @@ public class Repository<T> : IRepository<T> where T : class, IEntity
         return tracking ? _dbSet : _dbSet.AsNoTracking();
     }
 
-    public async Task<T> FindAsync(Guid entityId, bool tracking = true)
-    {
-        return await Query(tracking).FirstOrDefaultAsync(x => x.Id == entityId);
-    }
-
     public async Task AddAsync(T entity, bool autoSave = false)
     {
         await _dbSet.AddAsync(entity);
+        if (autoSave)
+            await SaveChangesAsync();
+    }
+
+    public async Task AddRangeAsync(IEnumerable<T> entities, bool autoSave = false)
+    {
+        await _dbSet.AddRangeAsync(entities);
         if (autoSave)
             await SaveChangesAsync();
     }
@@ -48,5 +50,7 @@ public class Repository<T> : IRepository<T> where T : class, IEntity
     public async Task SaveChangesAsync()
     {
         await _context.SaveChangesAsync();
-    } 
+    }
+
+    public FinDbContext Context => _context;
 }

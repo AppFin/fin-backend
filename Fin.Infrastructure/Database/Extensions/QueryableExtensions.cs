@@ -54,28 +54,28 @@ public static class QueryableExtensions
             return query;
 
         var property = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .FirstOrDefault(p => 
+            .FirstOrDefault(p =>
                 string.Equals(p.Name, input.Filter.Property, StringComparison.OrdinalIgnoreCase) &&
                 p.PropertyType == typeof(string));
 
         if (property == null)
-            throw new ArgumentException($"Property '{input.Filter.Property}' not found in type '{typeof(T).Name}' or is not string.");;
+            throw new ArgumentException($"Property '{input.Filter.Property}' not found in type '{typeof(T).Name}' or is not string.");
 
         var parameter = Expression.Parameter(typeof(T), "x");
         var propertyAccess = Expression.Property(parameter, property);
-        
-        var toLowerMethod = typeof(string).GetMethod(nameof(string.ToLowerInvariant), Type.EmptyTypes)!;
-        var loweredProperty = Expression.Call(propertyAccess, toLowerMethod);
-        
-        var loweredFilter = Expression.Constant(input.Filter.Filter.ToLowerInvariant());
-        
-        var containsMethod = typeof(string).GetMethod(nameof(string.Contains), new[] { typeof(string) })!;
-        var containsCall = Expression.Call(loweredProperty, containsMethod, loweredFilter);
 
-        var lambda = Expression.Lambda<Func<T, bool>>(containsCall, parameter);
+        var efFunctions = Expression.Property(null, typeof(EF).GetProperty(nameof(EF.Functions))!);
+        var likeMethod = typeof(DbFunctionsExtensions).GetMethod(nameof(DbFunctionsExtensions.Like),
+            new[] { typeof(DbFunctions), typeof(string), typeof(string) })!;
+
+        var pattern = Expression.Constant($"%{input.Filter.Filter.Normalize().ToLowerInvariant()}%");
+        var likeCall = Expression.Call(null, likeMethod, efFunctions, propertyAccess, pattern);
+
+        var lambda = Expression.Lambda<Func<T, bool>>(likeCall, parameter);
 
         return query.Where(lambda);
     }
+
 
     public static IQueryable<T> ApplyFilterAndSorter<T>(this IQueryable<T> query, IFilteredAndSortedInput input)
     {
