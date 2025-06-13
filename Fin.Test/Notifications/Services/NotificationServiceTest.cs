@@ -101,7 +101,7 @@ public class NotificationServiceTest : TestUtils.BaseTestWithContext
         dbNotification.Should().NotBeNull();
 
         resources.FakeSchedulerService
-            .Verify(s => s.ScheduleNotification(It.Is<Notification>(n => n.Id == result.Id)), Times.Once);
+            .Verify(s => s.ScheduleNotification(It.Is<Notification>(n => n.Id == result.Id), true), Times.Once);
     }
 
     [Fact]
@@ -128,7 +128,7 @@ public class NotificationServiceTest : TestUtils.BaseTestWithContext
         dbNotification.Should().NotBeNull();
 
         resources.FakeSchedulerService
-            .Verify(s => s.ScheduleNotification(It.IsAny<Notification>()), Times.Never);
+            .Verify(s => s.ScheduleNotification(It.IsAny<Notification>(), true), Times.Never);
     }
 
     #endregion
@@ -170,7 +170,7 @@ public class NotificationServiceTest : TestUtils.BaseTestWithContext
         resources.FakeSchedulerService
             .Verify(s => s.UnscheduleNotification(notification.Id, It.IsAny<List<Guid>>()), Times.Once);
         resources.FakeSchedulerService
-            .Verify(s => s.ScheduleNotification(It.IsAny<Notification>()), Times.Never);
+            .Verify(s => s.ScheduleNotification(It.IsAny<Notification>(), true), Times.Never);
     }
 
     [Fact]
@@ -194,7 +194,7 @@ public class NotificationServiceTest : TestUtils.BaseTestWithContext
         resources.FakeSchedulerService
             .Verify(s => s.UnscheduleNotification(It.IsAny<Guid>(), It.IsAny<List<Guid>>()), Times.Never);
         resources.FakeSchedulerService
-            .Verify(s => s.ScheduleNotification(It.Is<Notification>(n => n.Id == notification.Id)), Times.Once);
+            .Verify(s => s.ScheduleNotification(It.Is<Notification>(n => n.Id == notification.Id), false), Times.Once);
     }
 
     [Fact]
@@ -237,7 +237,7 @@ public class NotificationServiceTest : TestUtils.BaseTestWithContext
             .Verify(s => s.UnscheduleNotification(notification.Id, It.Is<List<Guid>>(l => l.Count == 1 && l.Contains(TestUtils.Guids[2]))), Times.Once);
 
         resources.FakeSchedulerService
-            .Verify(s => s.ScheduleNotification(It.Is<Notification>(n => n.Id == notification.Id)), Times.Once);
+            .Verify(s => s.ScheduleNotification(It.Is<Notification>(n => n.Id == notification.Id), false), Times.Once);
     }
 
     #endregion
@@ -306,7 +306,6 @@ public class NotificationServiceTest : TestUtils.BaseTestWithContext
     {
         return new NotificationService(
             resources.NotificationRepository,
-            resources.DeliveriesRepository,
             DateTimeProvider.Object,
             resources.FakeSchedulerService.Object
         );
@@ -317,7 +316,6 @@ public class NotificationServiceTest : TestUtils.BaseTestWithContext
         return new Resources
         {
             NotificationRepository = GetRepository<Notification>(),
-            DeliveriesRepository = GetRepository<NotificationUserDelivery>(),
             UsersRepository = GetRepository<User>(),
             FakeSchedulerService = new Mock<IUserSchedulerService>()
         };
@@ -326,7 +324,6 @@ public class NotificationServiceTest : TestUtils.BaseTestWithContext
     private class Resources
     {
         public IRepository<Notification> NotificationRepository { get; set; }
-        public IRepository<NotificationUserDelivery> DeliveriesRepository { get; set; }
         public IRepository<User> UsersRepository { get; set; }
         public Mock<IUserSchedulerService> FakeSchedulerService { get; set; }
     }

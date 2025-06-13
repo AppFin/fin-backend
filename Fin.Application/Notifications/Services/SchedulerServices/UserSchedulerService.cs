@@ -14,12 +14,14 @@ namespace Fin.Application.Notifications.Services.SchedulerServices;
 public interface IUserSchedulerService
 {
     public Task ScheduleDailyNotifications();
-    public void ScheduleNotification(Notification notification);
-    public void UnscheduleNotification(Guid notificationId, List<Guid> userIds);
+    public Task ScheduleNotification(Notification notification, bool autosave = true);
+    public Task ScheduleNotification(Guid notificationId, bool autosave = true);
+    public Task UnscheduleNotification(Guid notificationId, List<Guid> userIds);
 }
 
 public class UserSchedulerService(
     IRepository<Notification> notificationRepository,
+    IRepository<NotificationUserDelivery> notificationUserRepository,
     IDateTimeProvider dateTimeProvider,
     IUserRememberUseSchedulerService rememberUseSchedulerService,
     IBackgroundJobManager backgroundJobManager
@@ -32,7 +34,7 @@ public class UserSchedulerService(
         var startOfDay = dateTimeProvider.UtcNow().Date;
         var endOfDay = startOfDay.AddDays(1).AddTicks(-1);
 
-        var notifications = await notificationRepository.Query(false)
+        var notifications = await notificationRepository.Query()
             .Include(n => n.UserDeliveries)
             .Where(n => startOfDay <= n.StartToDelivery && n.StartToDelivery <= endOfDay)
             .Where(n => n.UserDeliveries.Any(n => !n.Delivery))
@@ -44,34 +46,47 @@ public class UserSchedulerService(
         {
             notification.UserDeliveries =
                 new Collection<NotificationUserDelivery>(notification.UserDeliveries.Where(n => !n.Delivery).ToList());
-            ScheduleNotification(notification);
+            await ScheduleNotification(notification, false);
         }
+        await notificationRepository.SaveChangesAsync();
     }
 
-    public void ScheduleNotification(Notification notification)
+    public async Task ScheduleNotification(Guid notificationId, bool autosave = true)
+    {
+        var notification = await notificationRepository.Query(true)
+            .Include(n => n.UserDeliveries).FirstOrDefaultAsync(n => n.Id == notificationId);
+        await ScheduleNotification(notification, autosave);
+    }
+
+    public async Task ScheduleNotification(Notification notification, bool autosave = true)
     {
         foreach (var userDelivery in notification.UserDeliveries)
         {
-            var jobId = GetJobIb(notification.Id, userDelivery.UserId);;
 
-            backgroundJobManager.Delete(jobId);
-            backgroundJobManager.Schedule<INotificationDeliveryService>(
-                jobId,
+            if (!string.IsNullOrWhiteSpace(userDelivery.BackgroundJobId))
+            {
+                backgroundJobManager.Delete(userDelivery.BackgroundJobId);
+            }
+
+            userDelivery.BackgroundJobId = backgroundJobManager.Schedule<INotificationDeliveryService>(
                 service => service.SendNotification(new NotifyUserDto(notification, userDelivery), true),
                 notification.StartToDelivery);
         }
+
+        await notificationRepository.UpdateAsync(notification, autosave);
     }
 
-    public void UnscheduleNotification(Guid notificationId, List<Guid> userIds)
+    public async Task UnscheduleNotification(Guid notificationId, List<Guid> userIds)
     {
-        foreach (var userId in userIds)
+        var jobsIds = await notificationUserRepository.Query(false)
+            .Where(n => n.NotificationId == notificationId &&
+                        userIds.Contains(n.UserId) &&
+                        !string.IsNullOrWhiteSpace(n.BackgroundJobId))
+            .Select(n => n.BackgroundJobId).ToListAsync();
+
+        foreach (var jobId in jobsIds)
         {
-            backgroundJobManager.Delete(GetJobIb(notificationId, userId));
+            backgroundJobManager.Delete(jobId);
         }
-    }
-
-    private string GetJobIb(Guid notificationId, Guid userId)
-    {
-        return $"notification:{notificationId}/user:{userId}";
     }
 }

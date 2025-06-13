@@ -21,9 +21,8 @@ public interface INotificationService
 
 public class NotificationService(
     IRepository<Notification> repository,
-    IRepository<NotificationUserDelivery> deliveriesRepository,
     IDateTimeProvider dateTimeProvider,
-    IUserSchedulerService _schedulerService
+    IUserSchedulerService schedulerService
     ) : INotificationService, IAutoTransient
 {
     public async Task<NotificationOutput> Get(Guid id)
@@ -48,7 +47,7 @@ public class NotificationService(
 
         var forToday = IsNotificationForToday(notification.StartToDelivery);
         if (forToday)
-            _schedulerService.ScheduleNotification(notification);
+            await schedulerService.ScheduleNotification(notification, autoSave);
 
         return new NotificationOutput(notification);
     }
@@ -68,17 +67,15 @@ public class NotificationService(
         var toDeleteDeliveries = notification.UpdateAndReturnToRemoveDeliveries(input);
         var toDeleteDeliveriesIds = toDeleteDeliveries.Select(d => d.UserId).ToList();
 
-        await repository.UpdateAsync(notification, autoSave);
+        if (isOldForToday)
+            await schedulerService.UnscheduleNotification(notification.Id, isNewForToday ? toDeleteDeliveriesIds : oldDeliveries);
 
-        if (isOldForToday && !isNewForToday)
-            _schedulerService.UnscheduleNotification(notification.Id, oldDeliveries);
-        else if (!isOldForToday && isNewForToday)
-            _schedulerService.ScheduleNotification(notification);
-        else if (isOldForToday && isNewForToday)
-        {
-            _schedulerService.UnscheduleNotification(notification.Id, toDeleteDeliveriesIds);
-            _schedulerService.ScheduleNotification(notification);
-        }
+        await repository.UpdateAsync(notification);
+
+        if (isNewForToday)
+            await schedulerService.ScheduleNotification(notification, false);
+
+        if (autoSave) await repository.SaveChangesAsync();
         
         return true;   
     }
@@ -92,7 +89,7 @@ public class NotificationService(
 
         var forToday = IsNotificationForToday(notification.StartToDelivery);
         if (forToday)
-            _schedulerService.UnscheduleNotification(notification.Id, notification.UserDeliveries.Select(d => d.UserId).ToList());
+            await schedulerService.UnscheduleNotification(notification.Id, notification.UserDeliveries.Select(d => d.UserId).ToList());
 
         await repository.DeleteAsync(notification, autoSave);
         return true;

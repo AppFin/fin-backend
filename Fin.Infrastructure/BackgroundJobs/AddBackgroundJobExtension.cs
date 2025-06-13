@@ -14,7 +14,7 @@ public static class AddBackgroundJobExtension
                 .UseSimpleAssemblyNameTypeSerializer()
                 .UseRecommendedSerializerSettings()
                 .UsePostgreSqlStorage(c => c.UseNpgsqlConnection(configuration.GetConnectionString("DefaultConnection")))
-        );
+        ).AddHangfireServer();
 
         return services;
     }

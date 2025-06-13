@@ -8,7 +8,9 @@ public class NotificationUserDelivery
     public Guid UserId { get; set; }
     public bool Delivery { get; set; }
     public bool Visualized { get; set; }
-    
+
+    public string BackgroundJobId { get; set; }
+
     public virtual Notification Notification { get; set; }
     public virtual User User { get; set; }
     

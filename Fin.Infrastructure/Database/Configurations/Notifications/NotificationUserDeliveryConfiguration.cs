@@ -9,6 +9,8 @@ public class NotificationUserDeliveryConfiguration: IEntityTypeConfiguration<Not
     public void Configure(EntityTypeBuilder<NotificationUserDelivery> builder)
     {
         builder.HasKey(x => new { x.NotificationId, x.UserId });
+
+        builder.Property(x => x.BackgroundJobId).HasMaxLength(20);
         builder.HasOne(u => u.User)
             .WithMany()
             .HasForeignKey(u => u.UserId)

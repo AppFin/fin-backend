@@ -38,7 +38,7 @@ public class UserSchedulerServiceTest : TestUtils.BaseTestWithContext
         targetNotification.UserDeliveries = new Collection<NotificationUserDelivery>
         {
             new(TestUtils.Guids[5], targetNotification.Id) { Delivery = true }, // Delivered
-            new(TestUtils.Guids[6], targetNotification.Id) { Delivery = false } // UNDELIVERED - should be scheduled
+            new(TestUtils.Guids[6], targetNotification.Id) { Delivery = false, BackgroundJobId = TestUtils.Strings[5]} // UNDELIVERED - should be scheduled
         };
 
         // 2. Wrong Day Notification
@@ -59,10 +59,9 @@ public class UserSchedulerServiceTest : TestUtils.BaseTestWithContext
         // Assert
         resources.FakeRememberUseSchedulerService.Verify(r => r.ScheduleTodayNotification(true), Times.Once);
 
-        var expectedJobId = $"notification:{targetNotification.Id}/user:{TestUtils.Guids[6]}";
-        resources.FakeBackgroundJobManager.Verify(b => b.Delete(expectedJobId), Times.Once);
+        resources.FakeBackgroundJobManager.Verify(b => b.Delete(TestUtils.Strings[5]), Times.Once);
         resources.FakeBackgroundJobManager.Verify(b => b.Schedule(
-            expectedJobId, It.IsAny<Expression<Action<INotificationDeliveryService>>>(), targetNotification.StartToDelivery), Times.Once);
+            It.IsAny<Expression<Action<INotificationDeliveryService>>>(), targetNotification.StartToDelivery), Times.Once);
 
         resources.FakeBackgroundJobManager.VerifyNoOtherCalls();
     }
@@ -93,7 +92,7 @@ public class UserSchedulerServiceTest : TestUtils.BaseTestWithContext
         service.ScheduleNotification(notification);
 
         // Assert
-        resources.FakeBackgroundJobManager.Verify(b => b.Schedule<INotificationDeliveryService>(It.IsAny<string>(), It.IsAny<Expression<Action<INotificationDeliveryService>>>(), notification.StartToDelivery), Times.Exactly(2));
+        resources.FakeBackgroundJobManager.Verify(b => b.Schedule( It.IsAny<Expression<Action<INotificationDeliveryService>>>(), notification.StartToDelivery), Times.Exactly(2));
     }
 
     #endregion
@@ -101,7 +100,7 @@ public class UserSchedulerServiceTest : TestUtils.BaseTestWithContext
     #region UnscheduleNotification
 
     [Fact]
-    public void UnscheduleNotification_ShouldDeleteJobsForUserIds()
+    public async Task UnscheduleNotification_ShouldDeleteJobsForUserIds()
     {
         // Arrange
         var resources = GetResources();
@@ -110,14 +109,26 @@ public class UserSchedulerServiceTest : TestUtils.BaseTestWithContext
         var notificationId = TestUtils.Guids[0];
         var userIds = new List<Guid> { TestUtils.Guids[1], TestUtils.Guids[2] };
 
+
+        await GetRepository<User>().AddRangeAsync([new User { Id = TestUtils.Guids[1] }, new User { Id = TestUtils.Guids[2] }]);
+        await resources.NotificationRepository.AddAsync(new Notification { Id = notificationId });
+        await resources.NotificationUserDeliveryRepository.AddRangeAsync([
+            new NotificationUserDelivery
+            {
+                NotificationId = notificationId, UserId = TestUtils.Guids[1], BackgroundJobId = TestUtils.Strings[5]
+            },
+            new NotificationUserDelivery
+                { NotificationId = notificationId, UserId = TestUtils.Guids[2], BackgroundJobId = TestUtils.Strings[1] }
+        ]);
+        await resources.NotificationRepository.SaveChangesAsync();
+
         // Act
-        service.UnscheduleNotification(notificationId, userIds);
+        await service.UnscheduleNotification(notificationId, userIds);
 
         // Assert
-        var jobId1 = $"notification:{notificationId}/user:{userIds[0]}";
-        var jobId2 = $"notification:{notificationId}/user:{userIds[1]}";
-        resources.FakeBackgroundJobManager.Verify(b => b.Delete(jobId1), Times.Once);
-        resources.FakeBackgroundJobManager.Verify(b => b.Delete(jobId2), Times.Once);
+
+        resources.FakeBackgroundJobManager.Verify(b => b.Delete(TestUtils.Strings[5]), Times.Once);
+        resources.FakeBackgroundJobManager.Verify(b => b.Delete(TestUtils.Strings[1]), Times.Once);
         resources.FakeBackgroundJobManager.VerifyNoOtherCalls();
     }
 
@@ -127,6 +138,7 @@ public class UserSchedulerServiceTest : TestUtils.BaseTestWithContext
     {
         return new UserSchedulerService(
             resources.NotificationRepository,
+            resources.NotificationUserDeliveryRepository,
             DateTimeProvider.Object,
             resources.FakeRememberUseSchedulerService.Object,
             resources.FakeBackgroundJobManager.Object // Inject the new mock
@@ -138,14 +150,16 @@ public class UserSchedulerServiceTest : TestUtils.BaseTestWithContext
         return new Resources
         {
             NotificationRepository = GetRepository<Notification>(),
+            NotificationUserDeliveryRepository = GetRepository<NotificationUserDelivery>(),
             FakeRememberUseSchedulerService = new Mock<IUserRememberUseSchedulerService>(),
-            FakeBackgroundJobManager = new Mock<IBackgroundJobManager>() // Create the new mock
+            FakeBackgroundJobManager = new Mock<IBackgroundJobManager>()
         };
     }
 
     private class Resources
     {
         public IRepository<Notification> NotificationRepository { get; set; }
+        public IRepository<NotificationUserDelivery> NotificationUserDeliveryRepository { get; set; }
         public Mock<IUserRememberUseSchedulerService> FakeRememberUseSchedulerService { get; set; }
         public Mock<IBackgroundJobManager> FakeBackgroundJobManager { get; set; } // Add to resources
     }

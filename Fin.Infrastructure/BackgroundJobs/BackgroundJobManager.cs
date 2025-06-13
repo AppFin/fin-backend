@@ -7,18 +7,18 @@ namespace Fin.Infrastructure.BackgroundJobs;
 public interface IBackgroundJobManager
 {
     void Delete(string jobId);
-    string Schedule<T>(string jobId, Expression<Action<T>> methodCall, DateTimeOffset enqueueAt);
+    string Schedule<T>( Expression<Action<T>> methodCall, DateTimeOffset enqueueAt);
 }
 
-public class BackgroundJobManager : IBackgroundJobManager, IAutoScoped // Or IAutoTransient
+public class BackgroundJobManager : IBackgroundJobManager, IAutoScoped
 {
     public void Delete(string jobId)
     {
         BackgroundJob.Delete(jobId);
     }
 
-    public string Schedule<T>(string jobId, Expression<Action<T>> methodCall, DateTimeOffset enqueueAt)
+    public string Schedule<T>(Expression<Action<T>> methodCall, DateTimeOffset enqueueAt)
     {
-        return BackgroundJob.Schedule<T>(jobId, methodCall, enqueueAt);
+        return BackgroundJob.Schedule<T>(methodCall, enqueueAt);
     }
 }
