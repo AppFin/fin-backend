@@ -20,7 +20,9 @@ if (app.Environment.IsDevelopment())
 {
     app.UseOpenApi();
     app.UseSwaggerUi();
+    app.UseHangfireDashboard();
 }
+
 
 app.UseNotifications();
 
@@ -33,8 +35,6 @@ app.UseAuthorization();
 
 app.UseHsts();
 app.UseHttpsRedirection();
-
-app.UseHangfireDashboard();
 
 app.MapControllers();
 app.Run();
