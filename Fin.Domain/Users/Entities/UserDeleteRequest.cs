@@ -9,7 +9,7 @@ public class UserDeleteRequest : IAuditedEntity
 
     public Guid? UserAbortedId { get; private set; }
     public virtual User UserAborted { get;  set; }
-    public DateTime AbortedAt { get; private set; }
+    public DateTime? AbortedAt { get; private set; }
     public bool Aborted { get; private set; }
 
     public DateTime DeleteRequestedAt { get; set; }
@@ -40,6 +40,8 @@ public class UserDeleteRequest : IAuditedEntity
         UserAbortedId = userAbortedId;
         AbortedAt = abortedAt;
         Aborted = true;
+
+        if (!User.IsActivity) User.ToggleActivity();
     }
 
 }

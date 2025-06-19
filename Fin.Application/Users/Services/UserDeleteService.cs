@@ -66,12 +66,13 @@ public class UserDeleteService(
     public async Task<bool> EffectiveDeleteUsers(CancellationToken cancellationToken = default)
     {
         var today = DateOnly.FromDateTime(dateTimeProvider.UtcNow());
-        var userIds = await userDeleteRequestRepo.Query(false)
+        var userIds = await userDeleteRequestRepo.Query()
             .Where(u => !u.Aborted && u.DeleteEffectivatedAt == today)
+            .Select(u => u.UserId)
             .ToListAsync(cancellationToken);
 
         foreach (var userId in userIds)
-            await userDeleteRequestRepo.DeleteAsync(userId, cancellationToken);
+            await DeleteUser(userId, cancellationToken);
 
         return true;
     }
@@ -89,7 +90,7 @@ public class UserDeleteService(
         if (deleteRequest == null) return false;
 
         deleteRequest.Abort(ambientData.UserId.Value, now);
-        await userDeleteRequestRepo.UpdateAsync(deleteRequest, cancellationToken);
+        await userDeleteRequestRepo.UpdateAsync(deleteRequest, true, cancellationToken);
 
         var userEmail = _cryptoHelper.Decrypt(deleteRequest.User.Credential.EncryptedEmail);
         await emailSender.SendEmailAsync(userEmail, "Solicitação de deleção abortada", "Sua solicitação de deleção do FinApp foi abortada e sua conta não será mais deletada.");
@@ -109,12 +110,20 @@ public class UserDeleteService(
         // TODO here need to add all related tables;
 
         var user = await userRepo.Query().FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
-        var credential = await credentialRepo.Query().FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
-        var tenant = await tenantRepo.Query().FirstOrDefaultAsync(t => t.Id == userId, cancellationToken);
-        var tenantUser = await tenantUserRepo.Query()
-            .FirstOrDefaultAsync(u => u.UserId == userId && u.TenantId == tenant.Id, cancellationToken);
-
+        var credential = await credentialRepo.Query().FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
+        var tenantsUser = await tenantUserRepo.Query()
+            .Where(u => u.UserId == userId)
+            .ToListAsync(cancellationToken);
+        var tenantIds = tenantsUser.Select(t => t.TenantId).ToList();
+        var tenants = await tenantRepo.Query()
+            .Where(t => tenantIds.Contains(t.Id))
+            .ToListAsync(cancellationToken);
         var userEmail = _cryptoHelper.Decrypt(credential.EncryptedEmail);
+
+
+        var otherDeleteRequests = await userDeleteRequestRepo.Query()
+            .Where(u => u.UserId == userId && u.Id != deleteRequest.Id)
+            .ToListAsync(cancellationToken);
 
         var notificationSetting = await notificationSettingsRepo.Query()
             .FirstOrDefaultAsync(n => n.UserId == userId, cancellationToken);
@@ -138,8 +147,15 @@ public class UserDeleteService(
         await rememberRepo.DeleteAsync(rememberSetting, cancellationToken);
         await notificationSettingsRepo.DeleteAsync(notificationSetting, cancellationToken);
 
-        await tenantUserRepo.DeleteAsync(tenantUser, cancellationToken);
-        await tenantRepo.DeleteAsync(tenant, cancellationToken);
+        foreach (var otherDeleteRequest in otherDeleteRequests)
+            await userDeleteRequestRepo.DeleteAsync(otherDeleteRequest, cancellationToken);
+
+        foreach (var tenantUser in tenantsUser)
+            await tenantUserRepo.DeleteAsync(tenantUser, cancellationToken);
+
+        foreach (var tenant in tenants)
+            await tenantRepo.DeleteAsync(tenant, cancellationToken);
+
         await credentialRepo.DeleteAsync(credential, cancellationToken);
         await userDeleteRequestRepo.DeleteAsync(deleteRequest, cancellationToken);
         await userRepo.DeleteAsync(user, cancellationToken);

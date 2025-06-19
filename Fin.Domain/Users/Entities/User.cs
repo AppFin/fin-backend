@@ -26,7 +26,7 @@ public class User: IEntity
     public UserCredential Credential { get; set; }
     public ICollection<Tenant> Tenants { get; set; } = new List<Tenant>();
 
-    public virtual UserDeleteRequest DeleteRequest { get; set; }
+    public virtual ICollection<UserDeleteRequest> DeleteRequests { get; set; } = new List<UserDeleteRequest>();
 
     public User()
     {
@@ -63,8 +63,12 @@ public class User: IEntity
     public UserDeleteRequest RequestDelete(DateTime deleteRequestAt)
     {
         IsActivity = false;
-        DeleteRequest = new  UserDeleteRequest(Id, deleteRequestAt);
-        return DeleteRequest;
+        var deleteRequest = new  UserDeleteRequest(Id, deleteRequestAt);
+
+        DeleteRequests ??= new List<UserDeleteRequest>();
+        DeleteRequests.Add(deleteRequest);
+
+        return deleteRequest;
     }
     
     public void ToggleActivity()

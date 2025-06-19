@@ -12,9 +12,9 @@ public class UserDeleteRequestConfiguration: IEntityTypeConfiguration<UserDelete
 
         builder
             .HasOne(e => e.User)
-            .WithOne(e => e.DeleteRequest)
-            .HasForeignKey<UserDeleteRequest>(x => x.UserId)
-            .HasPrincipalKey<User>(x => x.Id);
+            .WithMany(e => e.DeleteRequests)
+            .HasForeignKey(x => x.UserId)
+            .HasPrincipalKey(x => x.Id);
 
         builder
             .HasOne(e => e.UserAborted)
