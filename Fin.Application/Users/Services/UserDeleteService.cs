@@ -114,14 +114,14 @@ public class UserDeleteService(
             .ToPagedResult(input, cancellationToken );
     }
 
-    private async Task<bool> DeleteUser(Guid userId, CancellationToken cancellationToken = default)
+    private async Task DeleteUser(Guid userId, CancellationToken cancellationToken = default)
     {
         var today = DateOnly.FromDateTime(dateTimeProvider.UtcNow());
 
         var deleteRequest = await userDeleteRequestRepo.Query()
             .FirstOrDefaultAsync(u => u.UserId == userId && !u.Aborted && u.DeleteEffectivatedAt <= today,
                 cancellationToken);
-        if (deleteRequest == null) return false;
+        if (deleteRequest == null) return;
 
         // TODO here need to add all related tables;
 
@@ -179,7 +179,5 @@ public class UserDeleteService(
         await emailSender.SendEmailAsync(userEmail, "Conta deletada", "Sua conta no FinApp foi deletada. Agora você não poderá mais acessar seus dados e eles foram removidos da plataforma.");
 
         await unitOfWork.CommitAsync(cancellationToken);
-
-        return false;
     }
 }
