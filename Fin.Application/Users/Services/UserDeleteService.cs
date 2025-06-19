@@ -1,15 +1,20 @@
 ﻿using System.Security;
 using Fin.Domain.Global;
+using Fin.Domain.Global.Classes;
+using Fin.Domain.Notifications.Dtos;
 using Fin.Domain.Notifications.Entities;
 using Fin.Domain.Tenants.Entities;
+using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Entities;
 using Fin.Infrastructure.AmbientDatas;
 using Fin.Infrastructure.Authentications.Consts;
 using Fin.Infrastructure.AutoServices.Interfaces;
+using Fin.Infrastructure.Database.Extensions;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.DateTimes;
 using Fin.Infrastructure.EmailSenders;
 using Fin.Infrastructure.UnitOfWorks;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
@@ -20,6 +25,7 @@ public interface IUserDeleteService
     public Task<bool> RequestDeleteUser(CancellationToken cancellationToken = default);
     public Task<bool> EffectiveDeleteUsers(CancellationToken cancellationToken = default);
     public Task<bool> AbortDeleteUser(Guid userId, CancellationToken cancellationToken = default);
+    public Task<PagedOutput<UserDeleteRequestDto>> GetList(PagedFilteredAndSortedInput input, CancellationToken cancellationToken = default);
 }
 
 public class UserDeleteService(
@@ -96,6 +102,16 @@ public class UserDeleteService(
         await emailSender.SendEmailAsync(userEmail, "Solicitação de deleção abortada", "Sua solicitação de deleção do FinApp foi abortada e sua conta não será mais deletada.");
 
         return true;
+    }
+
+    public async Task<PagedOutput<UserDeleteRequestDto>> GetList(PagedFilteredAndSortedInput input, CancellationToken cancellationToken = default)
+    {
+        return await userDeleteRequestRepo.Query(false)
+            .Include(u => u.User)
+            .Include(u => u.UserAborted)
+            .ApplyFilterAndSorter(input)
+            .Select(n => new UserDeleteRequestDto(n))
+            .ToPagedResult(input, cancellationToken );
     }
 
     private async Task<bool> DeleteUser(Guid userId, CancellationToken cancellationToken = default)
