@@ -13,10 +13,10 @@ namespace Fin.Application.Notifications.Services.SchedulerServices;
 
 public interface IUserSchedulerService
 {
-    public Task ScheduleDailyNotifications();
-    public Task ScheduleNotification(Notification notification, bool autosave = true);
-    public Task ScheduleNotification(Guid notificationId, bool autosave = true);
-    public Task UnscheduleNotification(Guid notificationId, List<Guid> userIds);
+    public Task ScheduleDailyNotifications(CancellationToken cancellationToken = default);
+    public Task ScheduleNotification(Notification notification, bool autosave = true, CancellationToken cancellationToken = default);
+    public Task ScheduleNotification(Guid notificationId, bool autosave = true, CancellationToken cancellationToken = default);
+    public Task UnscheduleNotification(Guid notificationId, List<Guid> userIds, CancellationToken cancellationToken = default);
 }
 
 public class UserSchedulerService(
@@ -27,7 +27,7 @@ public class UserSchedulerService(
     IBackgroundJobManager backgroundJobManager
     ) : IUserSchedulerService, IAutoTransient
 {
-    public async Task ScheduleDailyNotifications()
+    public async Task ScheduleDailyNotifications(CancellationToken cancellationToken = default)
     {
         await rememberUseSchedulerService.ScheduleTodayNotification(autoSave: true);
 
@@ -38,7 +38,7 @@ public class UserSchedulerService(
             .Include(n => n.UserDeliveries)
             .Where(n => startOfDay <= n.StartToDelivery && n.StartToDelivery <= endOfDay)
             .Where(n => n.UserDeliveries.Any(n => !n.Delivery))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         if (notifications.Count == 0) return;
 
@@ -46,19 +46,19 @@ public class UserSchedulerService(
         {
             notification.UserDeliveries =
                 new Collection<NotificationUserDelivery>(notification.UserDeliveries.Where(n => !n.Delivery).ToList());
-            await ScheduleNotification(notification, false);
+            await ScheduleNotification(notification, false, cancellationToken);
         }
-        await notificationRepository.SaveChangesAsync();
+        await notificationRepository.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task ScheduleNotification(Guid notificationId, bool autosave = true)
+    public async Task ScheduleNotification(Guid notificationId, bool autosave = true, CancellationToken cancellationToken = default)
     {
         var notification = await notificationRepository.Query(true)
-            .Include(n => n.UserDeliveries).FirstOrDefaultAsync(n => n.Id == notificationId);
-        await ScheduleNotification(notification, autosave);
+            .Include(n => n.UserDeliveries).FirstOrDefaultAsync(n => n.Id == notificationId, cancellationToken);
+        await ScheduleNotification(notification, autosave, cancellationToken);
     }
 
-    public async Task ScheduleNotification(Notification notification, bool autosave = true)
+    public async Task ScheduleNotification(Notification notification, bool autosave = true, CancellationToken cancellationToken = default)
     {
         foreach (var userDelivery in notification.UserDeliveries)
         {
@@ -73,16 +73,16 @@ public class UserSchedulerService(
                 notification.StartToDelivery);
         }
 
-        await notificationRepository.UpdateAsync(notification, autosave);
+        await notificationRepository.UpdateAsync(notification, autosave, cancellationToken);
     }
 
-    public async Task UnscheduleNotification(Guid notificationId, List<Guid> userIds)
+    public async Task UnscheduleNotification(Guid notificationId, List<Guid> userIds, CancellationToken cancellationToken = default)
     {
         var jobsIds = await notificationUserRepository.Query(false)
             .Where(n => n.NotificationId == notificationId &&
                         userIds.Contains(n.UserId) &&
                         !string.IsNullOrWhiteSpace(n.BackgroundJobId))
-            .Select(n => n.BackgroundJobId).ToListAsync();
+            .Select(n => n.BackgroundJobId).ToListAsync(cancellationToken);
 
         foreach (var jobId in jobsIds)
         {

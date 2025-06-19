@@ -1,8 +1,7 @@
-﻿using Fin.Application.Notifications.Hubs;
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Fin.Application.Notifications.Extensions;
+namespace Fin.Infrastructure.Notifications.Hubs;
 
 public static class AddNotificationBackgroundJob
 {
