@@ -1,5 +1,4 @@
 ﻿using Fin.Domain.Notifications.Entities;
-using Fin.Infrastructure.AmbientDatas;
 using Fin.Infrastructure.Database.Repositories;
 using Microsoft.EntityFrameworkCore;
 

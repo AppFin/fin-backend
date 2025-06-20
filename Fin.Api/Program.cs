@@ -1,9 +1,8 @@
 using Fin.Application.Notifications.Extensions;
-using Fin.Infrastructure;
-using Fin.Infrastructure.AmbientDatas;
-using Fin.Infrastructure.Authentications;
-using Fin.Infrastructure.Errors;
+using Fin.Infrastructure.Extensions;
+using Fin.Infrastructure.Notifications.Hubs;
 using Hangfire;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
@@ -25,10 +24,7 @@ if (app.Environment.IsDevelopment())
 
 
 app.UseNotifications();
-
-app.UseMiddleware<ExceptionHandlingMiddleware>();
-app.UseMiddleware<TokenBlacklistMiddleware>();
-app.UseMiddleware<AmbientDataMiddleware>();
+app.UseFinMiddlewares();
 
 app.UseAuthentication();
 app.UseAuthorization();

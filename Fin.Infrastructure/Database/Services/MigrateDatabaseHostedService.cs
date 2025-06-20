@@ -5,31 +5,25 @@ using Microsoft.Extensions.Logging;
 
 namespace Fin.Infrastructure.Database.Services;
 
-public class MigrateDatabaseHostedService : IHostedService
+public class MigrateDatabaseHostedService(
+    IServiceProvider serviceProvider,
+    ILogger<MigrateDatabaseHostedService> logger)
+    : IHostedService
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<MigrateDatabaseHostedService> _logger;
-
-    public MigrateDatabaseHostedService(IServiceProvider serviceProvider, ILogger<MigrateDatabaseHostedService> logger)
-    {
-        _serviceProvider = serviceProvider;
-        _logger = logger;
-    }
-
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        using (var scope = _serviceProvider.CreateScope())
+        using (var scope = serviceProvider.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<FinDbContext>();
             try
             {
-                _logger.LogInformation("Applying migrations...");
+                logger.LogInformation("Applying migrations...");
                 await dbContext.Database.MigrateAsync(cancellationToken);
-                _logger.LogInformation("Migrations applied successfully.");
+                logger.LogInformation("Migrations applied successfully.");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"An error occurred while applying migrations: {ex.Message}");
+                logger.LogError($"An error occurred while applying migrations: {ex.Message}");
             }
         }
     }

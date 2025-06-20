@@ -1,5 +1,4 @@
-﻿using Fin.Application.Notifications.Hubs;
-using Fin.Domain.Global;
+﻿using Fin.Domain.Global;
 using Fin.Domain.Notifications.Dtos;
 using Fin.Domain.Notifications.Entities;
 using Fin.Domain.Notifications.Enums;
@@ -11,6 +10,7 @@ using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.DateTimes;
 using Fin.Infrastructure.EmailSenders;
 using Fin.Infrastructure.Firebases;
+using Fin.Infrastructure.Notifications.Hubs;
 using FirebaseAdmin.Messaging;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;

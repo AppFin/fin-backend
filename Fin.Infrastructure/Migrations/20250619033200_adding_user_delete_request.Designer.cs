@@ -3,6 +3,7 @@ using System;
 using Fin.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Fin.Infrastructure.Migrations
 {
     [DbContext(typeof(FinDbContext))]
-    partial class FinDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250619033200_adding_user_delete_request")]
+    partial class adding_user_delete_request
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -315,7 +318,7 @@ namespace Fin.Infrastructure.Migrations
                     b.Property<bool>("Aborted")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("AbortedAt")
+                    b.Property<DateTime>("AbortedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("CreatedAt")
@@ -346,7 +349,8 @@ namespace Fin.Infrastructure.Migrations
 
                     b.HasIndex("UserAbortedId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
                     b.ToTable("UserDeleteRequests", "public");
                 });
@@ -425,8 +429,8 @@ namespace Fin.Infrastructure.Migrations
                         .HasForeignKey("UserAbortedId");
 
                     b.HasOne("Fin.Domain.Users.Entities.User", "User")
-                        .WithMany("DeleteRequests")
-                        .HasForeignKey("UserId")
+                        .WithOne("DeleteRequest")
+                        .HasForeignKey("Fin.Domain.Users.Entities.UserDeleteRequest", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -444,7 +448,7 @@ namespace Fin.Infrastructure.Migrations
                 {
                     b.Navigation("Credential");
 
-                    b.Navigation("DeleteRequests");
+                    b.Navigation("DeleteRequest");
                 });
 #pragma warning restore 612, 618
         }

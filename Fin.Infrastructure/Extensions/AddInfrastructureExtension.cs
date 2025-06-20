@@ -8,7 +8,7 @@ using Fin.Infrastructure.Redis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Fin.Infrastructure;
+namespace Fin.Infrastructure.Extensions;
 
 public static class AddInfrastructureExtension
 {
@@ -17,10 +17,11 @@ public static class AddInfrastructureExtension
         services
             .AddRedis(configuration)
             .AddFinAuthentication(configuration)
-            .AddBackgroundJobs(configuration)
             .AddAutoServices()
+            .AddBackgroundJobs(configuration)
             .AddScoped<TokenBlacklistMiddleware>()
             .AddScoped<AmbientDataMiddleware>()
+            .AddScoped<ActivatedMiddleware>()
             .AddDatabase(configuration)
             .AddFirebase(configuration);
 

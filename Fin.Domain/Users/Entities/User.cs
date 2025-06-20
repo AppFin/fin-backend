@@ -26,6 +26,8 @@ public class User: IEntity
     public UserCredential Credential { get; set; }
     public ICollection<Tenant> Tenants { get; set; } = new List<Tenant>();
 
+    public virtual ICollection<UserDeleteRequest> DeleteRequests { get; set; } = new List<UserDeleteRequest>();
+
     public User()
     {
     }
@@ -56,6 +58,17 @@ public class User: IEntity
         ImagePublicUrl = userUpdateOrCreateInput.ImagePublicUrl;
         
         UpdatedAt = now;
+    }
+
+    public UserDeleteRequest RequestDelete(DateTime deleteRequestAt)
+    {
+        IsActivity = false;
+        var deleteRequest = new  UserDeleteRequest(Id, deleteRequestAt);
+
+        DeleteRequests ??= new List<UserDeleteRequest>();
+        DeleteRequests.Add(deleteRequest);
+
+        return deleteRequest;
     }
     
     public void ToggleActivity()

@@ -15,10 +15,11 @@ public class FinDbContext : DbContext
 {
     public DbSet<User> Users { get; set; }
     public DbSet<UserCredential> Credentials { get; set; }
-    
+    public DbSet<UserDeleteRequest> UserDeleteRequests { get; set; }
+
     public DbSet<Tenant> Tenants { get; set; }
     public DbSet<TenantUser> TenantUsers { get; set; }
-    
+
     public DbSet<UserNotificationSettings> UserNotificationSettings { get; set; }
     public DbSet<UserRememberUseSetting> UserRememberUseSettings { get; set; }
     public DbSet<Notification> Notifications { get; set; }

@@ -1,5 +1,4 @@
-﻿using Fin.Application.Notifications.Hubs;
-using Fin.Application.Notifications.Services.DeliveryServices;
+﻿using Fin.Application.Notifications.Services.DeliveryServices;
 using Fin.Domain.Global;
 using Fin.Domain.Notifications.Dtos;
 using Fin.Domain.Notifications.Entities;
@@ -9,6 +8,7 @@ using Fin.Infrastructure.Authentications.Consts;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.EmailSenders;
 using Fin.Infrastructure.Firebases;
+using Fin.Infrastructure.Notifications.Hubs;
 using FirebaseAdmin.Messaging;
 using FluentAssertions;
 using Microsoft.AspNetCore.SignalR;

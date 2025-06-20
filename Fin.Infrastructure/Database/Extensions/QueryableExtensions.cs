@@ -82,12 +82,12 @@ public static class QueryableExtensions
         return query.ApplyFilter(input).ApplySorter(input);
     }
 
-    public static async Task<PagedOutput<T>> ToPagedResult<T>(this IQueryable<T> query, IPagedInput input)
+    public static async Task<PagedOutput<T>> ToPagedResult<T>(this IQueryable<T> query, IPagedInput input, CancellationToken cancellationToken = default)
     {
         return new PagedOutput<T>
         {
-            TotalCount = await query.CountAsync(),
-            Items = await query.Skip(input.SkipCount).Take(input.MaxResultCount).ToListAsync()
+            TotalCount = await query.CountAsync(cancellationToken),
+            Items = await query.Skip(input.SkipCount).Take(input.MaxResultCount).ToListAsync(cancellationToken)
         };
     }
 

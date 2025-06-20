@@ -101,7 +101,7 @@ public class NotificationServiceTest : TestUtils.BaseTestWithContext
         dbNotification.Should().NotBeNull();
 
         resources.FakeSchedulerService
-            .Verify(s => s.ScheduleNotification(It.Is<Notification>(n => n.Id == result.Id), true), Times.Once);
+            .Verify(s => s.ScheduleNotification(It.Is<Notification>(n => n.Id == result.Id), true, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -128,7 +128,7 @@ public class NotificationServiceTest : TestUtils.BaseTestWithContext
         dbNotification.Should().NotBeNull();
 
         resources.FakeSchedulerService
-            .Verify(s => s.ScheduleNotification(It.IsAny<Notification>(), true), Times.Never);
+            .Verify(s => s.ScheduleNotification(It.IsAny<Notification>(), true, It.IsAny<CancellationToken>()), Times.Never);
     }
 
     #endregion
@@ -168,9 +168,9 @@ public class NotificationServiceTest : TestUtils.BaseTestWithContext
         // Assert
         result.Should().BeTrue();
         resources.FakeSchedulerService
-            .Verify(s => s.UnscheduleNotification(notification.Id, It.IsAny<List<Guid>>()), Times.Once);
+            .Verify(s => s.UnscheduleNotification(notification.Id, It.IsAny<List<Guid>>(), It.IsAny<CancellationToken>()), Times.Once);
         resources.FakeSchedulerService
-            .Verify(s => s.ScheduleNotification(It.IsAny<Notification>(), true), Times.Never);
+            .Verify(s => s.ScheduleNotification(It.IsAny<Notification>(), true, It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -192,9 +192,9 @@ public class NotificationServiceTest : TestUtils.BaseTestWithContext
         // Assert
         result.Should().BeTrue();
         resources.FakeSchedulerService
-            .Verify(s => s.UnscheduleNotification(It.IsAny<Guid>(), It.IsAny<List<Guid>>()), Times.Never);
+            .Verify(s => s.UnscheduleNotification(It.IsAny<Guid>(), It.IsAny<List<Guid>>(), It.IsAny<CancellationToken>()), Times.Never);
         resources.FakeSchedulerService
-            .Verify(s => s.ScheduleNotification(It.Is<Notification>(n => n.Id == notification.Id), false), Times.Once);
+            .Verify(s => s.ScheduleNotification(It.Is<Notification>(n => n.Id == notification.Id), false, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -234,10 +234,10 @@ public class NotificationServiceTest : TestUtils.BaseTestWithContext
         result.Should().BeTrue();
 
         resources.FakeSchedulerService
-            .Verify(s => s.UnscheduleNotification(notification.Id, It.Is<List<Guid>>(l => l.Count == 1 && l.Contains(TestUtils.Guids[2]))), Times.Once);
+            .Verify(s => s.UnscheduleNotification(notification.Id, It.Is<List<Guid>>(l => l.Count == 1 && l.Contains(TestUtils.Guids[2])), It.IsAny<CancellationToken>()), Times.Once);
 
         resources.FakeSchedulerService
-            .Verify(s => s.ScheduleNotification(It.Is<Notification>(n => n.Id == notification.Id), false), Times.Once);
+            .Verify(s => s.ScheduleNotification(It.Is<Notification>(n => n.Id == notification.Id), false, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion
@@ -276,7 +276,7 @@ public class NotificationServiceTest : TestUtils.BaseTestWithContext
         result.Should().BeTrue();
         (await resources.NotificationRepository.Query(false).FirstOrDefaultAsync(a => a.Id == notification.Id)).Should().BeNull();
         resources.FakeSchedulerService
-            .Verify(s => s.UnscheduleNotification(notification.Id, It.IsAny<List<Guid>>()), Times.Once);
+            .Verify(s => s.UnscheduleNotification(notification.Id, It.IsAny<List<Guid>>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -297,7 +297,7 @@ public class NotificationServiceTest : TestUtils.BaseTestWithContext
         result.Should().BeTrue();
         (await resources.NotificationRepository.Query(false).FirstOrDefaultAsync(a => a.Id == notification.Id)).Should().BeNull();
         resources.FakeSchedulerService
-            .Verify(s => s.UnscheduleNotification(It.IsAny<Guid>(), It.IsAny<List<Guid>>()), Times.Never);
+            .Verify(s => s.UnscheduleNotification(It.IsAny<Guid>(), It.IsAny<List<Guid>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     #endregion
