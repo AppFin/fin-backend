@@ -4,6 +4,7 @@ using Fin.Domain.Menus.Entities;
 using Fin.Infrastructure.AutoServices.Interfaces;
 using Fin.Infrastructure.Database.Extensions;
 using Fin.Infrastructure.Database.Repositories;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fin.Application.Menus;
@@ -36,7 +37,7 @@ public class MenuService(IRepository<Menu> repository) : IMenuService, IAutoTran
 
     public async Task<MenuOutput> Create(MenuInput input, bool autoSave = false)
     {
-        input.Validar();
+        ValidarInput(input);
         var menu = new Menu(input);
         await repository.AddAsync(menu, autoSave);
         return new MenuOutput(menu);
@@ -44,7 +45,7 @@ public class MenuService(IRepository<Menu> repository) : IMenuService, IAutoTran
 
     public async Task<bool> Update(Guid id, MenuInput input, bool autoSave = false)
     {
-        input.Validar();
+        ValidarInput(input);
         var menu = await repository.Query()
             .FirstOrDefaultAsync(u => u.Id == id);
         if (menu == null) return false;
@@ -63,5 +64,15 @@ public class MenuService(IRepository<Menu> repository) : IMenuService, IAutoTran
 
         await repository.DeleteAsync(menu, autoSave);
         return true;
+    }
+
+    private static void ValidarInput( MenuInput input)
+    {
+        if (string.IsNullOrWhiteSpace(input.FrontRoute))
+            throw new BadHttpRequestException("FrontRoute is required");
+        if (string.IsNullOrWhiteSpace(input.Name))
+            throw new BadHttpRequestException("Name is required");
+        if (string.IsNullOrWhiteSpace(input.Icon))
+            throw new BadHttpRequestException("Icon is required");
     }
 }
