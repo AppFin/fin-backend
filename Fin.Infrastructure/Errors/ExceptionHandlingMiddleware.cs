@@ -41,6 +41,10 @@ public class ExceptionHandlingMiddleware
                     context.Response.StatusCode = StatusCodes.Status404NotFound;
                     error = "Resources not found.";
                     break;
+                case BadHttpRequestException:
+                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                    error = ex.Message;
+                    break;
                 default:
                     context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                     _logger.LogError(ex, "Unhandled exception");
