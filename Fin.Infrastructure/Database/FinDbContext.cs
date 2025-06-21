@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Fin.Domain.Global.Interfaces;
+using Fin.Domain.Menus.Entities;
 using Fin.Domain.Notifications;
 using Fin.Domain.Notifications.Entities;
 using Fin.Domain.Tenants.Entities;
@@ -24,6 +25,8 @@ public class FinDbContext : DbContext
     public DbSet<UserRememberUseSetting> UserRememberUseSettings { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<NotificationUserDelivery> NotificationUserDeliveries { get; set; }
+
+    public DbSet<Menu> Menus { get; set; }
 
     private readonly IAmbientData _ambientData;
 
