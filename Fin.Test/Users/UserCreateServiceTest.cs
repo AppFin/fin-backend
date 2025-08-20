@@ -575,7 +575,7 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
         user.FirstName.Should().Be(input.FirstName);
         user.LastName.Should().Be(input.LastName);
         user.BirthDate.Should().Be(input.BirthDate);
-        user.Sex.Should().Be(input.Sex);
+        user.Gender.Should().Be(input.Gender);
         user.ImagePublicUrl.Should().Be(input.ImagePublicUrl);
 
         tenant.Locale.Should().Be("pt-Br");
@@ -597,7 +597,7 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
         result.Data.FirstName.Should().Be(user.FirstName);
         result.Data.LastName.Should().Be(user.LastName);
         result.Data.BirthDate.Should().Be(user.BirthDate);
-        result.Data.Sex.Should().Be(user.Sex);
+        result.Data.Gender.Should().Be(user.Gender);
         result.Data.ImagePublicUrl.Should().Be(user.ImagePublicUrl);
         result.Data.IsActivity.Should().Be(user.IsActivity);
         result.Data.IsAdmin.Should().Be(user.IsAdmin);
@@ -654,7 +654,7 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
         user.FirstName.Should().Be(input.FirstName);
         user.LastName.Should().Be(input.LastName);
         user.BirthDate.Should().Be(input.BirthDate);
-        user.Sex.Should().Be(input.Sex);
+        user.Gender.Should().Be(input.Gender);
         user.ImagePublicUrl.Should().Be(input.ImagePublicUrl);
 
 
@@ -673,7 +673,7 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
         result.Data.FirstName.Should().Be(user.FirstName);
         result.Data.LastName.Should().Be(user.LastName);
         result.Data.BirthDate.Should().Be(user.BirthDate);
-        result.Data.Sex.Should().Be(user.Sex);
+        result.Data.Gender.Should().Be(user.Gender);
         result.Data.ImagePublicUrl.Should().Be(user.ImagePublicUrl);
         result.Data.IsActivity.Should().Be(user.IsActivity);
         result.Data.IsAdmin.Should().Be(user.IsAdmin);
