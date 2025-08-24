@@ -4,7 +4,7 @@ using Fin.Domain.Notifications.Entities;
 using Fin.Domain.Notifications.Enums;
 using Fin.Domain.Users.Entities;
 using Fin.Infrastructure.AmbientDatas;
-using Fin.Infrastructure.Authentications.Consts;
+using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.AutoServices.Interfaces;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.DateTimes;
@@ -42,8 +42,8 @@ public class NotificationDeliveryService(
 {
     private readonly string SEND_NOTIFICATION_ACTION = "ReceiveNotification";
     private readonly CryptoHelper _cryptoHelper = new(
-        configuration.GetSection(AuthenticationConsts.EncryptKeyConfigKey).Value ?? "",
-        configuration.GetSection(AuthenticationConsts.EncryptIvConfigKey).Value ?? ""
+        configuration.GetSection(AuthenticationConstants.EncryptKeyConfigKey).Value ?? "",
+        configuration.GetSection(AuthenticationConstants.EncryptIvConfigKey).Value ?? ""
         );
 
 

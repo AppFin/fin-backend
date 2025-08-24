@@ -1,9 +1,12 @@
 using Fin.Application.Notifications.Extensions;
+using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Extensions;
 using Fin.Infrastructure.Notifications.Hubs;
 using Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var frontEndUrl = builder.Configuration.GetSection(AppConstants.FrontUrlConfigKey).Get<string>();
 
 builder.Services
     .AddInfrastructure(builder.Configuration)
@@ -14,7 +17,7 @@ builder.Services
         options.AddPolicy("AllowAngularLocalhost",
             policy =>
             {
-                policy.WithOrigins("http://localhost:4200")
+                policy.WithOrigins(frontEndUrl)
                     .AllowAnyHeader()
                     .AllowAnyMethod();
             });
