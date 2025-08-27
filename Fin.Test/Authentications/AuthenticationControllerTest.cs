@@ -2,6 +2,7 @@
 using Fin.Application.Authentications.Dtos;
 using Fin.Application.Authentications.Enums;
 using Fin.Application.Authentications.Services;
+using Fin.Application.Authentications.Utils;
 using Fin.Application.Globals.Dtos;
 using Fin.Infrastructure.Authentications.Dtos;
 using FluentAssertions;
@@ -15,12 +16,14 @@ namespace Fin.Test.Authentications;
 public class AuthenticationControllerTest : TestUtils.BaseTest
 {
     private readonly Mock<IAuthenticationService> _authServiceMock;
+    private readonly Mock<IAuthenticationHelper> _authHelperMock;
     private readonly AuthenticationController _controller;
 
     public AuthenticationControllerTest()
     {
         _authServiceMock = new Mock<IAuthenticationService>();
-        _controller = new AuthenticationController(_authServiceMock.Object);
+        _authHelperMock = new Mock<IAuthenticationHelper>();
+        _controller = new AuthenticationController(_authServiceMock.Object, _authHelperMock.Object);
     }
 
     [Fact]

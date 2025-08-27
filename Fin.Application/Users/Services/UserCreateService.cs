@@ -106,7 +106,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         
         await _cache.SetAsync(GenerateProcessCacheKey(creationToken), process, new DistributedCacheEntryOptions
         {
-            AbsoluteExpiration = sentDateTime.AddMinutes(20)
+            AbsoluteExpiration = sentDateTime.AddHours(12)
         });
 
         await _emailSender.SendEmailAsync(input.Email, "Fin - Email Confirmation", $"Your confirmation code is <b>{confirmationCode}</b>");

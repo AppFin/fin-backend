@@ -10,6 +10,7 @@ using Fin.Infrastructure.Authentications;
 using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.Authentications.Dtos;
 using Fin.Infrastructure.Authentications.Enums;
+using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.EmailSenders;
 using Fin.Infrastructure.Redis;
@@ -732,6 +733,9 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
         resources.FakeConfiguration
             .Setup(c => c.GetSection(AuthenticationConstants.EncryptIvConfigKey).Value)
             .Returns("1234567890qwerty");
+        resources.FakeConfiguration
+            .Setup(c => c.GetSection(AppConstants.FrontUrlConfigKey).Value)
+            .Returns("http://localhost:4200");
         
         var encryptKey = resources.FakeConfiguration.Object.GetSection(AuthenticationConstants.EncryptKeyConfigKey).Value ?? "";
         var encryptIv = resources.FakeConfiguration.Object.GetSection(AuthenticationConstants.EncryptIvConfigKey).Value ?? "";
