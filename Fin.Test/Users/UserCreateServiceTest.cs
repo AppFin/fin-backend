@@ -8,6 +8,7 @@ using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Entities;
 using Fin.Infrastructure.Authentications.Constants;
+using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.EmailSenders;
 using Fin.Infrastructure.Redis;
@@ -752,6 +753,9 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
         resources.FakeConfiguration
             .Setup(c => c.GetSection(AuthenticationConstants.EncryptIvConfigKey).Value)
             .Returns("1234567890qwerty");
+        resources.FakeConfiguration
+            .Setup(c => c.GetSection(AppConstants.FrontUrlConfigKey).Value)
+            .Returns("http://localhost:4200");
 
         var encryptKey =
             resources.FakeConfiguration.Object.GetSection(AuthenticationConstants.EncryptKeyConfigKey).Value ?? "";
