@@ -1,5 +1,5 @@
 ﻿using System.Text;
-using Fin.Infrastructure.Authentications.Consts;
+using Fin.Infrastructure.Authentications.Constants;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -23,8 +23,8 @@ public static class AddAuthenticationExtension
             .AddCookie()
             .AddGoogle("Google", options =>
             {
-                options.ClientId = configuration.GetSection(AuthenticationConsts.GoogleClientIdConfigKey).Value ?? "";
-                options.ClientSecret = configuration.GetSection(AuthenticationConsts.GoogleClientSecretConfigKey).Value ?? "";
+                options.ClientId = configuration.GetSection(AuthenticationConstants.GoogleClientIdConfigKey).Value ?? "";
+                options.ClientSecret = configuration.GetSection(AuthenticationConstants.GoogleClientSecretConfigKey).Value ?? "";
                 options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.CallbackPath = "/authentications/google-sign-callback";
                 
@@ -38,9 +38,9 @@ public static class AddAuthenticationExtension
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = configuration.GetSection(AuthenticationConsts.TokenJwtIssuerConfigKey).Value ?? "",
-                    ValidAudience = configuration.GetSection(AuthenticationConsts.TokenJwtAudienceConfigKey).Value ?? "",
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetSection(AuthenticationConsts.TokenJwtKeyConfigKey).Value ?? ""))
+                    ValidIssuer = configuration.GetSection(AuthenticationConstants.TokenJwtIssuerConfigKey).Value ?? "",
+                    ValidAudience = configuration.GetSection(AuthenticationConstants.TokenJwtAudienceConfigKey).Value ?? "",
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetSection(AuthenticationConstants.TokenJwtKeyConfigKey).Value ?? ""))
                 };
             });
         services.AddAuthorization();

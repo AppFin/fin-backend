@@ -13,7 +13,7 @@ public class User: IEntity
     public string LastName { get; set; }
     public string DisplayName { get; set; }
 
-    public UserSex Sex { get; set; }
+    public UserGender Gender { get; set; }
     public DateOnly? BirthDate { get; set; }
     public string ImagePublicUrl { get; private set; } 
         
@@ -39,7 +39,7 @@ public class User: IEntity
         FirstName = userUpdateOrCreateInput.FirstName;
         LastName = userUpdateOrCreateInput.LastName;
         DisplayName = userUpdateOrCreateInput.DisplayName;
-        Sex = userUpdateOrCreateInput.Sex;
+        Gender = userUpdateOrCreateInput.Gender;
         BirthDate = userUpdateOrCreateInput.BirthDate;
         ImagePublicUrl = userUpdateOrCreateInput.ImagePublicUrl;
         
@@ -53,7 +53,7 @@ public class User: IEntity
         FirstName = userUpdateOrCreateInput.FirstName;
         LastName = userUpdateOrCreateInput.LastName;
         DisplayName = userUpdateOrCreateInput.DisplayName;
-        Sex = userUpdateOrCreateInput.Sex;
+        Gender = userUpdateOrCreateInput.Gender;
         BirthDate = userUpdateOrCreateInput.BirthDate;
         ImagePublicUrl = userUpdateOrCreateInput.ImagePublicUrl;
         

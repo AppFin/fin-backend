@@ -4,7 +4,7 @@ using Fin.Domain.Notifications.Dtos;
 using Fin.Domain.Notifications.Entities;
 using Fin.Domain.Notifications.Enums;
 using Fin.Domain.Users.Entities;
-using Fin.Infrastructure.Authentications.Consts;
+using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.EmailSenders;
 using Fin.Infrastructure.Firebases;
@@ -285,11 +285,11 @@ public class NotificationDeliveryServiceTest : TestUtils.BaseTestWithContext
         fakeHubContext.Setup(h => h.Clients).Returns(fakeHubClients.Object);
 
         var fakeConfig = new Mock<IConfiguration>();
-        fakeConfig.Setup(c => c.GetSection(AuthenticationConsts.EncryptKeyConfigKey).Value).Returns("1234567890qwerty1234567890qwerty");
-        fakeConfig.Setup(c => c.GetSection(AuthenticationConsts.EncryptIvConfigKey).Value).Returns("1234567890qwerty");
+        fakeConfig.Setup(c => c.GetSection(AuthenticationConstants.EncryptKeyConfigKey).Value).Returns("1234567890qwerty1234567890qwerty");
+        fakeConfig.Setup(c => c.GetSection(AuthenticationConstants.EncryptIvConfigKey).Value).Returns("1234567890qwerty");
 
-        var encryptKey = fakeConfig.Object.GetSection(AuthenticationConsts.EncryptKeyConfigKey).Value!;
-        var encryptIv = fakeConfig.Object.GetSection(AuthenticationConsts.EncryptIvConfigKey).Value!;
+        var encryptKey = fakeConfig.Object.GetSection(AuthenticationConstants.EncryptKeyConfigKey).Value!;
+        var encryptIv = fakeConfig.Object.GetSection(AuthenticationConstants.EncryptIvConfigKey).Value!;
 
         return new Resources
         {

@@ -1,7 +1,4 @@
-﻿using System.Linq.Expressions;
-using System.Reflection;
-using Hangfire;
-using Hangfire.Common;
+﻿using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -47,7 +44,7 @@ public class RecurringBackgroundJobHostedService(
 
     public async Task ExecuteJobAsync(Type jobType)
     {
-        var job = (IAsyncRecurringBackgroundJob)serviceProvider.GetRequiredService(jobType);
+var job = (IAsyncRecurringBackgroundJob)serviceProvider.GetRequiredService(jobType);
         await job.ExecuteAsync();
     }
 

@@ -1,4 +1,4 @@
-﻿using Fin.Infrastructure.Consts;
+﻿using Fin.Infrastructure.Constants;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
@@ -16,7 +16,7 @@ public static class AddRedisExtension
             .AddStackExchangeRedisCache(op =>
             {
                 op.Configuration = connectionString;
-                op.InstanceName = AppConsts.AppName;
+                op.InstanceName = AppConstants.AppName;
             });
         
         return services;

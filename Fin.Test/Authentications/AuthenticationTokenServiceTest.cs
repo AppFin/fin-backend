@@ -3,7 +3,7 @@ using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Entities;
 using Fin.Infrastructure.Authentications;
-using Fin.Infrastructure.Authentications.Consts;
+using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.Authentications.Dtos;
 using Fin.Infrastructure.Authentications.Enums;
 using Fin.Infrastructure.Database.Repositories;
@@ -34,16 +34,16 @@ public class AuthenticationTokenServiceTest : TestUtils.BaseTestWithContext
         var encryptedPass = resources.CryptoHelper.Encrypt(pass);
 
         resources.FakeConfiguration
-            .Setup(c => c.GetSection(AuthenticationConsts.TokenJwtKeyConfigKey).Value)
+            .Setup(c => c.GetSection(AuthenticationConstants.TokenJwtKeyConfigKey).Value)
             .Returns("super-ultra-mega-power-nano-mili-cent-supe-secret-batman-key");
         resources.FakeConfiguration
-            .Setup(c => c.GetSection(AuthenticationConsts.TokenExpireInMinutesConfigKey).Value)
+            .Setup(c => c.GetSection(AuthenticationConstants.TokenExpireInMinutesConfigKey).Value)
             .Returns("120");
         resources.FakeConfiguration
-            .Setup(c => c.GetSection(AuthenticationConsts.TokenJwtIssuerConfigKey).Value)
+            .Setup(c => c.GetSection(AuthenticationConstants.TokenJwtIssuerConfigKey).Value)
             .Returns(TestUtils.Strings[3]);
         resources.FakeConfiguration
-            .Setup(c => c.GetSection(AuthenticationConsts.TokenJwtAudienceConfigKey).Value)
+            .Setup(c => c.GetSection(AuthenticationConstants.TokenJwtAudienceConfigKey).Value)
             .Returns(TestUtils.Strings[4]);
 
         DateTimeProvider.Setup(d => d.UtcNow())
@@ -168,16 +168,16 @@ public class AuthenticationTokenServiceTest : TestUtils.BaseTestWithContext
             .Returns(now);
 
         resources.FakeConfiguration
-            .Setup(c => c.GetSection(AuthenticationConsts.TokenJwtKeyConfigKey).Value)
+            .Setup(c => c.GetSection(AuthenticationConstants.TokenJwtKeyConfigKey).Value)
             .Returns("super-ultra-mega-power-nano-mili-cent-supe-secret-batman-key");
         resources.FakeConfiguration
-            .Setup(c => c.GetSection(AuthenticationConsts.TokenExpireInMinutesConfigKey).Value)
+            .Setup(c => c.GetSection(AuthenticationConstants.TokenExpireInMinutesConfigKey).Value)
             .Returns("120");
         resources.FakeConfiguration
-            .Setup(c => c.GetSection(AuthenticationConsts.TokenJwtIssuerConfigKey).Value)
+            .Setup(c => c.GetSection(AuthenticationConstants.TokenJwtIssuerConfigKey).Value)
             .Returns(TestUtils.Strings[3]);
         resources.FakeConfiguration
-            .Setup(c => c.GetSection(AuthenticationConsts.TokenJwtAudienceConfigKey).Value)
+            .Setup(c => c.GetSection(AuthenticationConstants.TokenJwtAudienceConfigKey).Value)
             .Returns(TestUtils.Strings[4]);
 
         var user = new User(new UserUpdateOrCreateInput
@@ -209,9 +209,9 @@ public class AuthenticationTokenServiceTest : TestUtils.BaseTestWithContext
         DateTimeProvider.Verify(d => d.UtcNow(), Times.Once);
 
         resources.FakeConfiguration
-            .Verify(c => c.GetSection(AuthenticationConsts.TokenJwtIssuerConfigKey).Value, Times.Once);
+            .Verify(c => c.GetSection(AuthenticationConstants.TokenJwtIssuerConfigKey).Value, Times.Once);
         resources.FakeConfiguration
-            .Verify(c => c.GetSection(AuthenticationConsts.TokenJwtAudienceConfigKey).Value, Times.Once);
+            .Verify(c => c.GetSection(AuthenticationConstants.TokenJwtAudienceConfigKey).Value, Times.Once);
     }
 
     [Fact(DisplayName = "Refresh token with fail, inactivated user")]
@@ -260,9 +260,9 @@ public class AuthenticationTokenServiceTest : TestUtils.BaseTestWithContext
         DateTimeProvider.Verify(d => d.UtcNow(), Times.Never);
 
         resources.FakeConfiguration
-            .Verify(c => c.GetSection(AuthenticationConsts.TokenJwtIssuerConfigKey).Value, Times.Never);
+            .Verify(c => c.GetSection(AuthenticationConstants.TokenJwtIssuerConfigKey).Value, Times.Never);
         resources.FakeConfiguration
-            .Verify(c => c.GetSection(AuthenticationConsts.TokenJwtAudienceConfigKey).Value, Times.Never);
+            .Verify(c => c.GetSection(AuthenticationConstants.TokenJwtAudienceConfigKey).Value, Times.Never);
     }
 
     [Fact(DisplayName = "Refresh token with fail, no user")]
@@ -295,9 +295,9 @@ public class AuthenticationTokenServiceTest : TestUtils.BaseTestWithContext
         DateTimeProvider.Verify(d => d.UtcNow(), Times.Never);
 
         resources.FakeConfiguration
-            .Verify(c => c.GetSection(AuthenticationConsts.TokenJwtIssuerConfigKey).Value, Times.Never);
+            .Verify(c => c.GetSection(AuthenticationConstants.TokenJwtIssuerConfigKey).Value, Times.Never);
         resources.FakeConfiguration
-            .Verify(c => c.GetSection(AuthenticationConsts.TokenJwtAudienceConfigKey).Value, Times.Never);
+            .Verify(c => c.GetSection(AuthenticationConstants.TokenJwtAudienceConfigKey).Value, Times.Never);
     }
 
     [Fact(DisplayName = "Refresh token with fail, no refresh token")]
@@ -325,9 +325,9 @@ public class AuthenticationTokenServiceTest : TestUtils.BaseTestWithContext
         DateTimeProvider.Verify(d => d.UtcNow(), Times.Never);
 
         resources.FakeConfiguration
-            .Verify(c => c.GetSection(AuthenticationConsts.TokenJwtIssuerConfigKey).Value, Times.Never);
+            .Verify(c => c.GetSection(AuthenticationConstants.TokenJwtIssuerConfigKey).Value, Times.Never);
         resources.FakeConfiguration
-            .Verify(c => c.GetSection(AuthenticationConsts.TokenJwtAudienceConfigKey).Value, Times.Never);
+            .Verify(c => c.GetSection(AuthenticationConstants.TokenJwtAudienceConfigKey).Value, Times.Never);
     }
 
     #endregion
@@ -346,7 +346,7 @@ public class AuthenticationTokenServiceTest : TestUtils.BaseTestWithContext
 
         resources.FakeRedis.Setup(r => r.GetAsync<string>($"token-refresh-{token}"))
             .ReturnsAsync(refreshToken);
-        resources.FakeConfiguration.Setup(c => c.GetSection(AuthenticationConsts.TokenExpireInMinutesConfigKey).Value)
+        resources.FakeConfiguration.Setup(c => c.GetSection(AuthenticationConstants.TokenExpireInMinutesConfigKey).Value)
             .Returns("120");
 
         // Act
@@ -359,7 +359,7 @@ public class AuthenticationTokenServiceTest : TestUtils.BaseTestWithContext
         resources.FakeRedis.Verify(
             r => r.SetAsync($"logged-out-{token}", true, It.IsAny<DistributedCacheEntryOptions>()), Times.Once);
 
-        resources.FakeConfiguration.Verify(c => c.GetSection(AuthenticationConsts.TokenExpireInMinutesConfigKey).Value,
+        resources.FakeConfiguration.Verify(c => c.GetSection(AuthenticationConstants.TokenExpireInMinutesConfigKey).Value,
             Times.Once);
 
         DateTimeProvider.Verify(d => d.UtcNow(), Times.Once);
@@ -389,16 +389,16 @@ public class AuthenticationTokenServiceTest : TestUtils.BaseTestWithContext
         };
 
         resources.FakeConfiguration
-            .Setup(c => c.GetSection(AuthenticationConsts.TokenJwtKeyConfigKey).Value)
+            .Setup(c => c.GetSection(AuthenticationConstants.TokenJwtKeyConfigKey).Value)
             .Returns("super-ultra-mega-power-nano-mili-cent-supe-secret-batman-key");
         resources.FakeConfiguration
-            .Setup(c => c.GetSection(AuthenticationConsts.TokenExpireInMinutesConfigKey).Value)
+            .Setup(c => c.GetSection(AuthenticationConstants.TokenExpireInMinutesConfigKey).Value)
             .Returns("120");
         resources.FakeConfiguration
-            .Setup(c => c.GetSection(AuthenticationConsts.TokenJwtIssuerConfigKey).Value)
+            .Setup(c => c.GetSection(AuthenticationConstants.TokenJwtIssuerConfigKey).Value)
             .Returns(TestUtils.Strings[3]);
         resources.FakeConfiguration
-            .Setup(c => c.GetSection(AuthenticationConsts.TokenJwtAudienceConfigKey).Value)
+            .Setup(c => c.GetSection(AuthenticationConstants.TokenJwtAudienceConfigKey).Value)
             .Returns(TestUtils.Strings[4]);
 
         // Act
@@ -411,13 +411,13 @@ public class AuthenticationTokenServiceTest : TestUtils.BaseTestWithContext
         result.Success.Should().BeTrue();
 
         resources.FakeConfiguration
-            .Verify(c => c.GetSection(AuthenticationConsts.TokenJwtIssuerConfigKey).Value, Times.Once);
+            .Verify(c => c.GetSection(AuthenticationConstants.TokenJwtIssuerConfigKey).Value, Times.Once);
         resources.FakeConfiguration
-            .Verify(c => c.GetSection(AuthenticationConsts.TokenJwtAudienceConfigKey).Value, Times.Once);
+            .Verify(c => c.GetSection(AuthenticationConstants.TokenJwtAudienceConfigKey).Value, Times.Once);
         resources.FakeConfiguration
-            .Verify(c => c.GetSection(AuthenticationConsts.TokenJwtKeyConfigKey).Value, Times.Once);
+            .Verify(c => c.GetSection(AuthenticationConstants.TokenJwtKeyConfigKey).Value, Times.Once);
         resources.FakeConfiguration
-            .Verify(c => c.GetSection(AuthenticationConsts.TokenExpireInMinutesConfigKey).Value, Times.Once);
+            .Verify(c => c.GetSection(AuthenticationConstants.TokenExpireInMinutesConfigKey).Value, Times.Once);
 
         DateTimeProvider.Verify(d => d.UtcNow(), Times.Once);
     }
@@ -452,10 +452,10 @@ public class AuthenticationTokenServiceTest : TestUtils.BaseTestWithContext
         };
 
         resources.FakeConfiguration
-            .Setup(c => c.GetSection(AuthenticationConsts.EncryptKeyConfigKey).Value)
+            .Setup(c => c.GetSection(AuthenticationConstants.EncryptKeyConfigKey).Value)
             .Returns(key);
         resources.FakeConfiguration
-            .Setup(c => c.GetSection(AuthenticationConsts.EncryptIvConfigKey).Value)
+            .Setup(c => c.GetSection(AuthenticationConstants.EncryptIvConfigKey).Value)
             .Returns(iv);
 
         return resources;

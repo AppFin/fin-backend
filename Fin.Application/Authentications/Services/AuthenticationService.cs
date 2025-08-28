@@ -1,5 +1,6 @@
 ﻿using Fin.Application.Authentications.Dtos;
 using Fin.Application.Authentications.Enums;
+using Fin.Application.Authentications.Utils;
 using Fin.Application.Globals.Dtos;
 using Fin.Application.Users.Services;
 using Fin.Domain.Global;
@@ -7,10 +8,11 @@ using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Entities;
 using Fin.Infrastructure.Authentications;
-using Fin.Infrastructure.Authentications.Consts;
+using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.Authentications.Dtos;
 using Fin.Infrastructure.Authentications.Enums;
 using Fin.Infrastructure.AutoServices.Interfaces;
+using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.EmailSenders;
 using Fin.Infrastructure.Redis;
@@ -24,7 +26,7 @@ public interface IAuthenticationService
 {
     public Task SendResetPasswordEmail(SendResetPasswordEmailInput input);
     public Task<ValidationResultDto<bool, ResetPasswordErrorCode>> ResetPassword(ResetPasswordInput input);
-    
+
     public Task<LoginOutput> Login(LoginInput input);
     public Task<LoginWithGoogleOutput> LoginOrSingInWithGoogle(LoginWithGoogleInput input);
     public Task<LoginOutput> RefreshToken(string refreshToken);
@@ -38,7 +40,8 @@ public class AuthenticationService : IAuthenticationService, IAutoTransient
     private readonly IEmailSenderService _emailSender;
     private readonly IUserCreateService _userCreateService;
     private readonly IAuthenticationTokenService _tokenService;
-    
+    private readonly IConfiguration _configuration;
+
     private readonly CryptoHelper _cryptoHelper;
 
     public AuthenticationService(
@@ -52,11 +55,12 @@ public class AuthenticationService : IAuthenticationService, IAutoTransient
         _credentialRepository = credentialRepository;
         _cache = cache;
         _emailSender = emailSender;
+        _configuration = configuration;
         _tokenService = tokenService;
         _userCreateService = userCreateService;
 
-        var encryptKey = configuration.GetSection(AuthenticationConsts.EncryptKeyConfigKey).Value ?? "";
-        var encryptIv = configuration.GetSection(AuthenticationConsts.EncryptIvConfigKey).Value ?? "";
+        var encryptKey = configuration.GetSection(AuthenticationConstants.EncryptKeyConfigKey).Value ?? "";
+        var encryptIv = configuration.GetSection(AuthenticationConstants.EncryptIvConfigKey).Value ?? "";
 
         _cryptoHelper = new CryptoHelper(encryptKey, encryptIv);
     }
@@ -67,20 +71,31 @@ public class AuthenticationService : IAuthenticationService, IAutoTransient
         var credential = _credentialRepository.Query()
             .Include(c => c.User)
             .FirstOrDefault(c => c.EncryptedEmail == encryptedEmail);
-        
+
         if (credential == null || !credential.User.IsActivity)
             return;
 
         var token = $"{Guid.NewGuid()}-{Guid.NewGuid()}";
+        var tokenLifeTimeInHours = 6;
 
         credential.ResetToken = token;
         await _cache.SetAsync(GetResetTokenCacheKey(token), credential.UserId, new DistributedCacheEntryOptions
         {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6)
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(tokenLifeTimeInHours)
         });
         await _credentialRepository.UpdateAsync(credential, true);
-        
-        await _emailSender.SendEmailAsync(input.Email, "Fin - Reset Password", $"Your reset token is <b>{token}</b>");
+
+        var frontUrl = _configuration.GetSection(AppConstants.FrontUrlConfigKey).Get<string>();
+        var logoIconUrl = $"{frontUrl}/icons/fin.png";
+        var resetLink = $"{frontUrl}/authentication/reset-password?token={token}";
+
+        var body = AuthenticationTemplates.ResetPasswordEmailTempalte
+            .Replace("{{appName}}", AppConstants.AppName)
+            .Replace("{{logoIconUrl}}", logoIconUrl)
+            .Replace("{{linkLifeTime}}", tokenLifeTimeInHours.ToString())
+            .Replace("{{resetLink}}", resetLink);
+
+        await _emailSender.SendEmailAsync(input.Email, "Fin - Reset Password", body);
     }
 
     public async Task<ValidationResultDto<bool, ResetPasswordErrorCode>> ResetPassword(ResetPasswordInput input)
@@ -94,14 +109,14 @@ public class AuthenticationService : IAuthenticationService, IAutoTransient
                 Message = "Invalid password",
                 ErrorCode = ResetPasswordErrorCode.InvalidPassword
             };
-        
+
         if (!isSamePass)
             return new ValidationResultDto<bool, ResetPasswordErrorCode>
             {
                 Message = "Not same password",
                 ErrorCode = ResetPasswordErrorCode.NotSamePassword
             };
-        
+
         var credential = await _credentialRepository.Query().FirstOrDefaultAsync(c => c.ResetToken == input.ResetToken);
         if (credential == null)
             return new ValidationResultDto<bool, ResetPasswordErrorCode>
@@ -109,13 +124,15 @@ public class AuthenticationService : IAuthenticationService, IAutoTransient
                 Message = "Invalid reset token",
                 ErrorCode = ResetPasswordErrorCode.InvalidToken
             };
-        
+
         var userId = await _cache.GetAsync<Guid>(GetResetTokenCacheKey(input.ResetToken));
         if (userId == Guid.Empty || userId != credential.UserId)
             return new ValidationResultDto<bool, ResetPasswordErrorCode>
             {
                 Message = userId == Guid.Empty ? "Reset token has expired" : "Invalid reset token",
-                ErrorCode = userId == Guid.Empty ?  ResetPasswordErrorCode.ExpiredToken : ResetPasswordErrorCode.InvalidToken
+                ErrorCode = userId == Guid.Empty
+                    ? ResetPasswordErrorCode.ExpiredToken
+                    : ResetPasswordErrorCode.InvalidToken
             };
 
         var encryptedPassword = _cryptoHelper.Encrypt(input.Password);
@@ -137,13 +154,13 @@ public class AuthenticationService : IAuthenticationService, IAutoTransient
 
     public async Task<LoginWithGoogleOutput> LoginOrSingInWithGoogle(LoginWithGoogleInput input)
     {
-       var encryptedEmail = _cryptoHelper.Encrypt(input.Email);
-        
+        var encryptedEmail = _cryptoHelper.Encrypt(input.Email);
+
         var credential = _credentialRepository.Query()
             .Include(c => c.User)
             .ThenInclude(c => c.Tenants)
             .FirstOrDefault(c => c.EncryptedEmail == encryptedEmail);
-        
+
         UserDto user;
         var mustToCreateUser = false;
         if (credential != null)
@@ -163,15 +180,16 @@ public class AuthenticationService : IAuthenticationService, IAutoTransient
         else
         {
             mustToCreateUser = true;
-            
-            var createResult = await _userCreateService.CreateUser(input.GoogleId, input.Email, new UserUpdateOrCreateInput
-            {
-                DisplayName = input.DisplayName,
-                FirstName = input.FirstName,
-                LastName = input.LastName,
-                ImagePublicUrl = input.PictureUrl
-            });
-            
+
+            var createResult = await _userCreateService.CreateUser(input.GoogleId, input.Email,
+                new UserUpdateOrCreateInput
+                {
+                    DisplayName = input.DisplayName,
+                    FirstName = input.FirstName,
+                    LastName = input.LastName,
+                    ImagePublicUrl = input.PictureUrl
+                });
+
             if (!createResult.Success || createResult.Data == null)
                 return new LoginWithGoogleOutput { ErrorCode = LoginErrorCode.CantCreateUser };
 
@@ -179,7 +197,7 @@ public class AuthenticationService : IAuthenticationService, IAutoTransient
         }
 
         var result = await _tokenService.GenerateTokenAsync(user);
-        
+
         return new LoginWithGoogleOutput
         {
             Success = result.Success,

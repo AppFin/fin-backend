@@ -7,9 +7,10 @@ using Fin.Domain.Global;
 using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Entities;
 using Fin.Infrastructure.Authentications;
-using Fin.Infrastructure.Authentications.Consts;
+using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.Authentications.Dtos;
 using Fin.Infrastructure.Authentications.Enums;
+using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.EmailSenders;
 using Fin.Infrastructure.Redis;
@@ -727,14 +728,17 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
         };
 
         resources.FakeConfiguration
-            .Setup(c => c.GetSection(AuthenticationConsts.EncryptKeyConfigKey).Value)
+            .Setup(c => c.GetSection(AuthenticationConstants.EncryptKeyConfigKey).Value)
             .Returns("1234567890qwerty1234567890qwerty");
         resources.FakeConfiguration
-            .Setup(c => c.GetSection(AuthenticationConsts.EncryptIvConfigKey).Value)
+            .Setup(c => c.GetSection(AuthenticationConstants.EncryptIvConfigKey).Value)
             .Returns("1234567890qwerty");
+        resources.FakeConfiguration
+            .Setup(c => c.GetSection(AppConstants.FrontUrlConfigKey).Value)
+            .Returns("http://localhost:4200");
         
-        var encryptKey = resources.FakeConfiguration.Object.GetSection(AuthenticationConsts.EncryptKeyConfigKey).Value ?? "";
-        var encryptIv = resources.FakeConfiguration.Object.GetSection(AuthenticationConsts.EncryptIvConfigKey).Value ?? "";
+        var encryptKey = resources.FakeConfiguration.Object.GetSection(AuthenticationConstants.EncryptKeyConfigKey).Value ?? "";
+        var encryptIv = resources.FakeConfiguration.Object.GetSection(AuthenticationConstants.EncryptIvConfigKey).Value ?? "";
 
         resources.CryptoHelper = new CryptoHelper(encryptKey, encryptIv);
         

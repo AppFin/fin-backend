@@ -5,7 +5,7 @@ using Fin.Domain.Global.Classes;
 using Fin.Domain.Notifications.Entities;
 using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Entities;
-using Fin.Infrastructure.Authentications.Consts;
+using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.EmailSenders;
 using FluentAssertions;
@@ -421,14 +421,14 @@ public class UserDeleteServiceTest : TestUtils.BaseTestWithContext
         };
 
         resources.FakeConfiguration
-            .Setup(c => c.GetSection(AuthenticationConsts.EncryptKeyConfigKey).Value)
+            .Setup(c => c.GetSection(AuthenticationConstants.EncryptKeyConfigKey).Value)
             .Returns("1234567890qwerty1234567890qwerty");
         resources.FakeConfiguration
-            .Setup(c => c.GetSection(AuthenticationConsts.EncryptIvConfigKey).Value)
+            .Setup(c => c.GetSection(AuthenticationConstants.EncryptIvConfigKey).Value)
             .Returns("1234567890qwerty");
 
-        var encryptKey = resources.FakeConfiguration.Object.GetSection(AuthenticationConsts.EncryptKeyConfigKey).Value ?? "";
-        var encryptIv = resources.FakeConfiguration.Object.GetSection(AuthenticationConsts.EncryptIvConfigKey).Value ?? "";
+        var encryptKey = resources.FakeConfiguration.Object.GetSection(AuthenticationConstants.EncryptKeyConfigKey).Value ?? "";
+        var encryptIv = resources.FakeConfiguration.Object.GetSection(AuthenticationConstants.EncryptIvConfigKey).Value ?? "";
 
         resources.CryptoHelper = new CryptoHelper(encryptKey, encryptIv);
 

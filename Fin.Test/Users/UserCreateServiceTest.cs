@@ -7,7 +7,8 @@ using Fin.Domain.Notifications.Entities;
 using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Entities;
-using Fin.Infrastructure.Authentications.Consts;
+using Fin.Infrastructure.Authentications.Constants;
+using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.EmailSenders;
 using Fin.Infrastructure.Redis;
@@ -575,7 +576,7 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
         user.FirstName.Should().Be(input.FirstName);
         user.LastName.Should().Be(input.LastName);
         user.BirthDate.Should().Be(input.BirthDate);
-        user.Sex.Should().Be(input.Sex);
+        user.Gender.Should().Be(input.Gender);
         user.ImagePublicUrl.Should().Be(input.ImagePublicUrl);
 
         tenant.Locale.Should().Be("pt-Br");
@@ -597,7 +598,7 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
         result.Data.FirstName.Should().Be(user.FirstName);
         result.Data.LastName.Should().Be(user.LastName);
         result.Data.BirthDate.Should().Be(user.BirthDate);
-        result.Data.Sex.Should().Be(user.Sex);
+        result.Data.Gender.Should().Be(user.Gender);
         result.Data.ImagePublicUrl.Should().Be(user.ImagePublicUrl);
         result.Data.IsActivity.Should().Be(user.IsActivity);
         result.Data.IsAdmin.Should().Be(user.IsAdmin);
@@ -654,7 +655,7 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
         user.FirstName.Should().Be(input.FirstName);
         user.LastName.Should().Be(input.LastName);
         user.BirthDate.Should().Be(input.BirthDate);
-        user.Sex.Should().Be(input.Sex);
+        user.Gender.Should().Be(input.Gender);
         user.ImagePublicUrl.Should().Be(input.ImagePublicUrl);
 
 
@@ -673,7 +674,7 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
         result.Data.FirstName.Should().Be(user.FirstName);
         result.Data.LastName.Should().Be(user.LastName);
         result.Data.BirthDate.Should().Be(user.BirthDate);
-        result.Data.Sex.Should().Be(user.Sex);
+        result.Data.Gender.Should().Be(user.Gender);
         result.Data.ImagePublicUrl.Should().Be(user.ImagePublicUrl);
         result.Data.IsActivity.Should().Be(user.IsActivity);
         result.Data.IsAdmin.Should().Be(user.IsAdmin);
@@ -747,15 +748,18 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
         };
 
         resources.FakeConfiguration
-            .Setup(c => c.GetSection(AuthenticationConsts.EncryptKeyConfigKey).Value)
+            .Setup(c => c.GetSection(AuthenticationConstants.EncryptKeyConfigKey).Value)
             .Returns("1234567890qwerty1234567890qwerty");
         resources.FakeConfiguration
-            .Setup(c => c.GetSection(AuthenticationConsts.EncryptIvConfigKey).Value)
+            .Setup(c => c.GetSection(AuthenticationConstants.EncryptIvConfigKey).Value)
             .Returns("1234567890qwerty");
+        resources.FakeConfiguration
+            .Setup(c => c.GetSection(AppConstants.FrontUrlConfigKey).Value)
+            .Returns("http://localhost:4200");
 
         var encryptKey =
-            resources.FakeConfiguration.Object.GetSection(AuthenticationConsts.EncryptKeyConfigKey).Value ?? "";
-        var encryptIv = resources.FakeConfiguration.Object.GetSection(AuthenticationConsts.EncryptIvConfigKey).Value ??
+            resources.FakeConfiguration.Object.GetSection(AuthenticationConstants.EncryptKeyConfigKey).Value ?? "";
+        var encryptIv = resources.FakeConfiguration.Object.GetSection(AuthenticationConstants.EncryptIvConfigKey).Value ??
                         "";
 
         resources.CryptoHelper = new CryptoHelper(encryptKey, encryptIv);

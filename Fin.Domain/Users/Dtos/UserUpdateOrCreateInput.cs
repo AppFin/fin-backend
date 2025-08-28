@@ -15,7 +15,7 @@ public class UserUpdateOrCreateInput
     [MaxLength(150)]
     public string DisplayName { get; set; }
 
-    public UserSex Sex { get; set; }
+    public UserGender Gender { get; set; }
     public DateOnly? BirthDate { get; set; }
     
     public string ImagePublicUrl { get; set; }

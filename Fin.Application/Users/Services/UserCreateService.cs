@@ -2,13 +2,15 @@
 using Fin.Application.Globals.Services;
 using Fin.Application.Users.Dtos;
 using Fin.Application.Users.Enums;
+using Fin.Application.Users.Utils;
 using Fin.Domain.Global;
 using Fin.Domain.Notifications.Entities;
 using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Entities;
-using Fin.Infrastructure.Authentications.Consts;
+using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.AutoServices.Interfaces;
+using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.DateTimes;
 using Fin.Infrastructure.EmailSenders;
@@ -42,6 +44,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
     private readonly IEmailSenderService _emailSender;
     private readonly IConfirmationCodeGenerator _codeGenerator;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IConfiguration _configuration;
 
     private readonly CryptoHelper _cryptoHelper;
 
@@ -59,6 +62,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
     {
         _credentialRepository = credentialRepository;
         _dateTimeProvider = dateTimeProvider;
+        _configuration = configuration;
         _cache = cache;
         _emailSender = emailSender;
         _codeGenerator = codeGenerator;
@@ -68,8 +72,8 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         _tenantRepository = tenantRepository;
         _userRepository = userRepository;
 
-        var encryptKey = configuration.GetSection(AuthenticationConsts.EncryptKeyConfigKey).Value ?? "";
-        var encryptIv = configuration.GetSection(AuthenticationConsts.EncryptIvConfigKey).Value ?? "";
+        var encryptKey = configuration.GetSection(AuthenticationConstants.EncryptKeyConfigKey).Value ?? "";
+        var encryptIv = configuration.GetSection(AuthenticationConstants.EncryptIvConfigKey).Value ?? "";
 
         _cryptoHelper = new CryptoHelper(encryptKey, encryptIv);
     }
@@ -106,10 +110,10 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         
         await _cache.SetAsync(GenerateProcessCacheKey(creationToken), process, new DistributedCacheEntryOptions
         {
-            AbsoluteExpiration = sentDateTime.AddMinutes(20)
+            AbsoluteExpiration = sentDateTime.AddHours(12)
         });
 
-        await _emailSender.SendEmailAsync(input.Email, "Fin - Email Confirmation", $"Your confirmation code is <b>{confirmationCode}</b>");
+        await SendConfirmationCode(input.Email, confirmationCode);
         
         return new ValidationResultDto<UserStartCreateOutput, UserStartCreateErrorCode>
         {
@@ -151,7 +155,8 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         {
             AbsoluteExpiration = now.AddMinutes(20)
         });
-        await _emailSender.SendEmailAsync(email, "Fin - Email Confirmation", $"Your confirmation code is <b>{confirmationCode}</b>");
+
+        await SendConfirmationCode(email, confirmationCode);
         
         return new ValidationResultDto<DateTime>
         {
@@ -274,5 +279,18 @@ public class UserCreateService : IUserCreateService, IAutoTransient
             ErrorCode = code,
             Message = message
         };
+    }
+    
+    private async Task SendConfirmationCode(string email, string confirmationCode)
+    {
+        var frontUrl = _configuration.GetSection(AppConstants.FrontUrlConfigKey).Get<string>();
+        var logoIconUrl = $"{frontUrl}/icons/fin.png";
+
+        var body = CreateUserTemplates.SendConfirmationCodeTemplate
+            .Replace("{{appName}}", AppConstants.AppName)
+            .Replace("{{logoIconUrl}}", logoIconUrl)
+            .Replace("{{confirmationCode}}", confirmationCode);
+        
+        await _emailSender.SendEmailAsync(email, "Fin - Email Confirmation", body);
     }
 }

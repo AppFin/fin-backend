@@ -10,7 +10,7 @@ public class UserDto
     public string FirstName { get; set; }
     public string LastName { get; set; }
     public string DisplayName { get; set; }
-    public UserSex Sex { get; set; }
+    public UserGender Gender { get; set; }
     public DateOnly? BirthDate { get; set; }
     public string ImagePublicUrl { get; private set; } 
     public bool IsAdmin { get; } = false;
@@ -27,7 +27,7 @@ public class UserDto
         FirstName = user.FirstName;
         LastName = user.LastName;
         DisplayName = user.DisplayName;
-        Sex = user.Sex;
+        Gender = user.Gender;
         BirthDate = user.BirthDate;
         ImagePublicUrl = user.ImagePublicUrl;
         IsAdmin = user.IsAdmin;

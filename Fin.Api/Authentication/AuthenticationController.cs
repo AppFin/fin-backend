@@ -1,5 +1,7 @@
 ﻿using System.Security.Claims;
+using System.Text.Json;
 using Fin.Application.Authentications.Dtos;
+using Fin.Application.Authentications.Utils;
 using Fin.Infrastructure.Authentications.Dtos;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
@@ -10,7 +12,7 @@ using IAuthenticationService = Fin.Application.Authentications.Services.IAuthent
 namespace Fin.Api.Authentication;
 
 [Route("authentications")]
-public class AuthenticationController(IAuthenticationService authenticationService) : ControllerBase
+public class AuthenticationController(IAuthenticationService authenticationService, IAuthenticationHelper helper) : ControllerBase
 {
     [HttpPost("login")]
     public async Task<ActionResult<LoginOutput>> Login([FromBody] LoginInput input)
@@ -42,33 +44,49 @@ public class AuthenticationController(IAuthenticationService authenticationServi
     }
 
     [HttpGet("login-google")]
-    public IActionResult LoginGoogle()
+    public IActionResult LoginGoogle([FromQuery] string state = null)
     {
-        var properties = new AuthenticationProperties { RedirectUri = "/authentications/google-callback", };
+        if (string.IsNullOrEmpty(state))
+        {
+            state = Guid.NewGuid().ToString("N");
+        }
+
+        var properties = new AuthenticationProperties
+        {
+            RedirectUri = "/authentications/google-callback",
+            Items = { ["state"] = state }
+        };
         return Challenge(properties, GoogleDefaults.AuthenticationScheme);
     }
 
     [HttpGet("google-callback")]
     public async Task<IActionResult> GoogleCallback()
     {
-        var result = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
-        if (!result.Succeeded)
-            return Unauthorized();
-
-        var loginResult = await authenticationService.LoginOrSingInWithGoogle(new LoginWithGoogleInput
+        try
         {
-            GoogleId = result.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value,
-            DisplayName = result.Principal.Identity?.Name,
-            Email = result.Principal.FindFirst(ClaimTypes.Email)?.Value,
-            FirstName = result.Principal.FindFirst(ClaimTypes.GivenName)?.Value,
-            LastName = result.Principal.FindFirst(ClaimTypes.Surname)?.Value,
-            PictureUrl = result.Principal.FindFirst("picture")?.Value,
-        });
+            var result = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
+            if (!result.Succeeded)
+                return helper.GenerateCallbackResponse(false, "Authentication failed", null);
 
-        if (!loginResult.Success)
-            return UnprocessableEntity();
+            var loginResult = await authenticationService.LoginOrSingInWithGoogle(new LoginWithGoogleInput
+            {
+                GoogleId = result.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value,
+                DisplayName = result.Principal.Identity?.Name,
+                Email = result.Principal.FindFirst(ClaimTypes.Email)?.Value,
+                FirstName = result.Principal.FindFirst(ClaimTypes.GivenName)?.Value,
+                LastName = result.Principal.FindFirst(ClaimTypes.Surname)?.Value,
+                PictureUrl = result.Principal.FindFirst("picture")?.Value,
+            });
 
-        return loginResult.MustToCreateUser ? Created("", loginResult) : Ok(loginResult);
+            if (!loginResult.Success)
+                return helper.GenerateCallbackResponse(false, "Internal authentication failed", loginResult);
+
+            return helper.GenerateCallbackResponse(true, null, loginResult);
+        }
+        catch (Exception ex)
+        {
+            return helper.GenerateCallbackResponse(false, "Internal authentication failed", null);
+        }
     }
 
     [HttpPost("send-reset-password-email")]
