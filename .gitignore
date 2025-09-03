@@ -55,3 +55,5 @@ nunit-*.xml
 
 
 appsettings.Development.json
+appsettings.json
+*appsettings.json
