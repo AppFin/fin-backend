@@ -15,6 +15,12 @@ public class MenuController(IMenuService service): ControllerBase
     {
         return await service.GetList(input);
     }
+
+    [HttpGet("side-nav")]
+    public async Task<List<MenuOutput>> GetListForSideNav()
+    {
+        return await service.GetListForSideNav();
+    }
     
     [HttpGet("{id:guid}")]
     [Authorize(Roles = "Admin")]
