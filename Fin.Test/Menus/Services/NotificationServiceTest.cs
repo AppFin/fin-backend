@@ -305,7 +305,7 @@ public class MenuServiceTest : TestUtils.BaseTestWithContext
 
     private MenuService GetService(Resources resources)
     {
-        return new MenuService(resources.MenuRepository);
+        return new MenuService(resources.MenuRepository, AmbientData);
     }
 
     private Resources GetResources()
