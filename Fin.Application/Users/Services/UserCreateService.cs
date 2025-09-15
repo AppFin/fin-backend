@@ -205,15 +205,15 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         var notificationSetting = new UserNotificationSettings(user.Id, tenant.Id);
         var rememberUseSetting = new UserRememberUseSetting(user.Id, tenant.Id);
 
-        await _unitOfWork.BeginTransactionAsync();
-
-        await _tenantRepository.AddAsync(tenant);
-        await _userRepository.AddAsync(user);
-        await _credentialRepository.AddAsync(credential);
-        await _userRememberUseSettingRepository.AddAsync(rememberUseSetting);
-        await _notificationSettingsRepository.AddAsync(notificationSetting);
-        await _unitOfWork.CommitAsync();
-
+        await using (await _unitOfWork.BeginTransactionAsync())
+        {
+            await _tenantRepository.AddAsync(tenant);
+            await _userRepository.AddAsync(user);
+            await _credentialRepository.AddAsync(credential);
+            await _userRememberUseSettingRepository.AddAsync(rememberUseSetting);
+            await _notificationSettingsRepository.AddAsync(notificationSetting);
+            await _unitOfWork.CommitAsync();
+        }
 
         await _cache.RemoveAsync(GenerateProcessCacheKey(creationToken));
         
@@ -249,14 +249,15 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         var notificationSetting = new UserNotificationSettings(user.Id, tenant.Id);
         var rememberUseSetting = new UserRememberUseSetting(user.Id, tenant.Id);
 
-        await _unitOfWork.BeginTransactionAsync();
-        await _tenantRepository.AddAsync(tenant);
-        await _userRepository.AddAsync(user);
-        await _credentialRepository.AddAsync(credential);
-        await _userRememberUseSettingRepository.AddAsync(rememberUseSetting);
-        await _notificationSettingsRepository.AddAsync(notificationSetting);
-        await _unitOfWork.CommitAsync();
-
+        await using (await _unitOfWork.BeginTransactionAsync())
+        {
+            await _tenantRepository.AddAsync(tenant);
+            await _userRepository.AddAsync(user);
+            await _credentialRepository.AddAsync(credential);
+            await _userRememberUseSettingRepository.AddAsync(rememberUseSetting);
+            await _notificationSettingsRepository.AddAsync(notificationSetting);
+            await _unitOfWork.CommitAsync();
+        }
 
         user.Tenants.First().Users = null;
         user.Credential.User = null;
