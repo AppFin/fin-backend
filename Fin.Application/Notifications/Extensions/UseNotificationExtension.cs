@@ -9,4 +9,5 @@ public static class UseNotificationExtension
     {
         app.MapHub<NotificationHub>("/notifications");
     }
+    
 }
