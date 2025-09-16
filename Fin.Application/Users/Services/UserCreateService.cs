@@ -8,6 +8,7 @@ using Fin.Domain.Notifications.Entities;
 using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Entities;
+using Fin.Domain.Users.Factories;
 using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.AutoServices.Interfaces;
 using Fin.Infrastructure.Constants;
@@ -197,7 +198,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         var now = _dateTimeProvider.UtcNow();
         
         var user = new User(input, now);
-        var credential = new UserCredential(user.Id, process.EncryptedEmail, process.EncryptedPassword);
+        var credential = UserCredentialFactory.Create(user.Id, process.EncryptedEmail, process.EncryptedPassword, UserCredentialFactoryType.Password);
 
         var tenant = new Tenant(now);
         user.Tenants.Add(tenant);
@@ -241,7 +242,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         var now = _dateTimeProvider.UtcNow();
         
         var user = new User(input, now);
-        var credential = UserCredential.CreateWithGoogle(user.Id, encryptedEmail, googleId);
+        var credential = UserCredentialFactory.Create(user.Id, encryptedEmail, googleId, UserCredentialFactoryType.Google);
 
         var tenant = new Tenant(now);
         user.Tenants.Add(tenant);

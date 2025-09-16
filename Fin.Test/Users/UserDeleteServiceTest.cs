@@ -5,6 +5,7 @@ using Fin.Domain.Global.Classes;
 using Fin.Domain.Notifications.Entities;
 using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Entities;
+using Fin.Domain.Users.Factories;
 using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.EmailSenders;
@@ -74,7 +75,7 @@ public class UserDeleteServiceTest : TestUtils.BaseTestWithContext
         var user = await resources.UserRepository.Query(false).FirstOrDefaultAsync();
         var email = TestUtils.Strings[2];
         var  encryptedEmail = resources.CryptoHelper.Encrypt(email);
-        user.Credential = new UserCredential(user.Id, encryptedEmail, null);
+        user.Credential = UserCredentialFactory.Create(user.Id, encryptedEmail, null, UserCredentialFactoryType.Password);
         await resources.CredentialRepository.AddAsync(user.Credential, true);
 
         // Act
@@ -129,7 +130,7 @@ public class UserDeleteServiceTest : TestUtils.BaseTestWithContext
 
         var email = TestUtils.Strings[2];
         var  encryptedEmail = resources.CryptoHelper.Encrypt(email);
-        user.Credential = new UserCredential(user.Id, encryptedEmail, null);
+        user.Credential = UserCredentialFactory.Create(user.Id, encryptedEmail, null, UserCredentialFactoryType.Google);
         await resources.CredentialRepository.AddAsync(user.Credential, true);
 
         var deleteRequest = new UserDeleteRequest(user.Id, TestUtils.UtcDateTimes[0]);
@@ -239,7 +240,7 @@ public class UserDeleteServiceTest : TestUtils.BaseTestWithContext
         var encryptedEmail = resources.CryptoHelper.Encrypt(email);
 
         var targetUser = new User { Id = TestUtils.Guids[3] };
-        var targetCredential = new UserCredential(targetUser.Id, encryptedEmail, null);
+        var targetCredential = UserCredentialFactory.Create(targetUser.Id, encryptedEmail, null, UserCredentialFactoryType.Google);
         targetUser.Credential = targetCredential;
 
         await resources.UserRepository.AddAsync(targetUser, true);
@@ -281,7 +282,7 @@ public class UserDeleteServiceTest : TestUtils.BaseTestWithContext
 
         var email = TestUtils.Strings[2];
         var  encryptedEmail = resources.CryptoHelper.Encrypt(email);
-        user.Credential = new UserCredential(user.Id, encryptedEmail, null);
+        user.Credential = UserCredentialFactory.Create(user.Id, encryptedEmail, null, UserCredentialFactoryType.Password);
         await resources.CredentialRepository.AddAsync(user.Credential, true);
 
         var deleteRequest = new UserDeleteRequest(user.Id, TestUtils.UtcDateTimes[0]);

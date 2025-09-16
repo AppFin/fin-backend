@@ -6,6 +6,7 @@ using Fin.Application.Users.Services;
 using Fin.Domain.Global;
 using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Entities;
+using Fin.Domain.Users.Factories;
 using Fin.Infrastructure.Authentications;
 using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.Authentications.Dtos;
@@ -42,10 +43,9 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
         };
 
         var user = new User();
-        var credential = new UserCredential(user.Id, encryptedEmail, null)
-        {
-            User = user
-        };
+        var credential = UserCredentialFactory.Create(user.Id, encryptedEmail, null, UserCredentialFactoryType.Password);
+        credential.User = user;
+        
         user.Credential = credential;
         user.ToggleActivity();
         await resources.CredentialRepository.AddAsync(credential, true);
@@ -80,10 +80,9 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
         };
 
         var user = new User();
-        var credential = new UserCredential(user.Id, encryptedEmail, null)
-        {
-            User = user
-        };
+        var credential = UserCredentialFactory.Create(user.Id, encryptedEmail, null, UserCredentialFactoryType.Password);
+        credential.User = user;
+        
         await resources.CredentialRepository.AddAsync(credential, true);
 
         // Act
@@ -225,11 +224,9 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
         var user = new User
         {
             Id = TestUtils.Guids[0],
-            Credential = new UserCredential(TestUtils.Guids[0], "123", "123")
-            {
-                ResetToken = input.ResetToken
-            }
+            Credential = UserCredentialFactory.Create(TestUtils.Guids[0], "123", "123",  UserCredentialFactoryType.Password)
         };
+        user.Credential.ResetToken = input.ResetToken;
         user.Credential.User = user;
         await resources.CredentialRepository.AddAsync(user.Credential, true);
         
@@ -263,11 +260,9 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
         var user = new User
         {
             Id = TestUtils.Guids[0],
-            Credential = new UserCredential(TestUtils.Guids[0], "123", "123")
-            {
-                ResetToken = input.ResetToken
-            }
+            Credential = UserCredentialFactory.Create(TestUtils.Guids[0], "123", "123",  UserCredentialFactoryType.Password)
         };
+        user.Credential.ResetToken = input.ResetToken;
         user.Credential.User = user;
         await resources.CredentialRepository.AddAsync(user.Credential, true);
         
@@ -305,11 +300,9 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
         var user = new User
         {
             Id = TestUtils.Guids[0],
-            Credential = new UserCredential(TestUtils.Guids[0], "123", "123")
-            {
-                ResetToken = input.ResetToken
-            }
+            Credential = UserCredentialFactory.Create(TestUtils.Guids[0], "123", "123",  UserCredentialFactoryType.Password)
         };
+        user.Credential.ResetToken = input.ResetToken;
         user.Credential.User = user;
         await resources.CredentialRepository.AddAsync(user.Credential, true);
         
@@ -390,10 +383,9 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
         };
         
         var user = new User();
-        var credential = new UserCredential(user.Id, encryptedEmail, null)
-        {
-            User = user
-        };
+        var credential = UserCredentialFactory.Create(user.Id, encryptedEmail, null, UserCredentialFactoryType.Password);
+        credential.User = user;                                                                         
+        
         await resources.CredentialRepository.AddAsync(credential, true);
 
         // Act
@@ -428,7 +420,7 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
         };
         
         var user = new User();
-        var credential = UserCredential.CreateWithGoogle(user.Id, encryptedEmail, TestUtils.Strings[1]);
+        var credential = UserCredentialFactory.Create(user.Id, encryptedEmail, TestUtils.Strings[1], UserCredentialFactoryType.Google);
         credential.User = user;
         user.Credential = credential;
         user.ToggleActivity();
@@ -560,10 +552,9 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
         {
             Id = TestUtils.Guids[0]
         };
-        var credential = new UserCredential(user.Id, encryptedEmail, null)
-        {
-            User = user
-        };
+        var credential = UserCredentialFactory.Create(user.Id, encryptedEmail, null, UserCredentialFactoryType.Password);
+        credential.User = user;
+        
         user.Credential = credential;
         user.ToggleActivity();
         await resources.CredentialRepository.AddAsync(credential, true);
@@ -618,11 +609,10 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
         {
             Id = TestUtils.Guids[0],
         };
-        var credential = new UserCredential(user.Id, encryptedEmail, null)
-        {
-            User = user,
-            GoogleId = input.GoogleId,
-        };
+        var credential = UserCredentialFactory.Create(user.Id, encryptedEmail, null, UserCredentialFactoryType.Google);
+        credential.User = user;
+        credential.GoogleId = input.GoogleId;
+        
         user.Credential = credential;
         user.ToggleActivity();
         await resources.CredentialRepository.AddAsync(credential, true);
