@@ -33,18 +33,18 @@ public class NotificationDeliveryService(
     IConfiguration configuration,
     IAmbientData ambientData,
     IDateTimeProvider _dateTimeProvider,
-
     IHubContext<NotificationHub> hubContext,
     IEmailSenderService emailSenderService,
     IFirebaseNotificationService firebaseNotification
-    )
+)
     : INotificationDeliveryService, IAutoTransient
 {
     private readonly string SEND_NOTIFICATION_ACTION = "ReceiveNotification";
+
     private readonly CryptoHelper _cryptoHelper = new(
         configuration.GetSection(AuthenticationConstants.EncryptKeyConfigKey).Value ?? "",
         configuration.GetSection(AuthenticationConstants.EncryptIvConfigKey).Value ?? ""
-        );
+    );
 
 
     public async Task SendNotification(NotifyUserDto notifyUser, bool autoSave = true)
@@ -52,27 +52,37 @@ public class NotificationDeliveryService(
         var notificationDelivery = await deliveryRepository.Query()
             .FirstOrDefaultAsync(n => n.NotificationId == notifyUser.NotificationId && n.UserId == notifyUser.UserId);
         if (notificationDelivery == null)
-            throw new Exception($"Notification not found to send. NotificationId {notifyUser.NotificationId}, UserId {notifyUser.UserId}");
+            throw new Exception(
+                $"Notification not found to send. NotificationId {notifyUser.NotificationId}, UserId {notifyUser.UserId}");
 
         var userSettings = await userSettingsRepository.Query()
             .FirstOrDefaultAsync(u => u.UserId == notifyUser.UserId);
         if (userSettings == null)
-            throw new Exception($"User Notification Settings not found to send. NotificationId {notifyUser.NotificationId}, UserId {notifyUser.UserId}");
+            throw new Exception(
+                $"User Notification Settings not found to send. NotificationId {notifyUser.NotificationId}, UserId {notifyUser.UserId}");
 
         foreach (var way in notifyUser.Ways)
         {
             if (way is NotificationWay.Snack or NotificationWay.Message)
             {
-                await hubContext.Clients.User(notifyUser.UserId.ToString()).SendAsync(SEND_NOTIFICATION_ACTION, notifyUser);
+                await hubContext.Clients.User(notifyUser.UserId.ToString())
+                    .SendAsync(SEND_NOTIFICATION_ACTION, notifyUser);
                 continue;
             }
 
             if (!userSettings.Enabled || !userSettings.AllowedWays.Contains(way)) continue;
-
-            if (way is NotificationWay.Push)
-                await SendPush(notifyUser, userSettings, false);
-            if (way is NotificationWay.Email)
+            
+            switch (way)
+            {
+                case NotificationWay.Push:
+                    await hubContext.Clients.User(notifyUser.UserId.ToString())
+                        .SendAsync(SEND_NOTIFICATION_ACTION, notifyUser);
+                    await SendPush(notifyUser, userSettings, false);
+                    break;
+                case NotificationWay.Email:
                     await SendEmail(notifyUser);
+                    break;
+            }
         }
 
         notificationDelivery.MarkAsDelivered();
@@ -165,7 +175,8 @@ public class NotificationDeliveryService(
         var userCredencial = await credencialRepository.Query(false)
             .FirstOrDefaultAsync(n => n.UserId == notification.UserId);
         if (userCredencial == null)
-            throw new Exception($"User not found to send email notification. UserId {notification.UserId}, NotificationId {notification.NotificationId}");
+            throw new Exception(
+                $"User not found to send email notification. UserId {notification.UserId}, NotificationId {notification.NotificationId}");
 
         var email = _cryptoHelper.Decrypt(userCredencial.EncryptedEmail);
         await emailSenderService.SendEmailAsync(email, notification.Title, notification.HtmlBody);
