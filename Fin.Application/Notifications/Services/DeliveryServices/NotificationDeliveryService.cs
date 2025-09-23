@@ -86,12 +86,12 @@ public class NotificationDeliveryService(
                         break;
                     case NotificationWay.Email:
                         await SendEmail(notifyUser);
-                        if (notifyUser.Ways.Count == 1)
-                            notificationDelivery.MarkAsDelivered();
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
+
+                notificationDelivery.MarkAsDelivered();
             }
             catch (Exception e)
             {
@@ -137,19 +137,21 @@ public class NotificationDeliveryService(
             .Where(n => n.Notification.StartToDelivery <= now.AddMinutes(1))
             .Where(n => !n.Notification.StopToDelivery.HasValue ||
                         n.Notification.StopToDelivery.Value >= now)
-            .Where(n => n.Notification.Ways.Any(n => n != NotificationWay.Email))
             .Select(n => new NotifyUserDto(n.Notification, n))
             .ToListAsync();
 
-        var notificationToMarkAsRead = userNotification
-            .Where(n => n.Ways.Contains(NotificationWay.Push))
+        userNotification = userNotification
+            .Where(n => n.Ways.Any(n => n != NotificationWay.Email))
+            .ToList();
+
+        var notificationToMarkAsDelivery = userNotification
             .Select(u => u.NotificationId)
             .ToList();
 
         await deliveryRepository.Query()
-            .Where(n => notificationToMarkAsRead.Contains(n.NotificationId))
+            .Where(n => notificationToMarkAsDelivery.Contains(n.NotificationId))
             .ExecuteUpdateAsync(x => x
-                .SetProperty(a => a.Visualized, true));
+                .SetProperty(a => a.Delivery, true));
 
         if (autoSave) await deliveryRepository.SaveChangesAsync();
 
@@ -160,7 +162,7 @@ public class NotificationDeliveryService(
     {
         await hubContext.Clients.User(notifyUser.UserId.ToString()).SendAsync(SEND_NOTIFICATION_ACTION, notifyUser);
     }
-    
+
     private async Task SendFirebase(NotifyUserDto notify, UserNotificationSettings userSettings, bool autoSave)
     {
         var messages = userSettings.FirebaseTokens

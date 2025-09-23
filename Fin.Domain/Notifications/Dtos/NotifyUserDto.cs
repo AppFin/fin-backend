@@ -10,6 +10,7 @@ public class NotifyUserDto(Notification notification, NotificationUserDelivery n
     public string HtmlBody { get; set; } = notification.HtmlBody;
     public string Title { get; set; } = notification.Title;
     public string Link { get; set; } = notification.Link;
+    public bool Continuous { get; set; } = notification.Continuous;
     public NotificationSeverity Severity { get; set; } = notification.Severity;
     
     
