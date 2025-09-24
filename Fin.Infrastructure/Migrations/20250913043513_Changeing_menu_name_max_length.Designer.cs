@@ -3,6 +3,7 @@ using System;
 using Fin.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Fin.Infrastructure.Migrations
 {
     [DbContext(typeof(FinDbContext))]
-    partial class FinDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250913043513_Changeing_menu_name_max_length")]
+    partial class Changeing_menu_name_max_length
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -93,17 +96,11 @@ namespace Fin.Infrastructure.Migrations
                     b.Property<string>("HtmlBody")
                         .HasColumnType("text");
 
-                    b.Property<string>("Link")
-                        .HasColumnType("text");
-
                     b.Property<string>("NormalizedTextBody")
                         .HasColumnType("text");
 
                     b.Property<string>("NormalizedTitle")
                         .HasColumnType("text");
-
-                    b.Property<int>("Severity")
-                        .HasColumnType("integer");
 
                     b.Property<DateTime>("StartToDelivery")
                         .HasColumnType("timestamp with time zone");

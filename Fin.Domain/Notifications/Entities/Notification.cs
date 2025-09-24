@@ -17,6 +17,8 @@ public class Notification: IAuditedEntity
     public string NormalizedTitle { get; set; }
     public DateTime StartToDelivery { get; set; }
     public DateTime? StopToDelivery { get; set; }
+    public string Link { get; set; }
+    public NotificationSeverity Severity { get; set; }
     
     public Guid Id { get; set; }
     public Guid CreatedBy { get; set; }
@@ -41,6 +43,8 @@ public class Notification: IAuditedEntity
         Continuous = input.Continuous;
 
         Title = input.Title;
+        Link = input.Link;
+        Severity = input.Severity;
         NormalizedTitle = Title.NormalizeForComparison();
         StartToDelivery = input.StartToDelivery;
         StopToDelivery = input.StopToDelivery;
@@ -59,6 +63,8 @@ public class Notification: IAuditedEntity
         StartToDelivery = input.StartToDelivery;
         StopToDelivery = input.StopToDelivery;
         Continuous = input.Continuous;
+        Link = input.Link;
+        Severity = input.Severity;
 
         var updatedDeliveries = input.UserIds.Select(userId => new NotificationUserDelivery(userId, Id)).ToList();
         

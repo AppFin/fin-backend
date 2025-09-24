@@ -1,6 +1,8 @@
 ﻿using Fin.Domain.Global.Classes;
 using Fin.Domain.Menus.Dtos;
 using Fin.Domain.Menus.Entities;
+using Fin.Domain.Menus.Enums;
+using Fin.Infrastructure.AmbientDatas;
 using Fin.Infrastructure.AutoServices.Interfaces;
 using Fin.Infrastructure.Database.Extensions;
 using Fin.Infrastructure.Database.Repositories;
@@ -16,9 +18,13 @@ public interface IMenuService
     public Task<MenuOutput> Create(MenuInput input, bool autoSave = false);
     public Task<bool> Update(Guid id, MenuInput input, bool autoSave = false);
     public Task<bool> Delete(Guid id, bool autoSave = false);
+    public Task<List<MenuOutput>> GetListForSideNav();
 }
 
-public class MenuService(IRepository<Menu> repository) : IMenuService, IAutoTransient
+public class MenuService(
+    IRepository<Menu> repository,
+    IAmbientData ambientData
+    ) : IMenuService, IAutoTransient
 {
     public async Task<MenuOutput> Get(Guid id)
     {
@@ -30,9 +36,21 @@ public class MenuService(IRepository<Menu> repository) : IMenuService, IAutoTran
     public async Task<PagedOutput<MenuOutput>> GetList(PagedFilteredAndSortedInput input)
     {
         return await repository.Query(false)
+            .WhereIf(!ambientData.IsAdmin, m => !m.OnlyForAdmin)
+            .OrderBy(m => m.Name)
             .ApplyFilterAndSorter(input)
             .Select(n => new MenuOutput(n))
             .ToPagedResult(input);
+    }
+
+    public async Task<List<MenuOutput>> GetListForSideNav()
+    {
+        return await repository.Query(false)
+            .OrderBy(m => m.Name)
+            .Where(m => m.Position != MenuPosition.Hide)
+            .WhereIf(!ambientData.IsAdmin, m => !m.OnlyForAdmin)
+            .Select(m => new MenuOutput(m))
+            .ToListAsync();
     }
 
     public async Task<MenuOutput> Create(MenuInput input, bool autoSave = false)

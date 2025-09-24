@@ -7,6 +7,7 @@ public static class UseNotificationExtension
 {
     public static void UseNotifications(this WebApplication app)
     {
-        app.MapHub<NotificationHub>("/notifications");
+        app.MapHub<NotificationHub>("/notifications-hub");
     }
+    
 }

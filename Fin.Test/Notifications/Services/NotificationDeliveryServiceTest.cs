@@ -4,6 +4,7 @@ using Fin.Domain.Notifications.Dtos;
 using Fin.Domain.Notifications.Entities;
 using Fin.Domain.Notifications.Enums;
 using Fin.Domain.Users.Entities;
+using Fin.Domain.Users.Factories;
 using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.EmailSenders;
@@ -146,7 +147,7 @@ public class NotificationDeliveryServiceTest : TestUtils.BaseTestWithContext
             Notification = new Notification { Id = notifyDto.NotificationId }
         };
         var settings = new UserNotificationSettings() { UserId = userId, Enabled = true, AllowedWays = [NotificationWay.Email]};
-        var credential = new UserCredential(userId, encryptedEmail, null);
+        var credential = UserCredentialFactory.Create(userId, encryptedEmail, null, UserCredentialFactoryType.Password);
 
         await resources.DeliveryRepository.AddAsync(delivery, true);
         await resources.UserSettingsRepository.AddAsync(settings, true);

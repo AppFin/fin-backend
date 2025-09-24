@@ -7,43 +7,20 @@ public class UserCredential : IEntity
 {
     public Guid Id { get; set; }
 
-    public string EncryptedEmail { get; private set; }
-    public string EncryptedPassword { get; private set; }
+    public string EncryptedEmail { get; set; }
+    public string EncryptedPassword { get; set; }
 
     public string GoogleId { get; set; }
 
     public string ResetToken { get; set; } = "";
-    public int FailLoginAttempts { get; private set; }
+    public int FailLoginAttempts { get; set; }
 
-    public Guid UserId { get; private set; }
+    public Guid UserId { get; set; }
     public virtual User User { get; set; }
 
     public bool HasGoogle => !string.IsNullOrEmpty(GoogleId);
     public bool HasPassword => !string.IsNullOrEmpty(EncryptedPassword);
     public bool ExceededAttempts => FailLoginAttempts >= 5;
-
-    public UserCredential()
-    {
-    }
-
-    public UserCredential(Guid userId, string encryptedEmail, string encryptedPassword)
-    {
-        Id = Guid.NewGuid();
-        UserId = userId;
-        EncryptedEmail = encryptedEmail;
-        EncryptedPassword = encryptedPassword;
-    }
-
-    public static UserCredential CreateWithGoogle(Guid userId, string encryptedEmail, string googleId)
-    {
-        return new UserCredential
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            EncryptedEmail = encryptedEmail,
-            GoogleId = googleId,
-        };
-    }
 
     public bool ResetPassword(string newPasswordEncrypted, string resetToken)
     {

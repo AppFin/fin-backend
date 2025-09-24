@@ -35,7 +35,7 @@ public static class AddAutoServicesExtension
         return services;
     }
     
-    private static void RegisterDependencyByType(IServiceCollection serviceCollection, Type dependencyType, ServiceLifetime lifeStyle)
+    public static void RegisterDependencyByType(IServiceCollection serviceCollection, Type dependencyType, ServiceLifetime lifeStyle)
     {
         var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
         var referencedPaths = Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll");
