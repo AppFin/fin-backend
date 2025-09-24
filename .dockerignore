@@ -1,0 +1,53 @@
+# Arquivos e pastas que não devem ir para o container
+
+# Build outputs
+**/bin/
+**/obj/
+**/out/
+
+# Dependencies
+node_modules/
+packages/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+logs/
+*.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Git
+.git/
+.gitignore
+README.md
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Tests results
+TestResults/
+coverage/
+
+# Temporary files
+tmp/
+temp/
