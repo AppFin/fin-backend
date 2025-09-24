@@ -6,10 +6,11 @@ namespace Fin.Infrastructure.UnitOfWorks;
 
 public interface IUnitOfWork : IDisposable, IAsyncDisposable
 {
-    Task BeginTransactionAsync(CancellationToken cancellationToken = default);
+    Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
     Task<int> CommitAsync(CancellationToken cancellationToken = default);
     Task RollbackAsync(CancellationToken cancellationToken = default);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+    bool IsInTransaction();
 }
 
 public class UnitOfWork(FinDbContext context): IUnitOfWork, IAutoScoped
@@ -17,35 +18,35 @@ public class UnitOfWork(FinDbContext context): IUnitOfWork, IAutoScoped
     private IDbContextTransaction _transaction;
     private bool _disposed;
 
-    public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
+    public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
         _transaction ??= await context.Database.BeginTransactionAsync(cancellationToken);
+        return _transaction;
     }
 
     public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var result = await context.SaveChangesAsync(cancellationToken);
+        var result = await context.SaveChangesAsync(cancellationToken);
+        
+        if (IsInTransaction())
             await _transaction.CommitAsync(cancellationToken);
-            return result;
-        }
-        catch
-        {
-            await RollbackAsync(cancellationToken);
-            throw;
-        }
+        return result;
     }
 
     public async Task RollbackAsync(CancellationToken cancellationToken = default)
     {
-        if (_transaction != null)
+        if (IsInTransaction())
         {
             await _transaction?.RollbackAsync(cancellationToken)!;
         }
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => await context.SaveChangesAsync(cancellationToken);
+    
+    public bool IsInTransaction()
+    {
+        return _transaction != null;
+    }
 
     public void Dispose()
     {

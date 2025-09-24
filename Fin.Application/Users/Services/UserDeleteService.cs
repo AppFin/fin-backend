@@ -153,31 +153,34 @@ public class UserDeleteService(
         var notifications = notificationDeliveries.Select(n => n.Notification)
             .Where(n => n.UserDeliveries.Count == 1);
 
-        await unitOfWork.BeginTransactionAsync(cancellationToken);
+        await using (await unitOfWork.BeginTransactionAsync(cancellationToken))
+        {
 
-        foreach (var notification in notifications)
-            await notificationRepo.DeleteAsync(notification, cancellationToken);
-        foreach (var delivery in notificationDeliveries)
-            await notificationDeliveryRepo.DeleteAsync(delivery, cancellationToken);
+            foreach (var notification in notifications)
+                await notificationRepo.DeleteAsync(notification, cancellationToken);
+            foreach (var delivery in notificationDeliveries)
+                await notificationDeliveryRepo.DeleteAsync(delivery, cancellationToken);
 
-        await rememberRepo.DeleteAsync(rememberSetting, cancellationToken);
-        await notificationSettingsRepo.DeleteAsync(notificationSetting, cancellationToken);
+            await rememberRepo.DeleteAsync(rememberSetting, cancellationToken);
+            await notificationSettingsRepo.DeleteAsync(notificationSetting, cancellationToken);
 
-        foreach (var otherDeleteRequest in otherDeleteRequests)
-            await userDeleteRequestRepo.DeleteAsync(otherDeleteRequest, cancellationToken);
+            foreach (var otherDeleteRequest in otherDeleteRequests)
+                await userDeleteRequestRepo.DeleteAsync(otherDeleteRequest, cancellationToken);
 
-        foreach (var tenantUser in tenantsUser)
-            await tenantUserRepo.DeleteAsync(tenantUser, cancellationToken);
+            foreach (var tenantUser in tenantsUser)
+                await tenantUserRepo.DeleteAsync(tenantUser, cancellationToken);
 
-        foreach (var tenant in tenants)
-            await tenantRepo.DeleteAsync(tenant, cancellationToken);
+            foreach (var tenant in tenants)
+                await tenantRepo.DeleteAsync(tenant, cancellationToken);
 
-        await credentialRepo.DeleteAsync(credential, cancellationToken);
-        await userDeleteRequestRepo.DeleteAsync(deleteRequest, cancellationToken);
-        await userRepo.DeleteAsync(user, cancellationToken);
+            await credentialRepo.DeleteAsync(credential, cancellationToken);
+            await userDeleteRequestRepo.DeleteAsync(deleteRequest, cancellationToken);
+            await userRepo.DeleteAsync(user, cancellationToken);
 
-        await emailSender.SendEmailAsync(userEmail, "Conta deletada", "Sua conta no FinApp foi deletada. Agora você não poderá mais acessar seus dados e eles foram removidos da plataforma.");
+            await emailSender.SendEmailAsync(userEmail, "Conta deletada",
+                "Sua conta no FinApp foi deletada. Agora você não poderá mais acessar seus dados e eles foram removidos da plataforma.");
 
-        await unitOfWork.CommitAsync(cancellationToken);
+            await unitOfWork.CommitAsync(cancellationToken);
+        }
     }
 }

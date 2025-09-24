@@ -7,6 +7,7 @@ using Fin.Domain.Notifications.Entities;
 using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Entities;
+using Fin.Domain.Users.Factories;
 using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Database.Repositories;
@@ -107,10 +108,10 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
         var encryptedEmail = resources.CryptoHelper.Encrypt(input.Email);
 
         var user = new User();
-        var credential = new UserCredential(user.Id, encryptedEmail, null)
-        {
-            User = user
-        };
+        var credential =
+            UserCredentialFactory.Create(user.Id, encryptedEmail, null, UserCredentialFactoryType.Password);
+        credential.User = user;
+            
         await resources.CredentialRepository.AddAsync(credential, true);
 
         // Act
@@ -699,7 +700,7 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
         var user = new User()
         {
             Id = userId,
-            Credential = UserCredential.CreateWithGoogle(userId, encryptedEmail, googleId)
+            Credential = UserCredentialFactory.Create(userId, encryptedEmail, googleId, UserCredentialFactoryType.Google)
         };
         await resources.UserRepository.AddAsync(user, true);
 

@@ -42,6 +42,22 @@ public static class AddAuthenticationExtension
                     ValidAudience = configuration.GetSection(AuthenticationConstants.TokenJwtAudienceConfigKey).Value ?? "",
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetSection(AuthenticationConstants.TokenJwtKeyConfigKey).Value ?? ""))
                 };
+                
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
+                        
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/notifications-hub"))
+                        {
+                            context.Token = accessToken;
+                        }
+                        
+                        return Task.CompletedTask;
+                    }
+                };
             });
         services.AddAuthorization();
 

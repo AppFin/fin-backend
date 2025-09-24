@@ -12,4 +12,6 @@ public class NotificationInput
     public DateTime StartToDelivery { get; set; }
     public DateTime? StopToDelivery { get; set; }
     public List<Guid> UserIds { get; set; } = new();
+    public string Link { get; set; }
+    public NotificationSeverity Severity { get; set; }
 }

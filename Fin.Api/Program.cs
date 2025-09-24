@@ -1,7 +1,7 @@
 using Fin.Application.Notifications.Extensions;
 using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Extensions;
-using Fin.Infrastructure.Notifications.Hubs;
+using Fin.Infrastructure.Seeders.Extensions;
 using Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,7 +10,6 @@ var frontEndUrl = builder.Configuration.GetSection(AppConstants.FrontUrlConfigKe
 
 builder.Services
     .AddInfrastructure(builder.Configuration)
-    .AddNotifications()
     .AddOpenApiDocument()
     .AddCors(options =>
     {
@@ -19,7 +18,8 @@ builder.Services
             {
                 policy.WithOrigins(frontEndUrl)
                     .AllowAnyHeader()
-                    .AllowAnyMethod();
+                    .AllowAnyMethod()
+                    .AllowCredentials();
             });
     })
     .AddControllers();
@@ -36,9 +36,9 @@ if (app.Environment.IsDevelopment())
     app.UseCors("AllowAngularLocalhost");
 }
 
-
 app.UseNotifications();
 app.UseFinMiddlewares();
+await app.UseSeeders();
 
 app.UseAuthentication();
 app.UseAuthorization();

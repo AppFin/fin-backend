@@ -4,7 +4,9 @@ using Fin.Infrastructure.AutoServices.Extensions;
 using Fin.Infrastructure.BackgroundJobs;
 using Fin.Infrastructure.Database.Extensions;
 using Fin.Infrastructure.Firebases;
+using Fin.Infrastructure.Notifications.Hubs;
 using Fin.Infrastructure.Redis;
+using Fin.Infrastructure.Seeders.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -20,10 +22,12 @@ public static class AddInfrastructureExtension
             .AddAutoServices()
             .AddBackgroundJobs(configuration)
             .AddScoped<TokenBlacklistMiddleware>()
-            .AddScoped<AmbientDataMiddleware>()
             .AddScoped<ActivatedMiddleware>()
+            .AddScoped<AmbientDataMiddleware>()
             .AddDatabase(configuration)
-            .AddFirebase(configuration);
+            .AddFirebase(configuration)
+            .AddSeeders()
+            .AddNotifications();
 
         return services;
     }
