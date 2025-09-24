@@ -62,43 +62,34 @@ public class NotificationDeliveryService(
             throw new Exception(
                 $"User Notification Settings not found to send. NotificationId {notifyUser.NotificationId}, UserId {notifyUser.UserId}");
 
-        foreach (var way in notifyUser.Ways)
+        var allowedWaysToSend = userSettings.AllowedWays.Intersect(notifyUser.Ways).ToList();
+
+        if (!userSettings.Enabled || !allowedWaysToSend.Any())
         {
-            if (!userSettings.Enabled || !userSettings.AllowedWays.Contains(way))
-            {
-                logger.LogInformation(
-                    "User {userId}, don't recived notfication {notificationId} on way {way} because notifications is disabled or way is not allowed.",
-                    notifyUser.UserId, notifyUser.NotificationId, way);
-                continue;
-            }
+            logger.LogWarning(
+                "User {userId}, don't get notification {notificationId} on any way because notifications is disabled or any way is allowed.",
+                notifyUser.UserId, notifyUser.NotificationId);
+            return;
+        }
 
-            try
-            {
-                switch (way)
-                {
-                    case NotificationWay.Snack:
-                    case NotificationWay.Message:
-                        await SendWebSocket(notifyUser);
-                        break;
-                    case NotificationWay.Push:
-                        await SendWebSocket(notifyUser);
-                        await SendFirebase(notifyUser, userSettings, false);
-                        break;
-                    case NotificationWay.Email:
-                        await SendEmail(notifyUser);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-
-                notificationDelivery.MarkAsDelivered();
-            }
-            catch (Exception e)
-            {
-                logger.LogError(
-                    "Error on send notification with id {notificationId} to user id: {userID} on way: {way}. Error: {err}",
-                    notifyUser.NotificationId, notifyUser.UserId, way, e);
-            }
+        try
+        {
+            if (
+                allowedWaysToSend.Contains(NotificationWay.Snack)
+                | allowedWaysToSend.Contains(NotificationWay.Message)
+                | allowedWaysToSend.Contains(NotificationWay.Push)
+            ) await SendWebSocket(notifyUser);
+            if (allowedWaysToSend.Contains(NotificationWay.Push))
+                await SendFirebase(notifyUser, userSettings, false);
+            if (allowedWaysToSend.Contains(NotificationWay.Email))
+                await SendEmail(notifyUser);
+            notificationDelivery.MarkAsDelivered();
+        }
+        catch (Exception e)
+        {
+            logger.LogError(
+                "Error on send notification with id {notificationId} to user id: {userId}.\nError: {err}",
+                notifyUser.NotificationId, notifyUser.UserId, e.ToString());
         }
 
         await deliveryRepository.UpdateAsync(notificationDelivery);
@@ -165,6 +156,8 @@ public class NotificationDeliveryService(
 
     private async Task SendFirebase(NotifyUserDto notify, UserNotificationSettings userSettings, bool autoSave)
     {
+        if (userSettings.FirebaseTokens is not { Count: > 0 }) return;
+        
         var messages = userSettings.FirebaseTokens
             .Select(t => new Message
             {

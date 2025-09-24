@@ -18,7 +18,8 @@ builder.Services
             {
                 policy.WithOrigins(frontEndUrl)
                     .AllowAnyHeader()
-                    .AllowAnyMethod();
+                    .AllowAnyMethod()
+                    .AllowCredentials();
             });
     })
     .AddControllers();
