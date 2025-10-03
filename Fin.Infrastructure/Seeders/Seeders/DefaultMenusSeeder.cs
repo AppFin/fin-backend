@@ -23,11 +23,22 @@ public class DefaultMenusSeeder(
                 Id = Guid.Parse("01994133-6669-7fcd-b6db-19a9b0c06f20"),
                 FrontRoute = "/admin/menus",
                 Name = "finCore.features.menus.title",
-                Color = "#fdc570",
+                Color = "#ff6666",
                 Icon = "list",
                 OnlyForAdmin = true,
                 Position = MenuPosition.LeftTop,
                 KeyWords = "Menu"
+            },
+            new()
+            {
+                Id = Guid.Parse("01999256-1baa-76bb-be49-6e209249c827"),
+                FrontRoute = "/admin/notifications",
+                Name = "finCore.features.notifications.title",
+                Color = "#ff6666",
+                Icon = "comment",
+                OnlyForAdmin = true,
+                Position = MenuPosition.LeftTop,
+                KeyWords = "notifications, notificação, notificações"
             }
         };
         var defaultMenusIds = defaultMenus.Select(x => x.Id).ToList();
