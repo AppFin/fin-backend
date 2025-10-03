@@ -15,6 +15,7 @@ public class NotificationOutput(Notification input)
     public DateTime? StopToDelivery { get; set; } = input.StopToDelivery;
     public string Link { get; set; } = input.Link;
     public NotificationSeverity Severity { get; set; } = input.Severity;
+    public List<Guid> UserIds { get; set; } = input.UserDeliveries.Select(u => u.UserId).ToList();
 
     public NotificationOutput() : this(new Notification())
     {

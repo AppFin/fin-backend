@@ -28,6 +28,7 @@ public class NotificationService(
     public async Task<NotificationOutput> Get(Guid id)
     {
         var entity = await repository.Query()
+            .Include(n => n.UserDeliveries)
             .FirstOrDefaultAsync(n => n.Id == id);
         return entity != null ? new NotificationOutput(entity) : null;
     }
@@ -35,6 +36,7 @@ public class NotificationService(
     public async Task<PagedOutput<NotificationOutput>> GetList(PagedFilteredAndSortedInput input)
     {
         return await repository.Query(false)
+            .Include(n => n.UserDeliveries)
             .ApplyFilterAndSorter(input)
             .Select(n => new NotificationOutput(n))
             .ToPagedResult(input);
