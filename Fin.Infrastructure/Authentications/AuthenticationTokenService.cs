@@ -134,7 +134,7 @@ public class AuthenticationTokenService: IAuthenticationTokenService, IAutoTrans
         var subject = new List<Claim>();
         subject.Add(new Claim(ClaimTypes.Name, user.DisplayName));
         subject.Add(new Claim("userId", user.Id.ToString()));
-        subject.Add(new Claim(ClaimTypes.Role, user.IsAdmin ? "Admin" : "User"));
+        subject.Add(new Claim(ClaimTypes.Role, user.IsAdmin ? AuthenticationRoles.Admin : AuthenticationRoles.User));
         subject.Add(new Claim("imageUrl", user.ImagePublicUrl ?? ""));
         subject.Add(new Claim("tenantId", user.Tenants.FirstOrDefault()?.Id.ToString() ?? ""));
         
