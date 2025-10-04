@@ -4,6 +4,7 @@ using Fin.Domain.Notifications.Dtos;
 using Fin.Domain.Notifications.Entities;
 using Fin.Domain.Notifications.Enums;
 using Fin.Domain.Users.Entities;
+using Fin.Domain.Users.Factories;
 using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.EmailSenders;
@@ -14,6 +15,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Notification = Fin.Domain.Notifications.Entities.Notification;
 
@@ -71,7 +73,12 @@ public class NotificationDeliveryServiceTest : TestUtils.BaseTestWithContext
         {
             Notification = new Notification { Id = notifyDto.NotificationId }
         };
-        var settings = new UserNotificationSettings() { UserId = notifyDto.UserId };
+        var settings = new UserNotificationSettings() 
+        { 
+            UserId = notifyDto.UserId, 
+            AllowedWays = [NotificationWay.Snack],
+            Enabled = true  
+        };
         await resources.DeliveryRepository.AddAsync(delivery, true);
         await resources.UserSettingsRepository.AddAsync(settings, true);
 
@@ -80,6 +87,7 @@ public class NotificationDeliveryServiceTest : TestUtils.BaseTestWithContext
 
         // Assert
         resources.FakeClientProxy.Verify(c => c.SendCoreAsync("ReceiveNotification", It.Is<object[]>(o => o[0] == notifyDto), default), Times.Once);
+    
         var dbDelivery = await resources.DeliveryRepository.Query(false).FirstOrDefaultAsync(a => a.NotificationId == delivery.NotificationId);
         dbDelivery.Delivery.Should().BeTrue();
     }
@@ -146,7 +154,7 @@ public class NotificationDeliveryServiceTest : TestUtils.BaseTestWithContext
             Notification = new Notification { Id = notifyDto.NotificationId }
         };
         var settings = new UserNotificationSettings() { UserId = userId, Enabled = true, AllowedWays = [NotificationWay.Email]};
-        var credential = new UserCredential(userId, encryptedEmail, null);
+        var credential = UserCredentialFactory.Create(userId, encryptedEmail, null, UserCredentialFactoryType.Password);
 
         await resources.DeliveryRepository.AddAsync(delivery, true);
         await resources.UserSettingsRepository.AddAsync(settings, true);
@@ -222,7 +230,7 @@ public class NotificationDeliveryServiceTest : TestUtils.BaseTestWithContext
     #region GetUnvisualizedNotifications
 
     [Fact]
-    public async Task GetUnvisualizedNotifications_ShouldReturnActiveAndMarkVisualized()
+    public async Task GetUnvisualizedNotifications_ShouldReturnActiveAndMarkDelivery()
     {
         // Arrange
         await ConfigureLoggedAmbientAsync();
@@ -256,7 +264,7 @@ public class NotificationDeliveryServiceTest : TestUtils.BaseTestWithContext
         result[0].NotificationId.Should().Be(activeNotification.Id);
 
         var dbDelivery = await resources.DeliveryRepository.Query(false).FirstAsync(d => d.NotificationId == activeDelivery.NotificationId);
-        dbDelivery.Visualized.Should().BeTrue();
+        dbDelivery.Delivery.Should().BeTrue();
     }
 
     #endregion
@@ -272,7 +280,8 @@ public class NotificationDeliveryServiceTest : TestUtils.BaseTestWithContext
             DateTimeProvider.Object,
             resources.FakeHubContext.Object,
             resources.FakeEmailSender.Object,
-            resources.FakeFirebaseNotification.Object
+            resources.FakeFirebaseNotification.Object,
+            resources.Logger.Object
         );
     }
 
@@ -302,7 +311,8 @@ public class NotificationDeliveryServiceTest : TestUtils.BaseTestWithContext
             FakeHubContext = fakeHubContext,
             FakeHubClients = fakeHubClients,
             FakeClientProxy = fakeClientProxy,
-            CryptoHelper = new CryptoHelper(encryptKey, encryptIv)
+            CryptoHelper = new CryptoHelper(encryptKey, encryptIv),
+            Logger = new  Mock<ILogger<NotificationDeliveryService>>()
         };
     }
 
@@ -314,6 +324,7 @@ public class NotificationDeliveryServiceTest : TestUtils.BaseTestWithContext
         public Mock<IConfiguration> FakeConfiguration { get; set; }
         public Mock<IEmailSenderService> FakeEmailSender { get; set; }
         public Mock<IFirebaseNotificationService> FakeFirebaseNotification { get; set; }
+        public Mock<ILogger<NotificationDeliveryService>> Logger { get; set; }
         public Mock<IHubContext<NotificationHub>> FakeHubContext { get; set; }
         public Mock<IHubClients> FakeHubClients { get; set; }
         public Mock<IClientProxy> FakeClientProxy { get; set; }

@@ -1,4 +1,5 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
+using Fin.Infrastructure.Authentications.Constants;
 using Microsoft.AspNetCore.Http;
 
 namespace Fin.Infrastructure.AmbientDatas;
@@ -28,7 +29,7 @@ public class AmbientDataMiddleware: IMiddleware
 
                 var displayName = jwt.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value ?? "";
                 var userId = jwt.Claims.FirstOrDefault(c => c.Type == "userId")?.Value ?? "";
-                var isAdmin = jwt.Claims.FirstOrDefault(c => c.Type == "role")?.Value == "Admin";
+                var isAdmin = jwt.Claims.FirstOrDefault(c => c.Type == "role")?.Value == AuthenticationRoles.Admin;
                 var tenantId = jwt.Claims.FirstOrDefault(c => c.Type == "tenantId")?.Value ?? "";
 
                 _ambientData.SetData(Guid.Parse(tenantId), Guid.Parse(userId), displayName, isAdmin);           

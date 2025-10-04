@@ -1,6 +1,7 @@
 ﻿using Fin.Application.Menus;
 using Fin.Domain.Global.Classes;
 using Fin.Domain.Menus.Dtos;
+using Fin.Infrastructure.Authentications.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,7 +24,7 @@ public class MenuController(IMenuService service): ControllerBase
     }
     
     [HttpGet("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AuthenticationRoles.Admin)]
     public async Task<ActionResult<MenuOutput>> Get([FromRoute] Guid id)
     {
         var menu = await service.Get(id);
@@ -31,7 +32,7 @@ public class MenuController(IMenuService service): ControllerBase
     }
     
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AuthenticationRoles.Admin)]
     public async Task<ActionResult<MenuOutput>> Create([FromBody] MenuInput input)
     {
         var menu = await service.Create(input, autoSave: true);
@@ -39,7 +40,7 @@ public class MenuController(IMenuService service): ControllerBase
     }
     
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AuthenticationRoles.Admin)]
     public async Task<ActionResult> Update([FromRoute] Guid id, [FromBody] MenuInput input)
     {
         var updated = await service.Update(id, input, autoSave: true);
@@ -47,7 +48,7 @@ public class MenuController(IMenuService service): ControllerBase
     }
     
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AuthenticationRoles.Admin)]
     public async Task<ActionResult> Delete([FromRoute] Guid id)
     {
         var deleted = await service.Delete(id, autoSave: true);

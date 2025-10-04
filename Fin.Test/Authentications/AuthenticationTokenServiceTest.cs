@@ -2,6 +2,7 @@
 using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Entities;
+using Fin.Domain.Users.Factories;
 using Fin.Infrastructure.Authentications;
 using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.Authentications.Dtos;
@@ -59,7 +60,8 @@ public class AuthenticationTokenServiceTest : TestUtils.BaseTestWithContext
             Id = TestUtils.Guids[0],
             Tenants = [new Tenant(now)]
         };
-        var credential = new UserCredential(user.Id, encryptedEmail, encryptedPass);
+        var credential =
+            UserCredentialFactory.Create(user.Id, encryptedEmail, encryptedPass, UserCredentialFactoryType.Password);
         credential.Id = TestUtils.Guids[1];
 
         await resources.UseRepository.AddAsync(user);
@@ -110,7 +112,7 @@ public class AuthenticationTokenServiceTest : TestUtils.BaseTestWithContext
             Id = TestUtils.Guids[0],
             Tenants = [new Tenant(now)]
         };
-        var credential = new UserCredential(user.Id, encryptedEmail, encryptedPass);
+        var credential = UserCredentialFactory.Create(user.Id, encryptedEmail, encryptedPass, UserCredentialFactoryType.Password);
         credential.Id = TestUtils.Guids[1];
         credential.User = user;
 
