@@ -1,3 +1,5 @@
+[🇺🇸 In english](../DOCKER.md)
+
 # Docker Compose - Fin Backend Infrastructure
 
 ## Como rodar o banco de dados PostgreSQL e Redis
@@ -36,21 +38,12 @@
    }
    ```
 
-3. **Rode as migrations para criar as tabelas:**
-   ```
-   dotnet ef database update --project .\Fin.Infrastructure\
-   ```
-   > Se necessário, instale o pacote de ferramentas:
-   > ```
-   > dotnet tool install --global dotnet-ef
-   > ```
-
-4. **Verifique se tudo está ok:**
+3. **Verifique se tudo está ok:**
    ```
    dotnet build
    ```
 
-5. **Inicie a aplicação:**
+4. **Inicie a aplicação:**
    ```
    dotnet run --project .\Fin.Api\
    ```
