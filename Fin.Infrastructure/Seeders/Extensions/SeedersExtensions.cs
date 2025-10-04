@@ -2,6 +2,7 @@ using Fin.Infrastructure.AutoServices.Extensions;
 using Fin.Infrastructure.Seeders.interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Fin.Infrastructure.Seeders.Extensions;
 
@@ -17,9 +18,25 @@ public static class SeedersExtensions
     {
         using var scope = app.Services.CreateScope();
         var seeders = scope.ServiceProvider.GetServices<ISeeder>();
-        foreach (var seeder in seeders)
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<ISeeder>>();
+
+        try
         {
-            await seeder.SeedAsync();
+            logger.LogInformation("Seeders started");
+            foreach (var seeder in seeders)
+            {
+                await seeder.SeedAsync();
+            }
+            logger.LogInformation("Seeders finished");
+        }
+        catch (Exception ex)
+        {
+            var isRelationDoesNotExistError = ex.Message.Contains("42P01");
+            logger.LogError(
+                isRelationDoesNotExistError
+                    ? "Error \"relation X does not exist\" was thrown. Did you run the migrations? Error: \n{message}"
+                    : "An error occurred while seeding: {message}", ex.Message);
+            throw;
         }
     }
     

@@ -25,8 +25,8 @@ public class Notification: IAuditedEntity
     public Guid UpdatedBy { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-    
-    public Collection<NotificationUserDelivery> UserDeliveries { get; set; }
+
+    public Collection<NotificationUserDelivery> UserDeliveries { get; set; } = [];
 
     public Notification()
     {

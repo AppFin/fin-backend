@@ -1,9 +1,10 @@
 ﻿using Fin.Infrastructure.Database.Interceptors;
 using Fin.Infrastructure.Database.Repositories;
-using Fin.Infrastructure.Database.Services;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Fin.Infrastructure.Database.Extensions;
 
@@ -25,9 +26,25 @@ public static class AddDatabaseExtension
                     .AddInterceptors(tenantEntityInterceptor);
             })
             .AddScoped(typeof(IRepository<>), typeof(Repository<>));;
-
-        services.AddHostedService<MigrateDatabaseHostedService>();
         
         return services;
+    }
+
+    public static async Task UseDbMigrations(this WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<FinDbContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<FinDbContext>>();
+        try
+        {
+            logger.LogInformation("Applying migrations...");
+            await dbContext.Database.MigrateAsync();
+            logger.LogInformation("Migrations applied successfully.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("An error occurred while applying migrations: {message}", ex.Message);
+            throw;
+        }
     }
 }

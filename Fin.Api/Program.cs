@@ -1,5 +1,6 @@
 using Fin.Application.Notifications.Extensions;
 using Fin.Infrastructure.Constants;
+using Fin.Infrastructure.Database.Extensions;
 using Fin.Infrastructure.Extensions;
 using Fin.Infrastructure.Seeders.Extensions;
 using Hangfire;
@@ -38,6 +39,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseNotifications();
 app.UseFinMiddlewares();
+
+await app.UseDbMigrations();
 await app.UseSeeders();
 
 app.UseAuthentication();

@@ -1,6 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Fin.Infrastructure.AmbientDatas;
+using Fin.Infrastructure.Authentications.Constants;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Moq;
@@ -68,7 +69,7 @@ public class AmbientDataMiddlewareTest
         {
             { "userId", TestUtils.Guids[0].ToString() },
             { "unique_name", "Test User" },
-            { "role", "Admin" },
+            { "role", AuthenticationRoles.Admin },
             { "tenantId", TestUtils.Guids[1].ToString() }
         };
 

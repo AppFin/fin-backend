@@ -1,6 +1,7 @@
 ﻿using Fin.Application.Users.Services;
 using Fin.Domain.Global.Classes;
 using Fin.Domain.Users.Dtos;
+using Fin.Infrastructure.Authentications.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,14 +12,14 @@ namespace Fin.Api.Users;
 public class UserDeleteController(IUserDeleteService userDeleteService) : ControllerBase
 {
     [HttpGet]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AuthenticationRoles.Admin)]
     public async Task<PagedOutput<UserDeleteRequestDto>> GetList([FromQuery] PagedFilteredAndSortedInput input, CancellationToken cancellationToken)
     {
         return await userDeleteService.GetList(input, cancellationToken);
     }
 
     [HttpPost("abort/{userId:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AuthenticationRoles.Admin)]
     public async Task<ActionResult<bool>> AbortDelete([FromRoute] Guid userId, CancellationToken cancellationToken)
     {
         var result = await userDeleteService.AbortDeleteUser(userId, cancellationToken);
