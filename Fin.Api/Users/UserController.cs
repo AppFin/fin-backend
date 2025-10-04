@@ -12,7 +12,6 @@ namespace Fin.Api.Users;
 public class UserController(IUserService service): ControllerBase
 {
     [HttpGet("{id:guid}")]
-    [Authorize(Roles = AuthenticationRoles.Admin)]
     public async Task<ActionResult<UserDto>> Get([FromRoute] Guid id)
     {
         var menu = await service.Get(id);
