@@ -1,4 +1,4 @@
-[Em portugês](./assets/README_pt-br.md)
+[🇧🇷 Em portugês](./assets/README_pt-br.md)
 
 ## Overview
 FinApp is a modern, intuitive personal finance management solution designed to help young adults and teenagers take control of their finances. This backend provides secure, scalable APIs powering Fin’s web and mobile experiences, replacing traditional spreadsheets with a more engaging and accessible digital approach.
