@@ -34,7 +34,8 @@ public class TitleCategoryService(
     {
         return await repository.Query(false)
             .WhereIf(input.Inactivated.HasValue, n => n.Inactivated == input.Inactivated.Value)
-            .OrderByDescending(m => m.Inactivated)
+            .WhereIf(input.Type.HasValue, n => n.Type == input.Type.Value)
+            .OrderBy(m => m.Inactivated)
             .ThenBy(m => m.Name)
             .ApplyFilterAndSorter(input)
             .Select(n => new TitleCategoryOutput(n))

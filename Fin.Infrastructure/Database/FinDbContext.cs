@@ -42,6 +42,8 @@ public class FinDbContext : DbContext
     {
         _ambientData = ambientData;
     }
+    
+    
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -64,7 +66,6 @@ public class FinDbContext : DbContext
 
     private void ApplyTenantFilter(ModelBuilder modelBuilder)
     {
-        if (!(_ambientData?.IsLogged ?? false)) return;
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             if (typeof(ITenantEntity).IsAssignableFrom(entityType.ClrType))
@@ -80,7 +81,7 @@ public class FinDbContext : DbContext
 
     private void SetTenantFilter<TEntity>(ModelBuilder modelBuilder) where TEntity : class, ITenantEntity
     {
-        modelBuilder.Entity<TEntity>().HasQueryFilter(e => e.TenantId == _ambientData.TenantId);
+        modelBuilder.Entity<TEntity>().HasQueryFilter(e => _ambientData.IsLogged && e.TenantId == _ambientData.TenantId);
     }
 
     private void ApplyUtcConverterToDateTime(ModelBuilder modelBuilder)
