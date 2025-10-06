@@ -81,6 +81,7 @@ public class FinDbContext : DbContext
 
     private void SetTenantFilter<TEntity>(ModelBuilder modelBuilder) where TEntity : class, ITenantEntity
     {
+        if (Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite") return;
         modelBuilder.Entity<TEntity>().HasQueryFilter(e => _ambientData.IsLogged && e.TenantId == _ambientData.TenantId);
     }
 
