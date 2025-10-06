@@ -28,30 +28,16 @@ public class FinancialInstitutionController(IFinancialInstitutionService service
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<FinancialInstitutionOutput>> Create([FromBody] FinancialInstitutionInput input)
     {
-        try
-        {
-            var institution = await service.Create(input, autoSave: true);
-            return institution != null ? Created($"financial-institutions/{institution.Id}", institution) : UnprocessableEntity();
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var institution = await service.Create(input, autoSave: true);
+        return institution != null ? Created($"financial-institutions/{institution.Id}", institution) : UnprocessableEntity();
     }
     
     [HttpPut("{id:guid}")]
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult> Update([FromRoute] Guid id, [FromBody] FinancialInstitutionInput input)
     {
-        try
-        {
-            var updated = await service.Update(id, input, autoSave: true);
-            return updated ? Ok() : NotFound();
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var updated = await service.Update(id, input, autoSave: true);
+        return updated ? Ok() : NotFound();
     }
     
     [HttpDelete("{id:guid}")]
