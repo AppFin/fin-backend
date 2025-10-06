@@ -3,6 +3,7 @@ using System;
 using Fin.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,14 +12,16 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Fin.Infrastructure.Migrations
 {
     [DbContext(typeof(FinDbContext))]
-    partial class FinDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251006191258_AddColorToFinancialInstitution")]
+    partial class AddColorToFinancialInstitution
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("public")
-                .HasAnnotation("ProductVersion", "9.0.4")
+                .HasAnnotation("ProductVersion", "9.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -35,6 +38,7 @@ namespace Fin.Infrastructure.Migrations
                         .HasDefaultValue(true);
 
                     b.Property<string>("Code")
+                        .IsRequired()
                         .HasMaxLength(3)
                         .HasColumnType("character varying(3)");
 
@@ -59,8 +63,12 @@ namespace Fin.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -72,13 +80,13 @@ namespace Fin.Infrastructure.Migrations
 
                     b.HasIndex("Active");
 
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
                     b.HasIndex("Type");
+
+                    b.HasIndex("Code", "TenantId")
+                        .IsUnique();
+
+                    b.HasIndex("Name", "TenantId")
+                        .IsUnique();
 
                     b.ToTable("FinancialInstitution", "public");
                 });

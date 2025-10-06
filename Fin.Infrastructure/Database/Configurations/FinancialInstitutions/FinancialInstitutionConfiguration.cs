@@ -11,32 +11,22 @@ public class FinancialInstitutionConfiguration : IEntityTypeConfiguration<Financ
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Name)
-            .HasMaxLength(200)
-            .IsRequired();
+            .HasMaxLength(100)
+            .IsRequired()
+            .IsUnicode();
 
         builder.Property(x => x.Code)
-            .HasMaxLength(3)
-            .IsRequired();
+            .HasMaxLength(15);
 
         builder.Property(x => x.Icon)
-            .HasMaxLength(50);
+            .HasMaxLength(20)
+            .IsRequired();
 
-        builder.Property(x => x.Active)
-            .IsRequired()
-            .HasDefaultValue(true);
+        builder.Property(x => x.Color)
+            .HasMaxLength(20)
+            .IsRequired();
 
         builder.Property(x => x.Type)
-            .IsRequired()
-            .HasConversion<string>();
-
-        builder.HasIndex(x => new { x.Name, x.TenantId })
-            .IsUnique();
-
-        builder.HasIndex(x => new { x.Code, x.TenantId })
-            .IsUnique();
-
-        builder.HasIndex(x => x.Active);
-
-        builder.HasIndex(x => x.Type);
+            .IsRequired();
     }
 }

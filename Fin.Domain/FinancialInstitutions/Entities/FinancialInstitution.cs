@@ -4,21 +4,20 @@ using Fin.Domain.Global.Interfaces;
 
 namespace Fin.Domain.FinancialInstitutions.Entities;
 
-public class FinancialInstitution : IAuditedEntity, ITenantEntity
+public class FinancialInstitution : IAuditedEntity
 {
     public string Name { get; set; }
     public string Code { get; set; }
     public FinancialInstitutionType Type { get; set; }
     public string Icon { get; set; }
-    public bool Active { get; set; }
+    public string Color { get; set; }
+    public bool Inactive { get; set; }
 
     public Guid Id { get; set; }
     public Guid CreatedBy { get; set; }
     public Guid UpdatedBy { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-    public Guid TenantId { get; set; }
-
     public FinancialInstitution()
     {
     }
@@ -29,7 +28,7 @@ public class FinancialInstitution : IAuditedEntity, ITenantEntity
         Code = input.Code;
         Type = input.Type;
         Icon = input.Icon;
-        Active = input.Active;
+        Color = input.Color;
     }
 
     public void Update(FinancialInstitutionInput input)
@@ -38,10 +37,8 @@ public class FinancialInstitution : IAuditedEntity, ITenantEntity
         Code = input.Code;
         Type = input.Type;
         Icon = input.Icon;
-        Active = input.Active;
+        Color = input.Color;
     }
 
-    public void Activate() => Active = true;
-    
-    public void Deactivate() => Active = false;
+   public void ToggleInactive() => Inactive = !Inactive;
 }

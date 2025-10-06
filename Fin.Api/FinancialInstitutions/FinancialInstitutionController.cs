@@ -11,13 +11,12 @@ namespace Fin.Api.FinancialInstitutions;
 public class FinancialInstitutionController(IFinancialInstitutionService service): ControllerBase
 {
     [HttpGet]
-    public async Task<PagedOutput<FinancialInstitutionOutput>> GetList([FromQuery] PagedFilteredAndSortedInput input)
+    public async Task<PagedOutput<FinancialInstitutionOutput>> GetList([FromQuery] FinancialInstitutionGetListInput input)
     {
         return await service.GetList(input);
     }
-    
+
     [HttpGet("{id:guid}")]
-    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<FinancialInstitutionOutput>> Get([FromRoute] Guid id)
     {
         var institution = await service.Get(id);
@@ -25,7 +24,6 @@ public class FinancialInstitutionController(IFinancialInstitutionService service
     }
     
     [HttpPost]
-    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<FinancialInstitutionOutput>> Create([FromBody] FinancialInstitutionInput input)
     {
         var institution = await service.Create(input, autoSave: true);
@@ -33,7 +31,6 @@ public class FinancialInstitutionController(IFinancialInstitutionService service
     }
     
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Admin")]
     public async Task<ActionResult> Update([FromRoute] Guid id, [FromBody] FinancialInstitutionInput input)
     {
         var updated = await service.Update(id, input, autoSave: true);
@@ -41,26 +38,16 @@ public class FinancialInstitutionController(IFinancialInstitutionService service
     }
     
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Admin")]
     public async Task<ActionResult> Delete([FromRoute] Guid id)
     {
         var deleted = await service.Delete(id, autoSave: true);
         return deleted ? Ok() : NotFound();   
     }
 
-    [HttpPost("{id:guid}/activate")]
-    [Authorize(Roles = "Admin")]
-    public async Task<ActionResult> Activate([FromRoute] Guid id)
+    [HttpPatch("{id:guid}/toggle-inactive")]
+    public async Task<ActionResult> ToggleInactive([FromRoute] Guid id)
     {
-        var activated = await service.Activate(id, autoSave: true);
-        return activated ? Ok() : NotFound();
-    }
-
-    [HttpPost("{id:guid}/deactivate")]
-    [Authorize(Roles = "Admin")]
-    public async Task<ActionResult> Deactivate([FromRoute] Guid id)
-    {
-        var deactivated = await service.Deactivate(id, autoSave: true);
-        return deactivated ? Ok() : NotFound();
+        var toggled = await service.ToggleInactive(id, autoSave: true);
+        return toggled ? Ok() : NotFound();   
     }
 }

@@ -10,9 +10,8 @@ public class FinancialInstitutionOutput
     public string Code { get; set; }
     public FinancialInstitutionType Type { get; set; }
     public string Icon { get; set; }
-    public bool Active { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public string Color { get; set; }
+    public bool Inactive { get; set; }
 
     public FinancialInstitutionOutput()
     {
@@ -25,8 +24,7 @@ public class FinancialInstitutionOutput
         Code = input.Code;
         Type = input.Type;
         Icon = input.Icon;
-        Active = input.Active;
-        CreatedAt = input.CreatedAt;
-        UpdatedAt = input.UpdatedAt;
+        Color = input.Color;
+        Inactive = input.Inactive;
     }
 }

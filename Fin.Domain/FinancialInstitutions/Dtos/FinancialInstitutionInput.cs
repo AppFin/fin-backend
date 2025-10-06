@@ -6,18 +6,20 @@ namespace Fin.Domain.FinancialInstitutions.Dtos;
 public class FinancialInstitutionInput
 {
     [Required]
-    [MaxLength(200)]
+    [MaxLength(100)]
     public string Name { get; set; }
     
-    [Required]
-    [RegularExpression(@"^\d{3}$", ErrorMessage = "Code must be exactly 3 digits")]
+    [MaxLength(15)]
     public string Code { get; set; }
     
     [Required]
     public FinancialInstitutionType Type { get; set; }
-    
-    [MaxLength(50)]
+
+    [MaxLength(20)]
+    [Required]
     public string Icon { get; set; }
     
-    public bool Active { get; set; } = true;
-}
+    [MaxLength(20)]
+    [Required]
+    public string Color { get; set; }
+    }

@@ -52,6 +52,7 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+notifications.md
 
-
+.vs
 appsettings.Development.json
