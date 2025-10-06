@@ -27,15 +27,15 @@ public class TitleCategoryController(ITitleCategoryService service): ControllerB
     [HttpPost]
     public async Task<ActionResult<TitleCategoryOutput>> Create([FromBody] TitleCategoryInput input)
     {
-        var category = await service.Create(input, autoSave: true);
-        return category != null ? Created($"categories/{category.Id}", category) : UnprocessableEntity();   
+        var validationResult = await service.Create(input, autoSave: true);
+        return validationResult.Success ? Created($"categories/{validationResult.Data?.Id}",validationResult.Data) : UnprocessableEntity(validationResult);   
     }
     
     [HttpPut("{id:guid}")]
     public async Task<ActionResult> Update([FromRoute] Guid id, [FromBody] TitleCategoryInput input)
     {
-        var updated = await service.Update(id, input, autoSave: true);
-        return updated  ? Ok() : UnprocessableEntity();   
+        var validationResult = await service.Update(id, input, autoSave: true);
+        return validationResult.Success  ? Ok() : UnprocessableEntity(validationResult);   
     }
     
     [HttpPut("toggle-inactivated/{id:guid}")]
