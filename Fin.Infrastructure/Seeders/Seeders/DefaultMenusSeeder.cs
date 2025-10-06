@@ -20,6 +20,17 @@ public class DefaultMenusSeeder(
         {
             new()
             {
+                Id = Guid.Parse("E517345A-837D-42B8-8281-FD8DC32F9150"),
+                FrontRoute = "/wallets",
+                Name = "finCore.features.wallets.title",
+                Color = "#fdc570",
+                Icon = "wallet",
+                OnlyForAdmin = false,
+                Position = MenuPosition.LeftTop,
+                KeyWords = "wallets, carteiras, conta, account, billetera, cuenta"
+            },
+            new()
+            {
                 Id = Guid.Parse("0199b289-82a7-7069-9230-05250b55fd47"),
                 FrontRoute = "/title-categories",
                 Name = "finCore.features.titleCategory.title",
