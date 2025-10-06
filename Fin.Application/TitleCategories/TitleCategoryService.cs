@@ -1,5 +1,6 @@
 ﻿using Fin.Application.Globals.Dtos;
 using Fin.Application.TitleCategories.Dtos;
+using Fin.Application.TitleCategories.Enums;
 using Fin.Domain.Global.Classes;
 using Fin.Domain.TitleCategories.Dtos;
 using Fin.Domain.TitleCategories.Entities;
@@ -44,7 +45,7 @@ public class TitleCategoryService(
 
     public async Task<ValidationResultDto<TitleCategoryOutput, TitleCategoryCreateOrUpdateErrorCode>> Create(TitleCategoryInput input, bool autoSave = false)
     {
-        var validation = await ValidarInput<TitleCategoryOutput>(input);
+        var validation = await ValidateInput<TitleCategoryOutput>(input);
         if (!validation.Success) return validation;
         
         var titleCategory = new TitleCategory(input);
@@ -55,7 +56,7 @@ public class TitleCategoryService(
 
     public async Task<ValidationResultDto<bool, TitleCategoryCreateOrUpdateErrorCode>> Update(Guid id, TitleCategoryInput input, bool autoSave = false)
     {
-        var validation = await ValidarInput<bool>(input, id);
+        var validation = await ValidateInput<bool>(input, id);
         if (!validation.Success) return validation;
         
         var titleCategory = await repository.Query().FirstAsync(u => u.Id == id);
@@ -88,7 +89,7 @@ public class TitleCategoryService(
         return true;  
     }
 
-    private async Task<ValidationResultDto<T,TitleCategoryCreateOrUpdateErrorCode>> ValidarInput<T>( TitleCategoryInput input, Guid? editingId = null)
+    private async Task<ValidationResultDto<T,TitleCategoryCreateOrUpdateErrorCode>> ValidateInput<T>( TitleCategoryInput input, Guid? editingId = null)
     {
         var validationResult = new ValidationResultDto<T,TitleCategoryCreateOrUpdateErrorCode>();
 
