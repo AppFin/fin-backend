@@ -33,6 +33,13 @@ namespace Fin.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Wallets", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Wallets_FinancialInstitution_FinancialInstitutionId",
+                        column: x => x.FinancialInstitutionId,
+                        principalSchema: "public",
+                        principalTable: "FinancialInstitution",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
@@ -41,6 +48,12 @@ namespace Fin.Infrastructure.Migrations
                 table: "TitleCategories",
                 columns: new[] { "Name", "TenantId" },
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Wallets_FinancialInstitutionId",
+                schema: "public",
+                table: "Wallets",
+                column: "FinancialInstitutionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Wallets_Name_TenantId",

@@ -1,6 +1,7 @@
 using Fin.Domain.FinancialInstitutions.Dtos;
 using Fin.Domain.FinancialInstitutions.Enums;
 using Fin.Domain.Global.Interfaces;
+using Fin.Domain.Wallets.Entities;
 
 namespace Fin.Domain.FinancialInstitutions.Entities;
 
@@ -13,11 +14,14 @@ public class FinancialInstitution : IAuditedEntity
     public string Color { get; set; }
     public bool Inactive { get; set; }
 
+    public virtual ICollection<Wallet> Wallets { get; set; }
+    
     public Guid Id { get; set; }
     public Guid CreatedBy { get; set; }
     public Guid UpdatedBy { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    
     public FinancialInstitution()
     {
     }

@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Fin.Infrastructure.Migrations
 {
     [DbContext(typeof(FinDbContext))]
-    [Migration("20251006220137_adding_wallets")]
+    [Migration("20251007222924_adding_wallets")]
     partial class adding_wallets
     {
         /// <inheritdoc />
@@ -25,6 +25,55 @@ namespace Fin.Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Fin.Domain.FinancialInstitutions.Entities.FinancialInstitution", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(15)
+                        .HasColumnType("character varying(15)");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Icon")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<bool>("Inactive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .IsUnicode(true)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FinancialInstitution", "public");
+                });
 
             modelBuilder.Entity("Fin.Domain.Menus.Entities.Menu", b =>
                 {
@@ -513,6 +562,8 @@ namespace Fin.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("FinancialInstitutionId");
+
                     b.HasIndex("Name", "TenantId")
                         .IsUnique();
 
@@ -601,6 +652,21 @@ namespace Fin.Infrastructure.Migrations
                     b.Navigation("User");
 
                     b.Navigation("UserAborted");
+                });
+
+            modelBuilder.Entity("Fin.Domain.Wallets.Entities.Wallet", b =>
+                {
+                    b.HasOne("Fin.Domain.FinancialInstitutions.Entities.FinancialInstitution", "FinancialInstitution")
+                        .WithMany("Wallets")
+                        .HasForeignKey("FinancialInstitutionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("FinancialInstitution");
+                });
+
+            modelBuilder.Entity("Fin.Domain.FinancialInstitutions.Entities.FinancialInstitution", b =>
+                {
+                    b.Navigation("Wallets");
                 });
 
             modelBuilder.Entity("Fin.Domain.Notifications.Entities.Notification", b =>

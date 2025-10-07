@@ -1,30 +1,37 @@
+using Fin.Application.FinancialInstitutions;
 using Fin.Application.Wallets.Enums;
 using Fin.Application.Wallets.Services;
+using Fin.Domain.FinancialInstitutions.Dtos;
 using Fin.Domain.Wallets.Dtos;
 using Fin.Domain.Wallets.Entities;
 using Fin.Infrastructure.Database.Repositories;
 using FluentAssertions;
+using Moq;
 
 namespace Fin.Test.Wallets.Services;
 
 public class WalletValidationServiceTest : TestUtils.BaseTestWithContext
 {
+    
+
     private WalletValidationService GetService(Resources resources)
     {
-        return new WalletValidationService(resources.WalletRepository);
+        return new WalletValidationService(resources.WalletRepository, resources.FakeFinancialInstitution.Object);
     }
 
     private Resources GetResources()
     {
         return new Resources
         {
-            WalletRepository = GetRepository<Wallet>()
+            WalletRepository = GetRepository<Wallet>(),
+            FakeFinancialInstitution = new Mock<IFinancialInstitutionService>()
         };
     }
 
     private class Resources
     {
         public IRepository<Wallet> WalletRepository { get; set; }
+        public Mock<IFinancialInstitutionService> FakeFinancialInstitution { get; set; }
     }
 
     #region ValidateToggleInactive
@@ -66,6 +73,8 @@ public class WalletValidationServiceTest : TestUtils.BaseTestWithContext
 
     #endregion
 
+    
+
     #region ValidateDelete
 
     [Fact]
@@ -104,15 +113,19 @@ public class WalletValidationServiceTest : TestUtils.BaseTestWithContext
     }
 
     #endregion
+
     
+
     #region ValidateInput (Create and Update)
-    
+
+    // Helper to create a valid input
     private WalletInput GetValidInput() => new()
     {
         Name = "New Wallet",
         Color = "#FFFFFF",
         Icon = "fa-icon",
-        InitialBalance = 0m
+        InitialBalance = 0m,
+        FinancialInstitutionId = null // Default to null for base tests
     };
 
     [Fact]
@@ -130,6 +143,87 @@ public class WalletValidationServiceTest : TestUtils.BaseTestWithContext
         result.Should().NotBeNull();
         result.Success.Should().BeTrue();
     }
+
+    [Fact]
+    public async Task ValidateInput_ShouldReturnSuccess_WhenFinancialInstitutionIdIsNull()
+    {
+        // Arrange
+        var resources = GetResources();
+        var service = GetService(resources);
+        var input = GetValidInput();
+        input.FinancialInstitutionId = null;
+
+        // Act
+        var result = await service.ValidateInput<bool>(input);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Success.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ValidateInput_ShouldReturnSuccess_WhenFinancialInstitutionIsValid()
+    {
+        // Arrange
+        var resources = GetResources();
+        var service = GetService(resources);
+        var input = GetValidInput();
+        input.FinancialInstitutionId = TestUtils.Guids[1];
+
+        // Mock a valid, active institution
+        var activeInstitution = new FinancialInstitutionOutput { Id = TestUtils.Guids[1], Inactive = false };
+        resources.FakeFinancialInstitution.Setup(s => s.Get(TestUtils.Guids[1])).ReturnsAsync(activeInstitution);
+
+        // Act
+        var result = await service.ValidateInput<bool>(input);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Success.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ValidateInput_ShouldReturnFailure_WhenFinancialInstitutionNotFound()
+    {
+        // Arrange
+        var resources = GetResources();
+        var service = GetService(resources);
+        var input = GetValidInput();
+        input.FinancialInstitutionId = TestUtils.Guids[1];
+
+        // Act
+        var result = await service.ValidateInput<bool>(input);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Success.Should().BeFalse();
+        result.ErrorCode.Should().Be(WalletCreateOrUpdateErrorCode.FinancialInstitutionNotFound);
+        result.Message.Should().Be("Financial institution not found.");
+    }
+
+    [Fact]
+    public async Task ValidateInput_ShouldReturnFailure_WhenFinancialInstitutionInactivated()
+    {
+        // Arrange
+        var resources = GetResources();
+        var service = GetService(resources);
+        var input = GetValidInput();
+        input.FinancialInstitutionId = TestUtils.Guids[1];
+
+        // Mock: Institution found but inactive
+        var inactiveInstitution = new FinancialInstitutionOutput { Id = TestUtils.Guids[1], Inactive = true };
+        resources.FakeFinancialInstitution.Setup(s => s.Get(TestUtils.Guids[1])).ReturnsAsync(inactiveInstitution);
+
+        // Act
+        var result = await service.ValidateInput<bool>(input);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Success.Should().BeFalse();
+        result.ErrorCode.Should().Be(WalletCreateOrUpdateErrorCode.FinancialInstitutionInactivated);
+        result.Message.Should().Be("Financial institution is inactive.");
+    }
+    
 
     [Fact]
     public async Task ValidateInput_Update_ShouldReturnSuccess_WhenValid()
@@ -168,8 +262,6 @@ public class WalletValidationServiceTest : TestUtils.BaseTestWithContext
         result.Message.Should().Be("Wallet not found to edit.");
     }
     
-    // --- Testes de Campos Obrigatórios e Tamanho ---
-
     [Theory]
     [InlineData(null)]
     [InlineData("")]
@@ -301,7 +393,7 @@ public class WalletValidationServiceTest : TestUtils.BaseTestWithContext
         var service = GetService(resources);
         var existingName = TestUtils.Strings[0];
         
-        // Categoria existente
+        // Existing Wallet
         await resources.WalletRepository.AddAsync(new Wallet(new WalletInput { Name = existingName, Color = TestUtils.Strings[1], Icon = TestUtils.Strings[2], InitialBalance = 0m }), true);
 
         var input = GetValidInput();
@@ -325,11 +417,12 @@ public class WalletValidationServiceTest : TestUtils.BaseTestWithContext
         var service = GetService(resources);
         var existingName = TestUtils.Strings[0];
         
+        // Existing Wallet
         var wallet = new Wallet(new WalletInput { Name = existingName, Color = TestUtils.Strings[1], Icon = TestUtils.Strings[2], InitialBalance = 0m });
         await resources.WalletRepository.AddAsync(wallet, true);
 
         var input = GetValidInput();
-        input.Name = existingName;
+        input.Name = existingName; // Using the same name
 
         // Act
         var result = await service.ValidateInput<bool>(input, wallet.Id);
@@ -346,14 +439,16 @@ public class WalletValidationServiceTest : TestUtils.BaseTestWithContext
         var resources = GetResources();
         var service = GetService(resources);
         
+        // Wallet A - Its name will be the "forbidden" name
         var walletA = new Wallet(new WalletInput { Name = TestUtils.Strings[0], Color = TestUtils.Strings[1], Icon = TestUtils.Strings[2], InitialBalance = 0m });
         await resources.WalletRepository.AddAsync(walletA, true);
 
+        // Wallet B - Will try to use Wallet A's name
         var walletB = new Wallet(new WalletInput { Name = TestUtils.Strings[3], Color = TestUtils.Strings[4], Icon = TestUtils.Strings[5], InitialBalance = 0m });
         await resources.WalletRepository.AddAsync(walletB, true);
 
         var input = GetValidInput();
-        input.Name = walletA.Name;
+        input.Name = walletA.Name; // Name already used by A
 
         // Act
         var result = await service.ValidateInput<bool>(input, walletB.Id);

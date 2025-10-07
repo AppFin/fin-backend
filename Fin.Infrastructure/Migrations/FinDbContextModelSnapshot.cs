@@ -559,6 +559,8 @@ namespace Fin.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("FinancialInstitutionId");
+
                     b.HasIndex("Name", "TenantId")
                         .IsUnique();
 
@@ -647,6 +649,21 @@ namespace Fin.Infrastructure.Migrations
                     b.Navigation("User");
 
                     b.Navigation("UserAborted");
+                });
+
+            modelBuilder.Entity("Fin.Domain.Wallets.Entities.Wallet", b =>
+                {
+                    b.HasOne("Fin.Domain.FinancialInstitutions.Entities.FinancialInstitution", "FinancialInstitution")
+                        .WithMany("Wallets")
+                        .HasForeignKey("FinancialInstitutionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("FinancialInstitution");
+                });
+
+            modelBuilder.Entity("Fin.Domain.FinancialInstitutions.Entities.FinancialInstitution", b =>
+                {
+                    b.Navigation("Wallets");
                 });
 
             modelBuilder.Entity("Fin.Domain.Notifications.Entities.Notification", b =>

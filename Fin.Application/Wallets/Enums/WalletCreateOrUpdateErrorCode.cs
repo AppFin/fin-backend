@@ -9,5 +9,7 @@ public enum WalletCreateOrUpdateErrorCode
     ColorTooLong = 4,
     IconIsRequired = 5,
     IconTooLong = 6,
-    WalletNotFound = 7
+    WalletNotFound = 7,
+    FinancialInstitutionNotFound =  8,
+    FinancialInstitutionInactivated =  9
 }

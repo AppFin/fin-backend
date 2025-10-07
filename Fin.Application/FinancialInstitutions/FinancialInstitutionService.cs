@@ -70,9 +70,10 @@ public class FinancialInstitutionService(
     public async Task<bool> Delete(Guid id, bool autoSave = false)
     {
         var institution = await repository.Query()
+            .Include(f => f.Wallets)
             .FirstOrDefaultAsync(f => f.Id == id);
-        if (institution == null) return false;
-
+        if (institution == null || institution.Wallets.Any()) return false;
+        
         await repository.DeleteAsync(institution, autoSave);
         return true;
     }
@@ -80,8 +81,9 @@ public class FinancialInstitutionService(
     public async Task<bool> ToggleInactive(Guid id, bool autoSave = false)
     {
         var institution = await repository.Query()
+            .Include(f => f.Wallets)
             .FirstOrDefaultAsync(f => f.Id == id);
-        if (institution == null) return false;
+        if (institution == null || (!institution.Inactive && institution.Wallets.Any(w => !w.Inactivated))) return false;
 
         institution.ToggleInactive();
 

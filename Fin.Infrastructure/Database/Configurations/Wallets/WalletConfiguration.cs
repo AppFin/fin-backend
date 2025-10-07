@@ -21,6 +21,11 @@ public class WalletConfiguration: IEntityTypeConfiguration<Wallet>
             .HasColumnType("numeric(19,4)")
             .HasPrecision(19, 4);
         
-        // TODO here need to config relation with financial institution whe it completed
+        builder
+            .HasOne(wallet => wallet.FinancialInstitution)
+            .WithMany(financialInstitution => financialInstitution.Wallets)
+            .HasForeignKey(wallet => wallet.FinancialInstitutionId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

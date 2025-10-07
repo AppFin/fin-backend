@@ -1,3 +1,4 @@
+using Fin.Application.FinancialInstitutions;
 using Fin.Application.Globals.Dtos;
 using Fin.Application.Wallets.Enums;
 using Fin.Domain.Wallets.Dtos;
@@ -12,15 +13,20 @@ public interface IWalletValidationService
 {
     public Task<ValidationResultDto<bool, WalletToogleInactiveErrorCode>> ValidateToggleInactive(Guid walletId);
     public Task<ValidationResultDto<bool, WalletDeleteErrorCode>> ValidateDelete(Guid walletId);
-    public Task<ValidationResultDto<T,WalletCreateOrUpdateErrorCode>> ValidateInput<T>(WalletInput input, Guid? editingId = null);
+
+    public Task<ValidationResultDto<T, WalletCreateOrUpdateErrorCode>> ValidateInput<T>(WalletInput input,
+        Guid? editingId = null);
 }
 
-public class WalletValidationService(IRepository<Wallet>repository): IWalletValidationService, IAutoTransient
+public class WalletValidationService(
+    IRepository<Wallet> repository,
+    IFinancialInstitutionService financialInstitutionService
+) : IWalletValidationService, IAutoTransient
 {
     public async Task<ValidationResultDto<bool, WalletToogleInactiveErrorCode>> ValidateToggleInactive(Guid walletId)
     {
         var validationResult = new ValidationResultDto<bool, WalletToogleInactiveErrorCode>();
-        
+
         var wallet = await repository.Query(tracking: false).FirstOrDefaultAsync(n => n.Id == walletId);
         if (wallet is null)
         {
@@ -28,17 +34,17 @@ public class WalletValidationService(IRepository<Wallet>repository): IWalletVali
             validationResult.Message = "Wallet not found to toogle inactive.";
             return validationResult;
         }
-        
+
         // TODO here validate relations
-        
+
         validationResult.Success = true;
         return validationResult;
     }
-    
+
     public async Task<ValidationResultDto<bool, WalletDeleteErrorCode>> ValidateDelete(Guid walletId)
     {
         var validationResult = new ValidationResultDto<bool, WalletDeleteErrorCode>();
-        
+
         var walletExists = await repository.Query().AnyAsync(n => n.Id == walletId);
         if (!walletExists)
         {
@@ -46,16 +52,17 @@ public class WalletValidationService(IRepository<Wallet>repository): IWalletVali
             validationResult.Message = "Wallet not found to delete.";
             return validationResult;
         }
-        
+
         // TODO here validate relations
-        
+
         validationResult.Success = true;
         return validationResult;
     }
 
-    public async Task<ValidationResultDto<T,WalletCreateOrUpdateErrorCode>> ValidateInput<T>(WalletInput input, Guid? editingId = null)
+    public async Task<ValidationResultDto<T, WalletCreateOrUpdateErrorCode>> ValidateInput<T>(WalletInput input,
+        Guid? editingId = null)
     {
-        var validationResult = new ValidationResultDto<T,WalletCreateOrUpdateErrorCode>();
+        var validationResult = new ValidationResultDto<T, WalletCreateOrUpdateErrorCode>();
 
         if (editingId.HasValue)
         {
@@ -68,45 +75,49 @@ public class WalletValidationService(IRepository<Wallet>repository): IWalletVali
                 return validationResult;
             }
         }
-        
+
         if (string.IsNullOrWhiteSpace(input.Color))
         {
             validationResult.ErrorCode = WalletCreateOrUpdateErrorCode.ColorIsRequired;
             validationResult.Message = "Color is required.";
             return validationResult;
         }
+
         if (input.Color.Length > 20)
         {
             validationResult.ErrorCode = WalletCreateOrUpdateErrorCode.ColorTooLong;
             validationResult.Message = "Color is too long. Max 20 characters.";
             return validationResult;
         }
-        
+
         if (string.IsNullOrWhiteSpace(input.Icon))
         {
             validationResult.ErrorCode = WalletCreateOrUpdateErrorCode.IconIsRequired;
             validationResult.Message = "Icon is required.";
             return validationResult;
         }
+
         if (input.Icon.Length > 20)
         {
             validationResult.ErrorCode = WalletCreateOrUpdateErrorCode.IconTooLong;
             validationResult.Message = "Icon is too long. Max 20 characters.";
             return validationResult;
         }
-        
+
         if (string.IsNullOrWhiteSpace(input.Name))
         {
             validationResult.ErrorCode = WalletCreateOrUpdateErrorCode.NameIsRequired;
             validationResult.Message = "Name is required.";
             return validationResult;
         }
+
         if (input.Name.Length > 100)
         {
             validationResult.ErrorCode = WalletCreateOrUpdateErrorCode.NameTooLong;
             validationResult.Message = "Name is too long. Max 100 characters.";
             return validationResult;
         }
+
         var nameAlredInUse = await repository.Query()
             .AnyAsync(n => n.Name == input.Name && (!editingId.HasValue || n.Id != editingId));
         if (nameAlredInUse)
@@ -115,7 +126,25 @@ public class WalletValidationService(IRepository<Wallet>repository): IWalletVali
             validationResult.Message = "Name is already in use.";
             return validationResult;
         }
-        
+
+        if (input.FinancialInstitutionId.HasValue)
+        {
+            var financialInstitution = await financialInstitutionService.Get(input.FinancialInstitutionId.Value);
+            if (financialInstitution is null)
+            {
+                validationResult.ErrorCode = WalletCreateOrUpdateErrorCode.FinancialInstitutionNotFound;
+                validationResult.Message = "Financial institution not found.";
+                return validationResult;
+            }
+
+            if (financialInstitution.Inactive)
+            {
+                validationResult.ErrorCode = WalletCreateOrUpdateErrorCode.FinancialInstitutionInactivated;
+                validationResult.Message = "Financial institution is inactive.";
+                return validationResult;
+            }
+        }
+
         validationResult.Success = true;
         return validationResult;
     }

@@ -1,6 +1,7 @@
 using Fin.Application.FinancialInstitutions;
 using Fin.Domain.FinancialInstitutions.Dtos;
 using Fin.Domain.Global.Classes;
+using Fin.Infrastructure.Authentications.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,6 +25,7 @@ public class FinancialInstitutionController(IFinancialInstitutionService service
     }
     
     [HttpPost]
+    [Authorize(Roles = AuthenticationRoles.Admin)]
     public async Task<ActionResult<FinancialInstitutionOutput>> Create([FromBody] FinancialInstitutionInput input)
     {
         var institution = await service.Create(input, autoSave: true);
@@ -31,6 +33,7 @@ public class FinancialInstitutionController(IFinancialInstitutionService service
     }
     
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = AuthenticationRoles.Admin)]
     public async Task<ActionResult> Update([FromRoute] Guid id, [FromBody] FinancialInstitutionInput input)
     {
         var updated = await service.Update(id, input, autoSave: true);
@@ -38,6 +41,7 @@ public class FinancialInstitutionController(IFinancialInstitutionService service
     }
     
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = AuthenticationRoles.Admin)]
     public async Task<ActionResult> Delete([FromRoute] Guid id)
     {
         var deleted = await service.Delete(id, autoSave: true);
@@ -45,6 +49,7 @@ public class FinancialInstitutionController(IFinancialInstitutionService service
     }
 
     [HttpPatch("{id:guid}/toggle-inactive")]
+    [Authorize(Roles = AuthenticationRoles.Admin)]
     public async Task<ActionResult> ToggleInactive([FromRoute] Guid id)
     {
         var toggled = await service.ToggleInactive(id, autoSave: true);
