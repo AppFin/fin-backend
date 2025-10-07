@@ -3,6 +3,7 @@ using System;
 using Fin.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Fin.Infrastructure.Migrations
 {
     [DbContext(typeof(FinDbContext))]
-    partial class FinDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251007000836_financialInstitution")]
+    partial class financialInstitution
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -370,9 +373,6 @@ namespace Fin.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Name", "TenantId")
-                        .IsUnique();
-
                     b.ToTable("TitleCategories", "public");
                 });
 
@@ -506,63 +506,6 @@ namespace Fin.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("UserDeleteRequests", "public");
-                });
-
-            modelBuilder.Entity("Fin.Domain.Wallets.Entities.Wallet", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<decimal>("CurrentBalance")
-                        .HasColumnType("numeric");
-
-                    b.Property<Guid?>("FinancialInstitutionId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Icon")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<bool>("Inactivated")
-                        .HasColumnType("boolean");
-
-                    b.Property<decimal>("InitialBalance")
-                        .HasPrecision(19, 4)
-                        .HasColumnType("numeric(19,4)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UpdatedBy")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name", "TenantId")
-                        .IsUnique();
-
-                    b.ToTable("Wallets", "public");
                 });
 
             modelBuilder.Entity("Fin.Domain.Notifications.Entities.NotificationUserDelivery", b =>
