@@ -12,4 +12,8 @@ public class WalletOutput(Wallet wallet)
     public Guid? FinancialInstitutionId { get; set; } = wallet.FinancialInstitutionId;
     public decimal InitialBalance { get; set; } = wallet.InitialBalance;
     public decimal CurrentBalance { get; set; } = wallet.CurrentBalance;
+
+    public WalletOutput(): this(new Wallet())
+    {
+    }
 }

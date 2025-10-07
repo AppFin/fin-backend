@@ -33,6 +33,7 @@ public class Wallet: IAuditedTenantEntity
         Icon = wallet.Icon;
         FinancialInstitutionId = wallet.FinancialInstitutionId;
         InitialBalance = wallet.InitialBalance;
+        CurrentBalance = wallet.InitialBalance;
     }
 
     public void Update(WalletInput wallet)
@@ -42,6 +43,7 @@ public class Wallet: IAuditedTenantEntity
         Icon = wallet.Icon;
         FinancialInstitutionId = wallet.FinancialInstitutionId;
         InitialBalance = wallet.InitialBalance;
+        // Here we don't update CurrentBalance because It's titles must be reprocesses
     }
     
     public void ToggleInactivated() => Inactivated = !Inactivated;

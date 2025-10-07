@@ -61,6 +61,7 @@ public class WalletService(
         
         var wallet = await repository.Query().FirstAsync(u => u.Id == id);
         wallet.Update(input);
+        // TODO reprocesses CurrentBalance 
         await repository.UpdateAsync(wallet, autoSave);
 
         validation.Data = true;
