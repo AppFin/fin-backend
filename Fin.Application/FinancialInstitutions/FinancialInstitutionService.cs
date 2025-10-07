@@ -35,6 +35,7 @@ public class FinancialInstitutionService(
     {
         return await repository.Query(false)
             .WhereIf(input.Inactive.HasValue, f => f.Inactive == input.Inactive.Value)
+            .WhereIf(input.Type.HasValue, f => f.Type == input.Type.Value)
             .OrderBy(f => f.Inactive)
             .ThenBy(f => f.Name)
             .ApplyFilterAndSorter(input)
