@@ -2,6 +2,7 @@
 using Fin.Application.Notifications.Services.DeliveryServices;
 using Fin.Domain.Global.Classes;
 using Fin.Domain.Notifications.Dtos;
+using Fin.Infrastructure.Authentications.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,14 +16,14 @@ public class NotificationController(
     ): ControllerBase
 {
     [HttpGet]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AuthenticationRoles.Admin)]
     public async Task<PagedOutput<NotificationOutput>> GetList([FromQuery] PagedFilteredAndSortedInput input)
     {
         return await service.GetList(input);
     }
     
     [HttpGet("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AuthenticationRoles.Admin)]
     public async Task<ActionResult<NotificationOutput>> Get([FromRoute] Guid id)
     {
         var notification = await service.Get(id);
@@ -30,7 +31,7 @@ public class NotificationController(
     }
     
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AuthenticationRoles.Admin)]
     public async Task<ActionResult<NotificationOutput>> Create([FromBody] NotificationInput input)
     {
         var notification = await service.Create(input, autoSave: true);
@@ -38,7 +39,7 @@ public class NotificationController(
     }
     
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AuthenticationRoles.Admin)]
     public async Task<ActionResult> Update([FromRoute] Guid id, [FromBody] NotificationInput input)
     {
         var updated = await service.Update(id, input, autoSave: true);
@@ -46,7 +47,7 @@ public class NotificationController(
     }
     
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AuthenticationRoles.Admin)]
     public async Task<ActionResult> Delete([FromRoute] Guid id)
     {
         var deleted = await service.Delete(id, autoSave: true);

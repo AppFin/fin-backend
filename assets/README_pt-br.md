@@ -1,4 +1,4 @@
-[In english](../README.md)
+[🇺🇸 In english](../README.md)
 
 ## Visão Geral
 

@@ -32,6 +32,6 @@ public class UserDto
         ImagePublicUrl = user.ImagePublicUrl;
         IsAdmin = user.IsAdmin;
         IsActivity = user.IsActivity;
-        Tenants = user.Tenants.ToList();
+        Tenants = user.Tenants?.ToList();
     }
 }

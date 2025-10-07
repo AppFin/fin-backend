@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace Fin.Domain.Global.Interfaces;
+﻿namespace Fin.Domain.Global.Interfaces;
 
 public interface IAuditedEntity: IEntity
 {
