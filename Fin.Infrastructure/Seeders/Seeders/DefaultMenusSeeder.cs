@@ -42,6 +42,17 @@ public class DefaultMenusSeeder(
             },
             new()
             {
+                Id = Guid.Parse("01994133-6669-7fcd-b6db-19a9b0c06f21"),
+                FrontRoute = "/admin/financial-institutions",
+                Name = "finCore.features.financialInstitutions.title",
+                Color = "#4CAF50",
+                Icon = "building-columns",
+                OnlyForAdmin = true,
+                Position = MenuPosition.LeftTop,
+                KeyWords = "Financial Institution"
+            },
+            new()
+            {
                 Id = Guid.Parse("01999256-1baa-76bb-be49-6e209249c827"),
                 FrontRoute = "/admin/notifications",
                 Name = "finCore.features.notifications.title",
