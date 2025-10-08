@@ -1,3 +1,4 @@
+using Fin.Application.FinancialInstitutions.Dtos;
 using Fin.Domain.FinancialInstitutions.Dtos;
 using Fin.Domain.FinancialInstitutions.Entities;
 using Fin.Domain.Global.Classes;
@@ -12,12 +13,12 @@ namespace Fin.Application.FinancialInstitutions;
 
 public interface IFinancialInstitutionService
 {
-    Task<FinancialInstitutionOutput> Get(Guid id);
-    Task<PagedOutput<FinancialInstitutionOutput>> GetList(FinancialInstitutionGetListInput input);
-    Task<FinancialInstitutionOutput> Create(FinancialInstitutionInput input, bool autoSave = false);
-    Task<bool> Update(Guid id, FinancialInstitutionInput input, bool autoSave = false);
-    Task<bool> Delete(Guid id, bool autoSave = false);
-    Task<bool> ToggleInactive(Guid id, bool autoSave = false);
+    public Task<FinancialInstitutionOutput> Get(Guid id);
+    public Task<PagedOutput<FinancialInstitutionOutput>> GetList(FinancialInstitutionGetListInput input);
+    public Task<FinancialInstitutionOutput> Create(FinancialInstitutionInput input, bool autoSave = false);
+    public Task<bool> Update(Guid id, FinancialInstitutionInput input, bool autoSave = false);
+    public Task<bool> Delete(Guid id, bool autoSave = false);
+    public Task<bool> ToggleInactive(Guid id, bool autoSave = false);
 }
 
 public class FinancialInstitutionService(

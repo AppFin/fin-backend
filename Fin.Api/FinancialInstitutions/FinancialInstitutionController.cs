@@ -1,4 +1,5 @@
 using Fin.Application.FinancialInstitutions;
+using Fin.Application.FinancialInstitutions.Dtos;
 using Fin.Domain.FinancialInstitutions.Dtos;
 using Fin.Domain.Global.Classes;
 using Fin.Infrastructure.Authentications.Constants;
