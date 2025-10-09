@@ -67,7 +67,7 @@ public class WalletValidationServiceTest : TestUtils.BaseTestWithContext
         // Assert
         result.Should().NotBeNull();
         result.Success.Should().BeFalse();
-        result.ErrorCode.Should().Be(WalletToogleInactiveErrorCode.WalletNotFound);
+        result.ErrorCode.Should().Be(WalletToggleInactiveErrorCode.WalletNotFound);
         result.Message.Should().Be("Wallet not found to toogle inactive.");
     }
 

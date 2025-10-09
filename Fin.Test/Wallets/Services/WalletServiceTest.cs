@@ -298,7 +298,7 @@ public class WalletServiceTest : TestUtils.BaseTestWithContext
         await resources.WalletRepository.AddAsync(wallet, true);
         wallet.Inactivated.Should().BeFalse();
         
-        var successValidation = new ValidationResultDto<bool, WalletToogleInactiveErrorCode> { Success = true };
+        var successValidation = new ValidationResultDto<bool, WalletToggleInactiveErrorCode> { Success = true };
         _validationServiceMock.Setup(v => v.ValidateToggleInactive(wallet.Id)).ReturnsAsync(successValidation);
 
         // Act
@@ -323,7 +323,7 @@ public class WalletServiceTest : TestUtils.BaseTestWithContext
         await resources.WalletRepository.AddAsync(wallet, true);
         wallet.Inactivated.Should().BeTrue();
         
-        var successValidation = new ValidationResultDto<bool, WalletToogleInactiveErrorCode> { Success = true };
+        var successValidation = new ValidationResultDto<bool, WalletToggleInactiveErrorCode> { Success = true };
         _validationServiceMock.Setup(v => v.ValidateToggleInactive(wallet.Id)).ReturnsAsync(successValidation);
 
         // Act
@@ -347,10 +347,10 @@ public class WalletServiceTest : TestUtils.BaseTestWithContext
         await resources.WalletRepository.AddAsync(wallet, true);
         wallet.Inactivated.Should().BeFalse();
 
-        var failureValidation = new ValidationResultDto<bool, WalletToogleInactiveErrorCode>
+        var failureValidation = new ValidationResultDto<bool, WalletToggleInactiveErrorCode>
         { 
             Success = false, 
-            ErrorCode = WalletToogleInactiveErrorCode.WalletNotFound,
+            ErrorCode = WalletToggleInactiveErrorCode.WalletNotFound,
             Message = "Wallet not found."
         };
         _validationServiceMock.Setup(v => v.ValidateToggleInactive(wallet.Id)).ReturnsAsync(failureValidation);
@@ -361,7 +361,7 @@ public class WalletServiceTest : TestUtils.BaseTestWithContext
         // Assert
         result.Should().NotBeNull();
         result.Success.Should().BeFalse();
-        result.ErrorCode.Should().Be(WalletToogleInactiveErrorCode.WalletNotFound);
+        result.ErrorCode.Should().Be(WalletToggleInactiveErrorCode.WalletNotFound);
         var dbWallet = await resources.WalletRepository.Query(false).FirstAsync(a => a.Id == wallet.Id);
         dbWallet.Inactivated.Should().BeFalse(); // Ensure no status change
     }

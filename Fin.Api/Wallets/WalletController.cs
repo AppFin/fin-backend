@@ -48,7 +48,7 @@ public class WalletController(IWalletService service) : ControllerBase
     {
         var validationResult = await service.ToggleInactive(id, autoSave: true);
         return validationResult.Success ? Ok() :
-            validationResult.ErrorCode == WalletToogleInactiveErrorCode.WalletNotFound ? NotFound(validationResult) :
+            validationResult.ErrorCode == WalletToggleInactiveErrorCode.WalletNotFound ? NotFound(validationResult) :
             UnprocessableEntity(validationResult);
     }
 

@@ -11,7 +11,7 @@ namespace Fin.Application.Wallets.Services;
 
 public interface IWalletValidationService
 {
-    public Task<ValidationResultDto<bool, WalletToogleInactiveErrorCode>> ValidateToggleInactive(Guid walletId);
+    public Task<ValidationResultDto<bool, WalletToggleInactiveErrorCode>> ValidateToggleInactive(Guid walletId);
     public Task<ValidationResultDto<bool, WalletDeleteErrorCode>> ValidateDelete(Guid walletId);
 
     public Task<ValidationResultDto<T, WalletCreateOrUpdateErrorCode>> ValidateInput<T>(WalletInput input,
@@ -23,14 +23,14 @@ public class WalletValidationService(
     IFinancialInstitutionService financialInstitutionService
 ) : IWalletValidationService, IAutoTransient
 {
-    public async Task<ValidationResultDto<bool, WalletToogleInactiveErrorCode>> ValidateToggleInactive(Guid walletId)
+    public async Task<ValidationResultDto<bool, WalletToggleInactiveErrorCode>> ValidateToggleInactive(Guid walletId)
     {
-        var validationResult = new ValidationResultDto<bool, WalletToogleInactiveErrorCode>();
+        var validationResult = new ValidationResultDto<bool, WalletToggleInactiveErrorCode>();
 
         var wallet = await repository.Query(tracking: false).FirstOrDefaultAsync(n => n.Id == walletId);
         if (wallet is null)
         {
-            validationResult.ErrorCode = WalletToogleInactiveErrorCode.WalletNotFound;
+            validationResult.ErrorCode = WalletToggleInactiveErrorCode.WalletNotFound;
             validationResult.Message = "Wallet not found to toogle inactive.";
             return validationResult;
         }

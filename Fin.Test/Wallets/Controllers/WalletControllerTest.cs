@@ -198,7 +198,7 @@ public class WalletControllerTest : TestUtils.BaseTest
     {
         // Arrange
         var walletId = TestUtils.Guids[0];
-        var successResult = new ValidationResultDto<bool, WalletToogleInactiveErrorCode> { Success = true, Data = true };
+        var successResult = new ValidationResultDto<bool, WalletToggleInactiveErrorCode> { Success = true, Data = true };
         _serviceMock.Setup(s => s.ToggleInactive(walletId, true)).ReturnsAsync(successResult);
 
         // Act
@@ -213,10 +213,10 @@ public class WalletControllerTest : TestUtils.BaseTest
     {
         // Arrange
         var walletId = TestUtils.Guids[0];
-        var notFoundResult = new ValidationResultDto<bool, WalletToogleInactiveErrorCode>
+        var notFoundResult = new ValidationResultDto<bool, WalletToggleInactiveErrorCode>
         {
             Success = false,
-            ErrorCode = WalletToogleInactiveErrorCode.WalletNotFound,
+            ErrorCode = WalletToggleInactiveErrorCode.WalletNotFound,
             Message = "Wallet not found."
         };
         _serviceMock.Setup(s => s.ToggleInactive(walletId, true)).ReturnsAsync(notFoundResult);
@@ -234,10 +234,10 @@ public class WalletControllerTest : TestUtils.BaseTest
     {
         // Arrange
         var walletId = TestUtils.Guids[0];
-        var failureResult = new ValidationResultDto<bool, WalletToogleInactiveErrorCode>
+        var failureResult = new ValidationResultDto<bool, WalletToggleInactiveErrorCode>
         {
             Success = false,
-            ErrorCode = WalletToogleInactiveErrorCode.WalletInUseByActivatedCreditCards,
+            ErrorCode = WalletToggleInactiveErrorCode.WalletInUseByActivatedCreditCards,
             Message = "Cannot inactive due to related items."
         };
         _serviceMock.Setup(s => s.ToggleInactive(walletId, true)).ReturnsAsync(failureResult);

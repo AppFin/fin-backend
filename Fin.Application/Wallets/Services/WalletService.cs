@@ -18,7 +18,7 @@ public interface IWalletService
     public Task<ValidationResultDto<WalletOutput, WalletCreateOrUpdateErrorCode>> Create(WalletInput input, bool autoSave = false);
     public Task<ValidationResultDto<bool, WalletCreateOrUpdateErrorCode>> Update(Guid id, WalletInput input, bool autoSave = false);
     public Task<ValidationResultDto<bool, WalletDeleteErrorCode>> Delete(Guid id, bool autoSave = false);
-    public Task<ValidationResultDto<bool, WalletToogleInactiveErrorCode>> ToggleInactive(Guid id, bool autoSave = false);
+    public Task<ValidationResultDto<bool, WalletToggleInactiveErrorCode>> ToggleInactive(Guid id, bool autoSave = false);
 }
 
 public class WalletService(
@@ -80,7 +80,7 @@ public class WalletService(
         return validation;
     }
 
-    public async Task<ValidationResultDto<bool, WalletToogleInactiveErrorCode>> ToggleInactive(Guid id, bool autoSave = false)
+    public async Task<ValidationResultDto<bool, WalletToggleInactiveErrorCode>> ToggleInactive(Guid id, bool autoSave = false)
     {
         var validation = await validationService.ValidateToggleInactive(id);
         if (!validation.Success) return validation;
