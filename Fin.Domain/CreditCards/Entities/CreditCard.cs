@@ -23,7 +23,7 @@ public class CreditCard: IAuditedTenantEntity
     public virtual CardBrand CardBrand { get; set; }
     
     public Guid FinancialInstitutionId { get; set; }
-    public virtual FinancialInstitution FinancialInstitution { get; private set; }
+    public virtual FinancialInstitution FinancialInstitution { get; set; }
     
     public Guid Id { get; set; }
     public Guid CreatedBy { get; set; }

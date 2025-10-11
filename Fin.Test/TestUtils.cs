@@ -1,13 +1,16 @@
-﻿using Fin.Domain.Global.Interfaces;
+﻿using Fin.Domain.CardBrands.Entities;
+using Fin.Domain.FinancialInstitutions.Entities;
+using Fin.Domain.FinancialInstitutions.Enums;
 using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Entities;
+using Fin.Domain.Wallets.Dtos;
+using Fin.Domain.Wallets.Entities;
 using Fin.Infrastructure.AmbientDatas;
 using Fin.Infrastructure.Database;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.DateTimes;
 using Fin.Infrastructure.UnitOfWorks;
 using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
 using Moq;
 
 namespace Fin.Test;
@@ -29,27 +32,29 @@ public abstract class TestUtils
             await Task.CompletedTask;
         }
     }
-    
-    public class BaseTestWithContext: BaseTest, IDisposable
+
+    public class BaseTestWithContext : BaseTest, IDisposable
     {
         protected readonly FinDbContext Context;
         protected readonly UnitOfWork UnitOfWork;
         private readonly SqliteConnection _connection;
         private readonly string _dbFilePath;
-        
+
         protected BaseTestWithContext()
         {
             var dateTimeProviderMockForContext = new Mock<IDateTimeProvider>();
-            Context = TestDbContextFactory.Create(out _connection, out _dbFilePath, AmbientData, dateTimeProviderMockForContext.Object, useFile: true);
+            Context = TestDbContextFactory.Create(out _connection, out _dbFilePath, AmbientData,
+                dateTimeProviderMockForContext.Object, useFile: true);
             UnitOfWork = new UnitOfWork(Context);
         }
 
         public void Dispose()
         {
             Context.Dispose();
-            TestDbContextFactory.Destroy(_connection, _dbFilePath);;
+            TestDbContextFactory.Destroy(_connection, _dbFilePath);
+            ;
         }
-        
+
         protected IRepository<T> GetRepository<T>() where T : class
         {
             return new Repository<T>(Context);
@@ -60,7 +65,7 @@ public abstract class TestUtils
             var user = new User
             {
                 Id = Guids[0],
-                Tenants = [ new Tenant() ],
+                Tenants = [new Tenant()],
                 Credential = new UserCredential()
             };
             if (isAdmin) user.MakeAdmin();
@@ -70,7 +75,7 @@ public abstract class TestUtils
             AmbientData.SetData(user.Tenants.First().Id, user.Id, user.DisplayName, user.IsAdmin);
         }
     }
-    
+
     public static List<Guid> Guids =>
     [
         Guid.Parse("3f5e2a76-9c4d-45f7-b798-8412ad4cfb6d"),
@@ -84,7 +89,7 @@ public abstract class TestUtils
         Guid.Parse("fd933db3-74d9-423b-bdb5-9c16fa91d1d7"),
         Guid.Parse("6f4d9ef4-3211-46b2-abe1-c87ef6a39db7")
     ];
-    
+
     public static List<string> Strings =>
     [
         "alpha-923",
@@ -99,6 +104,20 @@ public abstract class TestUtils
         "Zebra@Night"
     ];
     
+    public static List<decimal> Decimals =>
+    [
+        100.00m,
+        45.50m,
+        0.00m,
+        -12.75m,
+        99999.99m,
+        1.234567m,
+        1000m,
+        -500.00m,
+        123456.78m,
+        2.5m
+    ];
+
     public static List<DateTime> UtcDateTimes =>
     [
         new(2023, 01, 01, 0, 0, 0, DateTimeKind.Utc),
@@ -125,5 +144,41 @@ public abstract class TestUtils
         new(0, 45, 0), // 00:45:00
         new(10, 10, 10), // 10:10:10
         new(7, 20, 5)
+    ];
+    
+    public static List<CardBrand> CardBrands =>
+    [
+        new() { Name  = Strings[0], Color = Strings[1], Icon = Strings[2] },
+        new() { Name  = Strings[2], Color = Strings[3], Icon = Strings[4] },
+        new() { Name  = Strings[4], Color = Strings[5], Icon = Strings[6] },
+        new() { Name  = Strings[6], Color = Strings[7], Icon = Strings[8] },
+        new() { Name  = Strings[8], Color = Strings[9], Icon = Strings[0] }
+    ];
+    
+    public static List<FinancialInstitution> FinancialInstitutions =>
+    [
+        new() { Name  = Strings[0], Color = Strings[1], Icon = Strings[2], Type = FinancialInstitutionType.Bank },
+        new() { Name  = Strings[2], Color = Strings[3], Icon = Strings[4], Type = FinancialInstitutionType.DigitalBank },
+        new() { Name  = Strings[4], Color = Strings[5], Icon = Strings[6], Type = FinancialInstitutionType.FoodCard },
+        new() { Name  = Strings[6], Color = Strings[7], Icon = Strings[8], Type = FinancialInstitutionType.DigitalBank },
+        new() { Name  = Strings[8], Color = Strings[9], Icon = Strings[0], Type = FinancialInstitutionType.Bank }
+    ];
+    
+    public static List<WalletInput> WalletsInputs =>
+    [
+        new() { Name  = Strings[0], Color = Strings[1], Icon = Strings[2], InitialBalance = Decimals[0] },
+        new() { Name  = Strings[2], Color = Strings[3], Icon = Strings[4], InitialBalance = Decimals[1] },
+        new() { Name  = Strings[4], Color = Strings[5], Icon = Strings[6], InitialBalance = Decimals[2] },
+        new() { Name  = Strings[6], Color = Strings[7], Icon = Strings[8], InitialBalance = Decimals[3] },
+        new() { Name  = Strings[8], Color = Strings[9], Icon = Strings[0], InitialBalance = Decimals[4] }
+    ];
+    
+    public static List<Wallet> Wallets =>
+    [
+        new(WalletsInputs[0]),
+        new(WalletsInputs[1]),
+        new(WalletsInputs[2]),
+        new(WalletsInputs[3]),
+        new(WalletsInputs[4])
     ];
 }

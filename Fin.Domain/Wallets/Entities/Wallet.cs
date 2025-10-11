@@ -20,7 +20,7 @@ public class Wallet: IAuditedTenantEntity
     public bool Inactivated { get; private set; }
     
     public Guid? FinancialInstitutionId { get; private set; }
-    public virtual FinancialInstitution FinancialInstitution { get; }
+    public virtual FinancialInstitution FinancialInstitution { get; set; }
     
     public decimal InitialBalance { get; private set; }
     public decimal CurrentBalance { get; set; }
