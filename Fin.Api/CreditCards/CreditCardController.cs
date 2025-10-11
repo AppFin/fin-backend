@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Fin.Api.CreditCards;
 
-[Route("creditCards")]
+[Route("credit-cards")]
 [Authorize]
 public class CreditCardController(ICreditCardService service) : ControllerBase
 {
