@@ -1,3 +1,4 @@
+using Fin.Application.FinancialInstitutions.Dtos;
 using Fin.Domain.FinancialInstitutions.Dtos;
 using Fin.Domain.FinancialInstitutions.Entities;
 using Fin.Domain.Global.Classes;
@@ -12,12 +13,12 @@ namespace Fin.Application.FinancialInstitutions;
 
 public interface IFinancialInstitutionService
 {
-    Task<FinancialInstitutionOutput> Get(Guid id);
-    Task<PagedOutput<FinancialInstitutionOutput>> GetList(FinancialInstitutionGetListInput input);
-    Task<FinancialInstitutionOutput> Create(FinancialInstitutionInput input, bool autoSave = false);
-    Task<bool> Update(Guid id, FinancialInstitutionInput input, bool autoSave = false);
-    Task<bool> Delete(Guid id, bool autoSave = false);
-    Task<bool> ToggleInactive(Guid id, bool autoSave = false);
+    public Task<FinancialInstitutionOutput> Get(Guid id);
+    public Task<PagedOutput<FinancialInstitutionOutput>> GetList(FinancialInstitutionGetListInput input);
+    public Task<FinancialInstitutionOutput> Create(FinancialInstitutionInput input, bool autoSave = false);
+    public Task<bool> Update(Guid id, FinancialInstitutionInput input, bool autoSave = false);
+    public Task<bool> Delete(Guid id, bool autoSave = false);
+    public Task<bool> ToggleInactive(Guid id, bool autoSave = false);
 }
 
 public class FinancialInstitutionService(
@@ -70,9 +71,10 @@ public class FinancialInstitutionService(
     public async Task<bool> Delete(Guid id, bool autoSave = false)
     {
         var institution = await repository.Query()
+            .Include(f => f.Wallets)
             .FirstOrDefaultAsync(f => f.Id == id);
-        if (institution == null) return false;
-
+        if (institution == null || institution.Wallets.Any()) return false;
+        
         await repository.DeleteAsync(institution, autoSave);
         return true;
     }
@@ -80,8 +82,9 @@ public class FinancialInstitutionService(
     public async Task<bool> ToggleInactive(Guid id, bool autoSave = false)
     {
         var institution = await repository.Query()
+            .Include(f => f.Wallets)
             .FirstOrDefaultAsync(f => f.Id == id);
-        if (institution == null) return false;
+        if (institution == null || (!institution.Inactive && institution.Wallets.Any(w => !w.Inactivated))) return false;
 
         institution.ToggleInactive();
 

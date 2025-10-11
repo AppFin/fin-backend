@@ -6,6 +6,7 @@ using Fin.Domain.Notifications.Entities;
 using Fin.Domain.Tenants.Entities;
 using Fin.Domain.TitleCategories.Entities;
 using Fin.Domain.Users.Entities;
+using Fin.Domain.Wallets.Entities;
 using Fin.Infrastructure.AmbientDatas;
 using Fin.Infrastructure.Database.Configurations;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +31,8 @@ public class FinDbContext : DbContext
     public DbSet<Menu> Menus { get; set; }
     
     public DbSet<TitleCategory> TitleCategories { get; set; }
+    
+    public DbSet<Wallet> Wallets { get; set; }
 
     private readonly IAmbientData _ambientData;
 

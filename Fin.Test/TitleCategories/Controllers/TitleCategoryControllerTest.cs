@@ -1,11 +1,13 @@
 using Fin.Api.TitleCategories;
 using Fin.Application.TitleCategories;
 using Fin.Application.TitleCategories.Dtos;
+using Fin.Application.TitleCategories.Enums;
 using Fin.Domain.Global.Classes;
 using Fin.Domain.TitleCategories.Dtos;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using Fin.Application.Globals.Dtos;
 
 namespace Fin.Test.TitleCategories.Controllers;
 
@@ -85,7 +87,13 @@ public class TitleCategoryControllerTest : TestUtils.BaseTest
         // Arrange
         var input = new TitleCategoryInput { Name = TestUtils.Strings[1], Color = TestUtils.Strings[2], Icon = TestUtils.Strings[3] };
         var createdCategory = new TitleCategoryOutput { Id = TestUtils.Guids[0], Name = TestUtils.Strings[1] };
-        _serviceMock.Setup(s => s.Create(input, true)).ReturnsAsync(createdCategory);
+        var successResult = new ValidationResultDto<TitleCategoryOutput, TitleCategoryCreateOrUpdateErrorCode>
+        {
+            Success = true,
+            Data = createdCategory
+        };
+
+        _serviceMock.Setup(s => s.Create(input, true)).ReturnsAsync(successResult);
 
         // Act
         var result = await _controller.Create(input);
@@ -102,13 +110,21 @@ public class TitleCategoryControllerTest : TestUtils.BaseTest
     {
         // Arrange
         var input = new TitleCategoryInput();
-        _serviceMock.Setup(s => s.Create(input, true)).ReturnsAsync((TitleCategoryOutput)null);
+        var failureResult = new ValidationResultDto<TitleCategoryOutput, TitleCategoryCreateOrUpdateErrorCode>
+        {
+            Success = false,
+            ErrorCode = TitleCategoryCreateOrUpdateErrorCode.NameIsRequired,
+            Message = "Name is required."
+        };
+        
+        _serviceMock.Setup(s => s.Create(input, true)).ReturnsAsync(failureResult);
 
         // Act
         var result = await _controller.Create(input);
 
         // Assert
-        result.Result.Should().BeOfType<UnprocessableEntityResult>();
+        var unprocessableEntityResult = result.Result.Should().BeOfType<UnprocessableEntityObjectResult>().Subject;
+        unprocessableEntityResult.Value.Should().BeEquivalentTo(failureResult);
     }
 
     #endregion
@@ -121,7 +137,13 @@ public class TitleCategoryControllerTest : TestUtils.BaseTest
         // Arrange
         var categoryId = TestUtils.Guids[0];
         var input = new TitleCategoryInput { Name = TestUtils.Strings[1], Color = TestUtils.Strings[2], Icon = TestUtils.Strings[3] };
-        _serviceMock.Setup(s => s.Update(categoryId, input, true)).ReturnsAsync(true);
+        var successResult = new ValidationResultDto<bool, TitleCategoryCreateOrUpdateErrorCode>
+        {
+            Success = true,
+            Data = true
+        };
+
+        _serviceMock.Setup(s => s.Update(categoryId, input, true)).ReturnsAsync(successResult);
 
         // Act
         var result = await _controller.Update(categoryId, input);
@@ -131,18 +153,49 @@ public class TitleCategoryControllerTest : TestUtils.BaseTest
     }
 
     [Fact]
-    public async Task Update_ShouldReturnUnprocessableEntity_WhenUpdateFails()
+    public async Task Update_ShouldReturnNotFound_WhenCategoryDoesNotExist()
     {
         // Arrange
         var categoryId = TestUtils.Guids[0];
-        var input = new TitleCategoryInput();
-        _serviceMock.Setup(s => s.Update(categoryId, input, true)).ReturnsAsync(false);
+        var input = new TitleCategoryInput { Name = TestUtils.Strings[1], Color = TestUtils.Strings[2], Icon = TestUtils.Strings[3] };
+        var notFoundResult = new ValidationResultDto<bool, TitleCategoryCreateOrUpdateErrorCode>
+        {
+            Success = false,
+            ErrorCode = TitleCategoryCreateOrUpdateErrorCode.TitleCategoryNotFound,
+            Message = "Title category not found to edit."
+        };
+
+        _serviceMock.Setup(s => s.Update(categoryId, input, true)).ReturnsAsync(notFoundResult);
 
         // Act
         var result = await _controller.Update(categoryId, input);
 
         // Assert
-        result.Should().BeOfType<UnprocessableEntityResult>();
+        var notFoundObjectResult = result.Should().BeOfType<NotFoundObjectResult>().Subject;
+        notFoundObjectResult.Value.Should().BeEquivalentTo(notFoundResult);
+    }
+
+    [Fact]
+    public async Task Update_ShouldReturnUnprocessableEntity_WhenUpdateFailsForOtherReasons()
+    {
+        // Arrange
+        var categoryId = TestUtils.Guids[0];
+        var input = new TitleCategoryInput();
+        var failureResult = new ValidationResultDto<bool, TitleCategoryCreateOrUpdateErrorCode>
+        {
+            Success = false,
+            ErrorCode = TitleCategoryCreateOrUpdateErrorCode.NameAlreadyInUse,
+            Message = "Name is already in use."
+        };
+
+        _serviceMock.Setup(s => s.Update(categoryId, input, true)).ReturnsAsync(failureResult);
+
+        // Act
+        var result = await _controller.Update(categoryId, input);
+
+        // Assert
+        var unprocessableEntityResult = result.Should().BeOfType<UnprocessableEntityObjectResult>().Subject;
+        unprocessableEntityResult.Value.Should().BeEquivalentTo(failureResult);
     }
 
     #endregion
@@ -164,7 +217,7 @@ public class TitleCategoryControllerTest : TestUtils.BaseTest
     }
 
     [Fact]
-    public async Task ToggleInactivated_ShouldReturnUnprocessableEntity_WhenToggleFails()
+    public async Task ToggleInactivated_ShouldReturnNotFound_WhenToggleFails()
     {
         // Arrange
         var categoryId = TestUtils.Guids[0];
@@ -174,7 +227,7 @@ public class TitleCategoryControllerTest : TestUtils.BaseTest
         var result = await _controller.ToggleInactivated(categoryId);
 
         // Assert
-        result.Should().BeOfType<UnprocessableEntityResult>();
+        result.Should().BeOfType<NotFoundResult>();
     }
 
     #endregion
@@ -196,7 +249,7 @@ public class TitleCategoryControllerTest : TestUtils.BaseTest
     }
 
     [Fact]
-    public async Task Delete_ShouldReturnUnprocessableEntity_WhenDeleteFails()
+    public async Task Delete_ShouldReturnNotFound_WhenDeleteFails()
     {
         // Arrange
         var categoryId = TestUtils.Guids[0];
@@ -206,7 +259,7 @@ public class TitleCategoryControllerTest : TestUtils.BaseTest
         var result = await _controller.Delete(categoryId);
 
         // Assert
-        result.Should().BeOfType<UnprocessableEntityResult>();
+        result.Should().BeOfType<NotFoundResult>();
     }
 
     #endregion
