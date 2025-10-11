@@ -18,4 +18,8 @@ public enum CreditCardCreateOrUpdateErrorCode
     DebitWalletInactivated =  11,
     
     CardBrandNotFound =  12,
+    
+    LimitMinValueZero =  13,
+    DueDayOutOfRange =  14,
+    ClosingDayOutOfRange =  15
 }

@@ -165,6 +165,25 @@ public class CreditCardValidationService(
             return validationResult;
         }
 
+        if (input.Limit <= 0)
+        {
+            validationResult.ErrorCode = CreditCardCreateOrUpdateErrorCode.LimitMinValueZero;
+            validationResult.Message = "Limit must be greater than zero.";
+            return validationResult;
+        }
+        if (1 > input.DueDay || input.DueDay > 31)
+        {
+            validationResult.ErrorCode = CreditCardCreateOrUpdateErrorCode.DueDayOutOfRange;
+            validationResult.Message = "Due day is out of range. >= 1 and <= 31";
+            return validationResult;
+        }
+        if (1 > input.ClosingDay || input.ClosingDay > 31)
+        {
+            validationResult.ErrorCode = CreditCardCreateOrUpdateErrorCode.ClosingDayOutOfRange;
+            validationResult.Message = "Closing day is out of range. >= 1 and <= 31";
+            return validationResult;
+        }
+
         validationResult.Success = true;
         return validationResult;
     }
