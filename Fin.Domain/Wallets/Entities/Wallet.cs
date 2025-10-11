@@ -1,3 +1,4 @@
+using Fin.Domain.CreditCards.Entities;
 using Fin.Domain.FinancialInstitutions.Entities;
 using Fin.Domain.Global.Interfaces;
 using Fin.Domain.Wallets.Dtos;
@@ -23,6 +24,9 @@ public class Wallet: IAuditedTenantEntity
     
     public decimal InitialBalance { get; private set; }
     public decimal CurrentBalance { get; set; }
+    
+    
+    public virtual ICollection<CreditCard> CreditCards { get; set; }
 
     public Wallet()
     {

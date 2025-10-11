@@ -13,7 +13,7 @@ public class CreditCard: IAuditedTenantEntity
     public string Icon { get; private set; }
     public decimal Limit { get; private set; }
     public int DueDay { get; private set; }
-    public int ClossingDay { get; private set; }
+    public int ClosingDay { get; private set; }
     public bool Inactivated { get; private set; }
     
     public Guid DebitWalletId { get; private set; }
@@ -43,7 +43,7 @@ public class CreditCard: IAuditedTenantEntity
         Icon = input.Icon;
         Limit = input.Limit;
         DueDay = input.DueDay;
-        ClossingDay = input.ClossingDay;
+        ClosingDay = input.ClosingDay;
         DebitWalletId = input.DebitWalletId;
         CardBrandId = input.CardBrandId;
         FinancialInstitutionId = input.FinancialInstitutionId;
@@ -56,7 +56,7 @@ public class CreditCard: IAuditedTenantEntity
         Icon = input.Icon;
         Limit = input.Limit;
         DueDay = input.DueDay;
-        ClossingDay = input.ClossingDay;
+        ClosingDay = input.ClosingDay;
         DebitWalletId = input.DebitWalletId;
         CardBrandId = input.CardBrandId;
         FinancialInstitutionId = input.FinancialInstitutionId;

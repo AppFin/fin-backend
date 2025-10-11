@@ -9,7 +9,7 @@ public class CreditCardOutput(CreditCard card)
     public string Icon { get; set; } = card.Icon;
     public decimal Limit { get; set; } = card.Limit;
     public int DueDay { get; set; } = card.DueDay;
-    public int ClossingDay { get; set; } = card.ClossingDay;
+    public int ClosingDay { get; set; } = card.ClosingDay;
     public Guid DebitWalletId { get; set; } = card.DebitWalletId;
     public Guid CardBrandId { get; set; } = card.CardBrandId;
     public Guid FinancialInstitutionId { get; set; } = card.FinancialInstitutionId;
