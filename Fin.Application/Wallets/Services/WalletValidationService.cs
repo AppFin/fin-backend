@@ -119,7 +119,7 @@ public class WalletValidationService(
         }
 
         var nameAlredInUse = await repository.Query()
-            .AnyAsync(n => n.Name == input.Name && (!editingId.HasValue || n.Id != editingId));
+            .AnyAsync(n => EF.Functions.ILike(n.Name, input.Name)  && (!editingId.HasValue || n.Id != editingId));
         if (nameAlredInUse)
         {
             validationResult.ErrorCode = WalletCreateOrUpdateErrorCode.NameAlreadyInUse;

@@ -22,7 +22,7 @@ public class DefaultMenusSeeder(
             {
                 Id = Guid.Parse("E517345A-837D-42B8-8281-FD8DC32F9150"),
                 FrontRoute = "/wallets",
-                Name = "finCore.features.wallets.title",
+                Name = "finCore.features.wallet.title",
                 Color = "#fdc570",
                 Icon = "wallet",
                 OnlyForAdmin = false,
