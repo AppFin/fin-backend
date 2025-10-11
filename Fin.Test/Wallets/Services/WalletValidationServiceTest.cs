@@ -1,6 +1,7 @@
 using Fin.Application.FinancialInstitutions;
 using Fin.Application.Wallets.Enums;
 using Fin.Application.Wallets.Services;
+using Fin.Domain.CreditCards.Entities;
 using Fin.Domain.FinancialInstitutions.Dtos;
 using Fin.Domain.Wallets.Dtos;
 using Fin.Domain.Wallets.Entities;
@@ -16,7 +17,7 @@ public class WalletValidationServiceTest : TestUtils.BaseTestWithContext
 
     private WalletValidationService GetService(Resources resources)
     {
-        return new WalletValidationService(resources.WalletRepository, resources.FakeFinancialInstitution.Object);
+        return new WalletValidationService(resources.WalletRepository, resources.CreditCardRepository, resources.FakeFinancialInstitution.Object);
     }
 
     private Resources GetResources()
@@ -24,6 +25,7 @@ public class WalletValidationServiceTest : TestUtils.BaseTestWithContext
         return new Resources
         {
             WalletRepository = GetRepository<Wallet>(),
+            CreditCardRepository = GetRepository<CreditCard>(),
             FakeFinancialInstitution = new Mock<IFinancialInstitutionService>()
         };
     }
@@ -31,6 +33,7 @@ public class WalletValidationServiceTest : TestUtils.BaseTestWithContext
     private class Resources
     {
         public IRepository<Wallet> WalletRepository { get; set; }
+        public IRepository<CreditCard> CreditCardRepository { get; set; }
         public Mock<IFinancialInstitutionService> FakeFinancialInstitution { get; set; }
     }
 
@@ -68,7 +71,7 @@ public class WalletValidationServiceTest : TestUtils.BaseTestWithContext
         result.Should().NotBeNull();
         result.Success.Should().BeFalse();
         result.ErrorCode.Should().Be(WalletToggleInactiveErrorCode.WalletNotFound);
-        result.Message.Should().Be("Wallet not found to toogle inactive.");
+        result.Message.Should().Be("Wallet not found to toggle inactive.");
     }
 
     #endregion

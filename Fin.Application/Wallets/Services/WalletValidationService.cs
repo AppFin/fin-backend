@@ -1,6 +1,7 @@
 using Fin.Application.FinancialInstitutions;
 using Fin.Application.Globals.Dtos;
 using Fin.Application.Wallets.Enums;
+using Fin.Domain.CreditCards.Entities;
 using Fin.Domain.Wallets.Dtos;
 using Fin.Domain.Wallets.Entities;
 using Fin.Infrastructure.AutoServices.Interfaces;
@@ -19,7 +20,8 @@ public interface IWalletValidationService
 }
 
 public class WalletValidationService(
-    IRepository<Wallet> repository,
+    IRepository<Wallet> walletRepository,
+    IRepository<CreditCard> creditCardRepository,
     IFinancialInstitutionService financialInstitutionService
 ) : IWalletValidationService, IAutoTransient
 {
@@ -27,15 +29,21 @@ public class WalletValidationService(
     {
         var validationResult = new ValidationResultDto<bool, WalletToggleInactiveErrorCode>();
 
-        var wallet = await repository.Query(tracking: false).FirstOrDefaultAsync(n => n.Id == walletId);
+        var wallet = await walletRepository.Query(tracking: false).FirstOrDefaultAsync(n => n.Id == walletId);
         if (wallet is null)
         {
             validationResult.ErrorCode = WalletToggleInactiveErrorCode.WalletNotFound;
-            validationResult.Message = "Wallet not found to toogle inactive.";
+            validationResult.Message = "Wallet not found to toggle inactive.";
             return validationResult;
         }
 
-        // TODO here validate relations
+        var walletInUseByActivatedCreditCard = await creditCardRepository.Query().AnyAsync(n => n.DebitWalletId == walletId && !n.Inactivated);
+        if (walletInUseByActivatedCreditCard)
+        {
+            validationResult.ErrorCode = WalletToggleInactiveErrorCode.WalletInUseByActivatedCreditCards;
+            validationResult.Message = "Wallet in use by activated credit cards.";
+            return validationResult;
+        }
 
         validationResult.Success = true;
         return validationResult;
@@ -45,11 +53,19 @@ public class WalletValidationService(
     {
         var validationResult = new ValidationResultDto<bool, WalletDeleteErrorCode>();
 
-        var walletExists = await repository.Query().AnyAsync(n => n.Id == walletId);
+        var walletExists = await walletRepository.Query().AnyAsync(n => n.Id == walletId);
         if (!walletExists)
         {
             validationResult.ErrorCode = WalletDeleteErrorCode.WalletNotFound;
             validationResult.Message = "Wallet not found to delete.";
+            return validationResult;
+        }
+        
+        var walletInUseByCreditCard = await creditCardRepository.Query().AnyAsync(n => n.DebitWalletId == walletId);
+        if (walletInUseByCreditCard)
+        {
+            validationResult.ErrorCode = WalletDeleteErrorCode.WalletInUseByCreditCards;
+            validationResult.Message = "Wallet in use by credit cards.";
             return validationResult;
         }
 
@@ -66,7 +82,7 @@ public class WalletValidationService(
 
         if (editingId.HasValue)
         {
-            var walletExists = await repository.Query()
+            var walletExists = await walletRepository.Query()
                 .AnyAsync(n => n.Id == editingId.Value);
             if (!walletExists)
             {
@@ -118,7 +134,7 @@ public class WalletValidationService(
             return validationResult;
         }
 
-        var nameAlredInUse = await repository.Query()
+        var nameAlredInUse = await walletRepository.Query()
             .AnyAsync(n => n.Name.ToLower() == input.Name.ToLower()  && (!editingId.HasValue || n.Id != editingId));
         if (nameAlredInUse)
         {
