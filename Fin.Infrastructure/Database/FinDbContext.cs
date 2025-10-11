@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Fin.Domain.CardBrands.Entities;
 using Fin.Domain.Global.Interfaces;
 using Fin.Domain.Menus.Entities;
 using Fin.Domain.Notifications;
@@ -30,8 +31,8 @@ public class FinDbContext : DbContext
 
     public DbSet<Menu> Menus { get; set; }
     
+    public DbSet<CardBrand> CardBrands { get; set; }
     public DbSet<TitleCategory> TitleCategories { get; set; }
-    
     public DbSet<Wallet> Wallets { get; set; }
 
     private readonly IAmbientData _ambientData;
