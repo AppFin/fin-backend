@@ -4,6 +4,7 @@ namespace Fin.Domain.CreditCards.Dtos;
 
 public class CreditCardOutput(CreditCard card)
 {
+    public Guid Id { get; set; } = card.Id;
     public string Name { get; set; } = card.Name;
     public string Color { get; set; } = card.Color;
     public string Icon { get; set; } = card.Icon;
