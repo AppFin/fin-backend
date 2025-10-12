@@ -55,7 +55,7 @@ public class MenuService(
 
     public async Task<MenuOutput> Create(MenuInput input, bool autoSave = false)
     {
-        ValidarInput(input);
+        ValidateInput(input);
         var menu = new Menu(input);
         await repository.AddAsync(menu, autoSave);
         return new MenuOutput(menu);
@@ -63,7 +63,7 @@ public class MenuService(
 
     public async Task<bool> Update(Guid id, MenuInput input, bool autoSave = false)
     {
-        ValidarInput(input);
+        ValidateInput(input);
         var menu = await repository.Query()
             .FirstOrDefaultAsync(u => u.Id == id);
         if (menu == null) return false;
@@ -84,7 +84,7 @@ public class MenuService(
         return true;
     }
 
-    private static void ValidarInput( MenuInput input)
+    private static void ValidateInput( MenuInput input)
     {
         if (string.IsNullOrWhiteSpace(input.FrontRoute))
             throw new BadHttpRequestException("FrontRoute is required");

@@ -4,6 +4,7 @@ using Fin.Infrastructure.Database.Extensions;
 using Fin.Infrastructure.Extensions;
 using Fin.Infrastructure.Seeders.Extensions;
 using Hangfire;
+using NSwag;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +12,18 @@ var frontEndUrl = builder.Configuration.GetSection(AppConstants.FrontUrlConfigKe
 
 builder.Services
     .AddInfrastructure(builder.Configuration)
-    .AddOpenApiDocument()
+    .AddOpenApiDocument(config =>
+    {
+        config.Title = "FinApp API";
+        config.Version = "v1";
+
+        config.AddSecurity("Bearer", [], new OpenApiSecurityScheme
+        {
+            Type = OpenApiSecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+        });
+    })
     .AddCors(options =>
     {
         options.AddPolicy("AllowAngularLocalhost",

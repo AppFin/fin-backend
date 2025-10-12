@@ -20,6 +20,28 @@ public class DefaultMenusSeeder(
         {
             new()
             {
+                Id = Guid.Parse("E517345A-837D-42B8-8281-FD8DC32F9150"),
+                FrontRoute = "/wallets",
+                Name = "finCore.features.wallet.title",
+                Color = "#fdc570",
+                Icon = "wallet",
+                OnlyForAdmin = false,
+                Position = MenuPosition.LeftTop,
+                KeyWords = "wallets, carteiras, conta, account, billetera, cuenta"
+            },
+            new()
+            {
+                Id = Guid.Parse("0199b289-82a7-7069-9230-05250b55fd47"),
+                FrontRoute = "/title-categories",
+                Name = "finCore.features.titleCategory.title",
+                Color = "#fdc570",
+                Icon = "icons",
+                OnlyForAdmin = false,
+                Position = MenuPosition.LeftTop,
+                KeyWords = "title category, categória do título, categoria"
+            },
+            new()
+            {
                 Id = Guid.Parse("01994133-6669-7fcd-b6db-19a9b0c06f20"),
                 FrontRoute = "/admin/menus",
                 Name = "finCore.features.menus.title",
@@ -28,6 +50,17 @@ public class DefaultMenusSeeder(
                 OnlyForAdmin = true,
                 Position = MenuPosition.LeftTop,
                 KeyWords = "Menu"
+            },
+            new()
+            {
+                Id = Guid.Parse("01994133-6669-7fcd-b6db-19a9b0c06f21"),
+                FrontRoute = "/admin/financial-institutions",
+                Name = "finCore.features.financialInstitutions.title",
+                Color = "#4CAF50",
+                Icon = "building-columns",
+                OnlyForAdmin = true,
+                Position = MenuPosition.LeftTop,
+                KeyWords = "Financial Institution"
             },
             new()
             {

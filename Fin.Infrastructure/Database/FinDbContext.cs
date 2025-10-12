@@ -5,7 +5,9 @@ using Fin.Domain.Menus.Entities;
 using Fin.Domain.Notifications;
 using Fin.Domain.Notifications.Entities;
 using Fin.Domain.Tenants.Entities;
+using Fin.Domain.TitleCategories.Entities;
 using Fin.Domain.Users.Entities;
+using Fin.Domain.Wallets.Entities;
 using Fin.Infrastructure.AmbientDatas;
 using Fin.Infrastructure.Database.Configurations;
 using Microsoft.EntityFrameworkCore;
@@ -28,7 +30,10 @@ public class FinDbContext : DbContext
     public DbSet<NotificationUserDelivery> NotificationUserDeliveries { get; set; }
 
     public DbSet<Menu> Menus { get; set; }
+    
     public DbSet<CardBrand> CardBrands { get; set; }
+    public DbSet<TitleCategory> TitleCategories { get; set; }
+    public DbSet<Wallet> Wallets { get; set; }
 
     private readonly IAmbientData _ambientData;
 
@@ -41,6 +46,8 @@ public class FinDbContext : DbContext
     {
         _ambientData = ambientData;
     }
+    
+    
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -63,7 +70,6 @@ public class FinDbContext : DbContext
 
     private void ApplyTenantFilter(ModelBuilder modelBuilder)
     {
-        if (!(_ambientData?.IsLogged ?? false)) return;
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             if (typeof(ITenantEntity).IsAssignableFrom(entityType.ClrType))
@@ -79,7 +85,8 @@ public class FinDbContext : DbContext
 
     private void SetTenantFilter<TEntity>(ModelBuilder modelBuilder) where TEntity : class, ITenantEntity
     {
-        modelBuilder.Entity<TEntity>().HasQueryFilter(e => e.TenantId == _ambientData.TenantId);
+        if (Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite") return;
+        modelBuilder.Entity<TEntity>().HasQueryFilter(e => _ambientData.IsLogged && e.TenantId == _ambientData.TenantId);
     }
 
     private void ApplyUtcConverterToDateTime(ModelBuilder modelBuilder)
