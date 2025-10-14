@@ -72,6 +72,17 @@ public class DefaultMenusSeeder(
                 OnlyForAdmin = true,
                 Position = MenuPosition.LeftTop,
                 KeyWords = "notifications, notificação, notificações"
+            },
+            new()
+            {
+                Id = Guid.Parse("01999256-1baa-76bb-be49-6e209249c828"),
+                FrontRoute = "/admin/card-brand",
+                Name = "finCore.features.cardBrand.title",
+                Color = "#6d28d9",
+                Icon = "credit-card",
+                OnlyForAdmin = true,
+                Position = MenuPosition.LeftTop,
+                KeyWords = "card brand, bandeira, cartao"
             }
         };
         var defaultMenusIds = defaultMenus.Select(x => x.Id).ToList();
