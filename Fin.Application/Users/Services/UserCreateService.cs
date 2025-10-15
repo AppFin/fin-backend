@@ -9,6 +9,8 @@ using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Entities;
 using Fin.Domain.Users.Factories;
+using Fin.Domain.Wallets.Dtos;
+using Fin.Domain.Wallets.Entities;
 using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.AutoServices.Interfaces;
 using Fin.Infrastructure.Constants;
@@ -37,6 +39,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
     private readonly IRepository<UserCredential> _credentialRepository;
     private readonly IRepository<User> _userRepository;
     private readonly IRepository<Tenant> _tenantRepository;
+    private readonly IRepository<Wallet> _walletRepository;
     private readonly IRepository<UserNotificationSettings> _notificationSettingsRepository;
     private readonly IRepository<UserRememberUseSetting> _userRememberUseSettingRepository;
     
@@ -59,7 +62,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         IEmailSenderService emailSender,
         IConfirmationCodeGenerator codeGenerator,
         IRepository<UserNotificationSettings> notificationSettingsRepository,
-        IRepository<UserRememberUseSetting> userRememberUseSettingRepository, IUnitOfWork unitOfWork)
+        IRepository<UserRememberUseSetting> userRememberUseSettingRepository, IUnitOfWork unitOfWork, IRepository<Wallet> walletRepository)
     {
         _credentialRepository = credentialRepository;
         _dateTimeProvider = dateTimeProvider;
@@ -70,6 +73,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         _notificationSettingsRepository = notificationSettingsRepository;
         _userRememberUseSettingRepository = userRememberUseSettingRepository;
         _unitOfWork = unitOfWork;
+        _walletRepository = walletRepository;
         _tenantRepository = tenantRepository;
         _userRepository = userRepository;
 
@@ -200,33 +204,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         var user = new User(input, now);
         var credential = UserCredentialFactory.Create(user.Id, process.EncryptedEmail, process.EncryptedPassword, UserCredentialFactoryType.Password);
 
-        var tenant = new Tenant(now);
-        user.Tenants.Add(tenant);
-        
-        var notificationSetting = new UserNotificationSettings(user.Id, tenant.Id);
-        var rememberUseSetting = new UserRememberUseSetting(user.Id, tenant.Id);
-
-        await using (await _unitOfWork.BeginTransactionAsync())
-        {
-            await _tenantRepository.AddAsync(tenant);
-            await _userRepository.AddAsync(user);
-            await _credentialRepository.AddAsync(credential);
-            await _userRememberUseSettingRepository.AddAsync(rememberUseSetting);
-            await _notificationSettingsRepository.AddAsync(notificationSetting);
-            await _unitOfWork.CommitAsync();
-        }
-
-        await _cache.RemoveAsync(GenerateProcessCacheKey(creationToken));
-        
-        user.Tenants.First().Users = null;
-        user.Credential.User = null;
-        
-        return new ValidationResultDto<UserDto>
-        {
-            Success = true,
-            Data = new UserDto(user),
-            Message = "Created user"
-        };
+        return await ExecuteCreateUser(creationToken, user, credential);
     }
 
     public async Task<ValidationResultDto<UserDto>> CreateUser(string googleId, string email, UserUpdateOrCreateInput input)
@@ -244,15 +222,29 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         var user = new User(input, now);
         var credential = UserCredentialFactory.Create(user.Id, encryptedEmail, googleId, UserCredentialFactoryType.Google);
 
-        var tenant = new Tenant(now);
+        return await ExecuteCreateUser(null, user, credential);
+    }
+    
+    private async Task<ValidationResultDto<UserDto>> ExecuteCreateUser(string creationToken, User user, UserCredential credential)
+    {
+        var tenant = new Tenant(user.CreatedAt);
         user.Tenants.Add(tenant);
-
+        
         var notificationSetting = new UserNotificationSettings(user.Id, tenant.Id);
         var rememberUseSetting = new UserRememberUseSetting(user.Id, tenant.Id);
-
+        var firstWallet = new Wallet(new WalletInput
+        {
+            Color = "#fdc570",
+            Icon = "wallet",
+            Name = "Wallet",
+            InitialBalance = 0
+        });
+        
         await using (await _unitOfWork.BeginTransactionAsync())
         {
             await _tenantRepository.AddAsync(tenant);
+            firstWallet.TenantId = tenant.Id;
+            await _walletRepository.AddAsync(firstWallet);
             await _userRepository.AddAsync(user);
             await _credentialRepository.AddAsync(credential);
             await _userRememberUseSettingRepository.AddAsync(rememberUseSetting);
@@ -260,8 +252,12 @@ public class UserCreateService : IUserCreateService, IAutoTransient
             await _unitOfWork.CommitAsync();
         }
 
+        if (!string.IsNullOrWhiteSpace(creationToken))
+            await _cache.RemoveAsync(GenerateProcessCacheKey(creationToken));
+        
         user.Tenants.First().Users = null;
         user.Credential.User = null;
+        
         return new ValidationResultDto<UserDto>
         {
             Success = true,

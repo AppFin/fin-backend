@@ -8,6 +8,7 @@ using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Entities;
 using Fin.Domain.Users.Factories;
+using Fin.Domain.Wallets.Entities;
 using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Database.Repositories;
@@ -729,7 +730,8 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
             resources.FakeCodeGenerator.Object,
             resources.UserNotificationSettings,
             resources.UserRememberUseSettings,
-            UnitOfWork
+            UnitOfWork,
+            resources.WalletRepository
         );
     }
 
@@ -742,6 +744,7 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
             TenantRepository = GetRepository<Tenant>(),
             UserNotificationSettings = GetRepository<UserNotificationSettings>(),
             UserRememberUseSettings = GetRepository<UserRememberUseSetting>(),
+            WalletRepository = GetRepository<Wallet>(),
             FakeCache = new Mock<IRedisCacheService>(),
             FakeEmailSender = new Mock<IEmailSenderService>(),
             FakeConfiguration = new Mock<IConfiguration>(),
@@ -774,6 +777,7 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
         public IRepository<User> UserRepository { get; init; }
         public IRepository<Tenant> TenantRepository { get; init; }
         public IRepository<UserNotificationSettings> UserNotificationSettings { get; init; }
+        public IRepository<Wallet> WalletRepository { get; init; }
         public IRepository<UserRememberUseSetting> UserRememberUseSettings { get; init; }
         public Mock<IRedisCacheService> FakeCache { get; init; }
         public Mock<IConfiguration> FakeConfiguration { get; init; }

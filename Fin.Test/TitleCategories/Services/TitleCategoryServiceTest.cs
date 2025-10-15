@@ -1,10 +1,11 @@
+using Fin.Application.Globals.Dtos;
 using Fin.Application.TitleCategories;
 using Fin.Application.TitleCategories.Dtos;
+using Fin.Application.TitleCategories.Enums;
 using Fin.Domain.TitleCategories.Dtos;
 using Fin.Domain.TitleCategories.Entities;
 using Fin.Infrastructure.Database.Repositories;
 using FluentAssertions;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fin.Test.TitleCategories.Services;
@@ -69,7 +70,6 @@ public class TitleCategoryServiceTest : TestUtils.BaseTestWithContext
         result.Should().NotBeNull();
         result.TotalCount.Should().Be(3);
         result.Items.Should().HaveCount(2);
-        // Default sort is Inactivated (false first) then Name (asc). All are not inactivated, so sort by Name.
         result.Items.First().Name.Should().Be("A");
         result.Items.Last().Name.Should().Be("B");
     }
@@ -98,7 +98,7 @@ public class TitleCategoryServiceTest : TestUtils.BaseTestWithContext
         result.Should().NotBeNull();
         result.TotalCount.Should().Be(2);
         result.Items.Should().HaveCount(2);
-        result.Items.First().Name.Should().Be("Inactive1"); // Sorted by Name asc
+        result.Items.First().Name.Should().Be("Inactive1");
         result.Items.Last().Name.Should().Be("Inactive2");
     }
 
@@ -124,7 +124,7 @@ public class TitleCategoryServiceTest : TestUtils.BaseTestWithContext
         result.Should().NotBeNull();
         result.TotalCount.Should().Be(2);
         result.Items.Should().HaveCount(2);
-        result.Items.First().Name.Should().Be("Active1"); // Sorted by Name asc
+        result.Items.First().Name.Should().Be("Active1");
         result.Items.Last().Name.Should().Be("Active2");
     }
 
@@ -133,13 +133,11 @@ public class TitleCategoryServiceTest : TestUtils.BaseTestWithContext
     #region Create
 
     [Fact]
-    public async Task Create()
+    public async Task Create_ShouldReturnSuccessAndTitleCategory_WhenInputIsValid()
     {
         // Arrange
         var resources = GetResources();
         var service = GetService(resources);
-
-        DateTimeProvider.Setup(d => d.UtcNow()).Returns(TestUtils.UtcDateTimes[0]);
 
         var input = new TitleCategoryInput
         {
@@ -153,7 +151,10 @@ public class TitleCategoryServiceTest : TestUtils.BaseTestWithContext
 
         // Assert
         result.Should().NotBeNull();
-        var dbTitleCategory = await resources.TitleCategoryRepository.Query(false).FirstOrDefaultAsync(a => a.Id == result.Id);
+        result.Success.Should().BeTrue();
+        result.Data.Should().NotBeNull();
+
+        var dbTitleCategory = await resources.TitleCategoryRepository.Query(false).FirstOrDefaultAsync(a => a.Id == result.Data.Id);
         dbTitleCategory.Should().NotBeNull();
         dbTitleCategory.Name.Should().Be(input.Name);
         dbTitleCategory.Color.Should().Be(input.Color);
@@ -162,13 +163,11 @@ public class TitleCategoryServiceTest : TestUtils.BaseTestWithContext
     }
 
     [Fact]
-    public async Task Create_NameRequired()
+    public async Task Create_ShouldReturnFailure_NameRequired()
     {
         // Arrange
         var resources = GetResources();
         var service = GetService(resources);
-
-        DateTimeProvider.Setup(d => d.UtcNow()).Returns(TestUtils.UtcDateTimes[0]);
 
         var input = new TitleCategoryInput
         {
@@ -176,19 +175,22 @@ public class TitleCategoryServiceTest : TestUtils.BaseTestWithContext
             Icon = TestUtils.Strings[0]
         };
 
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<BadHttpRequestException>(async () => await service.Create(input, true));
-        exception.Message.Should().Be("Name is required");
+        // Act
+        var result = await service.Create(input, true);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Success.Should().BeFalse();
+        result.ErrorCode.Should().Be(TitleCategoryCreateOrUpdateErrorCode.NameIsRequired);
+        result.Message.Should().Be("Name is required.");
     }
 
     [Fact]
-    public async Task Create_ColorRequired()
+    public async Task Create_ShouldReturnFailure_ColorRequired()
     {
         // Arrange
         var resources = GetResources();
         var service = GetService(resources);
-
-        DateTimeProvider.Setup(d => d.UtcNow()).Returns(TestUtils.UtcDateTimes[0]);
 
         var input = new TitleCategoryInput
         {
@@ -196,20 +198,22 @@ public class TitleCategoryServiceTest : TestUtils.BaseTestWithContext
             Icon = TestUtils.Strings[0]
         };
 
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<BadHttpRequestException>(async () => await service.Create(input, true));
-        // Note: The service validates 'Color' but throws an error message 'FrontRoute is required'
-        exception.Message.Should().Be("FrontRoute is required"); 
+        // Act
+        var result = await service.Create(input, true);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Success.Should().BeFalse();
+        result.ErrorCode.Should().Be(TitleCategoryCreateOrUpdateErrorCode.ColorIsRequired);
+        result.Message.Should().Be("Color is required.");
     }
 
     [Fact]
-    public async Task Create_IconRequired()
+    public async Task Create_ShouldReturnFailure_IconRequired()
     {
         // Arrange
         var resources = GetResources();
         var service = GetService(resources);
-
-        DateTimeProvider.Setup(d => d.UtcNow()).Returns(TestUtils.UtcDateTimes[0]);
 
         var input = new TitleCategoryInput
         {
@@ -217,9 +221,41 @@ public class TitleCategoryServiceTest : TestUtils.BaseTestWithContext
             Color = TestUtils.Strings[0]
         };
 
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<BadHttpRequestException>(async () => await service.Create(input, true));
-        exception.Message.Should().Be("Icon is required");
+        // Act
+        var result = await service.Create(input, true);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Success.Should().BeFalse();
+        result.ErrorCode.Should().Be(TitleCategoryCreateOrUpdateErrorCode.IconIsRequired);
+        result.Message.Should().Be("Icon is required.");
+    }
+
+    [Fact]
+    public async Task Create_ShouldReturnFailure_NameAlreadyInUse()
+    {
+        // Arrange
+        var resources = GetResources();
+        var service = GetService(resources);
+
+        var existingName = TestUtils.Strings[0];
+        await resources.TitleCategoryRepository.AddAsync(new TitleCategory(new TitleCategoryInput { Name = existingName, Color = TestUtils.Strings[1], Icon = TestUtils.Strings[2] }), true);
+
+        var input = new TitleCategoryInput
+        {
+            Name = existingName,
+            Color = TestUtils.Strings[3],
+            Icon = TestUtils.Strings[4]
+        };
+
+        // Act
+        var result = await service.Create(input, true);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Success.Should().BeFalse();
+        result.ErrorCode.Should().Be(TitleCategoryCreateOrUpdateErrorCode.NameAlreadyInUse);
+        result.Message.Should().Be("Name is already in use.");
     }
 
     #endregion
@@ -227,27 +263,32 @@ public class TitleCategoryServiceTest : TestUtils.BaseTestWithContext
     #region Update
 
     [Fact]
-    public async Task Update_ShouldReturnFalse_WhenTitleCategoryNotFound()
+    public async Task Update_ShouldReturnFailure_WhenTitleCategoryNotFound()
     {
         // Arrange
         var resources = GetResources();
         var service = GetService(resources);
 
+        var input = new TitleCategoryInput { Color = TestUtils.Strings[1], Icon = TestUtils.Strings[3], Name = TestUtils.Strings[0] };
+
         // Act
-        var result = await service.Update(TestUtils.Guids[9], new TitleCategoryInput{ Color = TestUtils.Strings[1], Icon = TestUtils.Strings[3], Name = TestUtils.Strings[0]}, true);
+        var result = await service.Update(TestUtils.Guids[9], input, true);
 
         // Assert
-        result.Should().BeFalse();
+        result.Should().NotBeNull();
+        result.Success.Should().BeFalse();
+        result.ErrorCode.Should().Be(TitleCategoryCreateOrUpdateErrorCode.TitleCategoryNotFound);
+        result.Message.Should().Be("Title category not found to edit.");
+        result.Data.Should().BeFalse();
     }
 
     [Fact]
-    public async Task Update_ShouldReturnTrue()
+    public async Task Update_ShouldReturnSuccessAndTrue()
     {
         // Arrange
         var resources = GetResources();
         var service = GetService(resources);
 
-        DateTimeProvider.Setup(d => d.UtcNow()).Returns(TestUtils.UtcDateTimes[0]);
         var titleCategory = new TitleCategory(new TitleCategoryInput { Name = TestUtils.Strings[0], Color = TestUtils.Strings[1], Icon = TestUtils.Strings[3] });
         await resources.TitleCategoryRepository.AddAsync(titleCategory, true);
 
@@ -257,70 +298,110 @@ public class TitleCategoryServiceTest : TestUtils.BaseTestWithContext
         var result = await service.Update(titleCategory.Id, input, true);
 
         // Assert
-        result.Should().BeTrue();
+        result.Should().NotBeNull();
+        result.Success.Should().BeTrue();
+        result.Data.Should().BeTrue();
 
-        var dbTitleCategory = await resources.TitleCategoryRepository.Query(false).FirstOrDefaultAsync(a => a.Id == titleCategory.Id);
-        dbTitleCategory.Should().NotBeNull();
+        var dbTitleCategory = await resources.TitleCategoryRepository.Query(false).FirstAsync(a => a.Id == titleCategory.Id);
         dbTitleCategory.Name.Should().Be(input.Name);
         dbTitleCategory.Color.Should().Be(input.Color);
         dbTitleCategory.Icon.Should().Be(input.Icon);
     }
 
     [Fact]
-    public async Task Update_ShouldThrow_NameRequired()
+    public async Task Update_ShouldReturnFailure_NameRequired()
     {
-
         // Arrange
         var resources = GetResources();
         var service = GetService(resources);
 
-        DateTimeProvider.Setup(d => d.UtcNow()).Returns(TestUtils.UtcDateTimes[0]);
         var titleCategory = new TitleCategory(new TitleCategoryInput { Name = TestUtils.Strings[0], Color = TestUtils.Strings[1], Icon = TestUtils.Strings[3] });
         await resources.TitleCategoryRepository.AddAsync(titleCategory, true);
 
         var input = new TitleCategoryInput { Color = TestUtils.Strings[5], Icon = TestUtils.Strings[6] };
 
-        // Act & asser
-        var exception = await Assert.ThrowsAsync<BadHttpRequestException>(async () => await service.Update(titleCategory.Id, input, true));
-        exception.Message.Should().Be("Name is required");
+        // Act
+        var result = await service.Update(titleCategory.Id, input, true);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Success.Should().BeFalse();
+        result.ErrorCode.Should().Be(TitleCategoryCreateOrUpdateErrorCode.NameIsRequired);
+        result.Message.Should().Be("Name is required.");
     }
 
     [Fact]
-    public async Task Update_ShouldThrow_ColorRequired()
+    public async Task Update_ShouldReturnFailure_ColorRequired()
     {
-
         // Arrange
         var resources = GetResources();
         var service = GetService(resources);
 
-        DateTimeProvider.Setup(d => d.UtcNow()).Returns(TestUtils.UtcDateTimes[0]);
         var titleCategory = new TitleCategory(new TitleCategoryInput { Name = TestUtils.Strings[0], Color = TestUtils.Strings[1], Icon = TestUtils.Strings[3] });
         await resources.TitleCategoryRepository.AddAsync(titleCategory, true);
 
         var input = new TitleCategoryInput { Name = TestUtils.Strings[5], Icon = TestUtils.Strings[6] };
 
-        // Act & asser
-        var exception = await Assert.ThrowsAsync<BadHttpRequestException>(async () => await service.Update(titleCategory.Id, input, true));
-        exception.Message.Should().Be("FrontRoute is required");
+        // Act
+        var result = await service.Update(titleCategory.Id, input, true);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Success.Should().BeFalse();
+        result.ErrorCode.Should().Be(TitleCategoryCreateOrUpdateErrorCode.ColorIsRequired);
+        result.Message.Should().Be("Color is required.");
     }
 
     [Fact]
-    public async Task Update_ShouldThrow_IconRequired()
+    public async Task Update_ShouldReturnFailure_IconRequired()
     {
-
         // Arrange
         var resources = GetResources();
         var service = GetService(resources);
 
-        DateTimeProvider.Setup(d => d.UtcNow()).Returns(TestUtils.UtcDateTimes[0]);
         var titleCategory = new TitleCategory(new TitleCategoryInput { Name = TestUtils.Strings[0], Color = TestUtils.Strings[1], Icon = TestUtils.Strings[3] });
         await resources.TitleCategoryRepository.AddAsync(titleCategory, true);
 
         var input = new TitleCategoryInput { Name = TestUtils.Strings[5], Color = TestUtils.Strings[6] };
 
-        // Act & asser
-        var exception = await Assert.ThrowsAsync<BadHttpRequestException>(async () => await service.Update(titleCategory.Id, input, true));
-        exception.Message.Should().Be("Icon is required");
+        // Act
+        var result = await service.Update(titleCategory.Id, input, true);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Success.Should().BeFalse();
+        result.ErrorCode.Should().Be(TitleCategoryCreateOrUpdateErrorCode.IconIsRequired);
+        result.Message.Should().Be("Icon is required.");
+    }
+
+    [Fact]
+    public async Task Update_ShouldReturnFailure_NameAlreadyInUse()
+    {
+        // Arrange
+        var resources = GetResources();
+        var service = GetService(resources);
+
+        var existingTitleCategory = new TitleCategory(new TitleCategoryInput { Name = TestUtils.Strings[0], Color = TestUtils.Strings[1], Icon = TestUtils.Strings[2] });
+        await resources.TitleCategoryRepository.AddAsync(existingTitleCategory, true);
+
+        var titleCategoryToUpdate = new TitleCategory(new TitleCategoryInput { Name = TestUtils.Strings[3], Color = TestUtils.Strings[4], Icon = TestUtils.Strings[5] });
+        await resources.TitleCategoryRepository.AddAsync(titleCategoryToUpdate, true);
+
+        var input = new TitleCategoryInput
+        {
+            Name = existingTitleCategory.Name, // Name already in use by another category
+            Color = TestUtils.Strings[6],
+            Icon = TestUtils.Strings[7]
+        };
+
+        // Act
+        var result = await service.Update(titleCategoryToUpdate.Id, input, true);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Success.Should().BeFalse();
+        result.ErrorCode.Should().Be(TitleCategoryCreateOrUpdateErrorCode.NameAlreadyInUse);
+        result.Message.Should().Be("Name is already in use.");
     }
 
     #endregion
@@ -348,7 +429,6 @@ public class TitleCategoryServiceTest : TestUtils.BaseTestWithContext
         var resources = GetResources();
         var service = GetService(resources);
 
-        DateTimeProvider.Setup(d => d.UtcNow()).Returns(TestUtils.UtcDateTimes[0]);
         var titleCategory = new TitleCategory(new TitleCategoryInput { Name = TestUtils.Strings[0], Color = TestUtils.Strings[1], Icon = TestUtils.Strings[3] });
         await resources.TitleCategoryRepository.AddAsync(titleCategory, true);
 
@@ -385,7 +465,6 @@ public class TitleCategoryServiceTest : TestUtils.BaseTestWithContext
         var resources = GetResources();
         var service = GetService(resources);
 
-        DateTimeProvider.Setup(d => d.UtcNow()).Returns(TestUtils.UtcDateTimes[0]);
         var titleCategory = new TitleCategory(new TitleCategoryInput { Name = TestUtils.Strings[0], Color = TestUtils.Strings[1], Icon = TestUtils.Strings[3] });
         await resources.TitleCategoryRepository.AddAsync(titleCategory, true);
         titleCategory.Inactivated.Should().BeFalse();
@@ -407,7 +486,6 @@ public class TitleCategoryServiceTest : TestUtils.BaseTestWithContext
         var resources = GetResources();
         var service = GetService(resources);
 
-        DateTimeProvider.Setup(d => d.UtcNow()).Returns(TestUtils.UtcDateTimes[0]);
         var titleCategory = new TitleCategory(new TitleCategoryInput { Name = TestUtils.Strings[0], Color = TestUtils.Strings[1], Icon = TestUtils.Strings[3] });
         titleCategory.ToggleInactivated();
         await resources.TitleCategoryRepository.AddAsync(titleCategory, true);
