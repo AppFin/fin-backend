@@ -12,7 +12,9 @@ public class UserDto
     public string DisplayName { get; set; }
     public UserGender Gender { get; set; }
     public DateOnly? BirthDate { get; set; }
-    public string ImagePublicUrl { get; private set; } 
+    public string ImagePublicUrl { get; private set; }
+    public string Theme { get; set; }
+    
     public bool IsAdmin { get; } = false;
     public bool IsActivity { get; private set; }
     public List<Tenant> Tenants { get; private set; } = [];
@@ -30,6 +32,7 @@ public class UserDto
         Gender = user.Gender;
         BirthDate = user.BirthDate;
         ImagePublicUrl = user.ImagePublicUrl;
+        Theme = user.Theme;
         IsAdmin = user.IsAdmin;
         IsActivity = user.IsActivity;
         Tenants = user.Tenants?.ToList();

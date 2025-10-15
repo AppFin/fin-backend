@@ -1,4 +1,5 @@
 ﻿using Fin.Domain.Users.Entities;
+using Fin.Domain.Users.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -14,5 +15,9 @@ public class UserConfiguration: IEntityTypeConfiguration<User>
         builder.Property(x => x.LastName).HasMaxLength(100);
         builder.Property(x => x.DisplayName).HasMaxLength(150);
         builder.Property(x => x.ImagePublicUrl).HasMaxLength(200);
+        
+        builder.Property(x => x.Theme)
+            .IsRequired()
+            .HasDefaultValue("light");
     }
 }

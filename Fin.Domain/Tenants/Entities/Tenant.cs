@@ -11,6 +11,7 @@ public class Tenant: IEntity
     
     public string Locale { get; set; }
     public string Timezone { get; set; }
+    public string Currency { get; set; }
     
     public ICollection<User> Users { get; set; }
 
@@ -23,7 +24,9 @@ public class Tenant: IEntity
         Id = Guid.NewGuid();
         CreatedAt = now;
         UpdatedAt = now;
-        Locale = "pt-Br";
+        Locale = "pt-BR";
         Timezone = "America/Sao_Paulo";
-    } 
-}
+        Currency = "BRL";
+    }
+    
+} 

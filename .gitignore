@@ -55,4 +55,11 @@ nunit-*.xml
 notifications.md
 
 .vs
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+.idea/
 appsettings.Development.json

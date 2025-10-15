@@ -14,6 +14,7 @@ public interface IUserService
 {
     public Task<UserDto> Get(Guid id);
     public Task<PagedOutput<UserDto>> GetList(PagedFilteredAndSortedInput input);
+    public Task<UserDto> UpdateTheme(Guid userId, string theme, bool autoSave = false);
 }
 
 public class UserService(IRepository<User> repository, IAmbientData ambientData): IUserService, IAutoTransient
@@ -35,5 +36,22 @@ public class UserService(IRepository<User> repository, IAmbientData ambientData)
             .ApplyFilterAndSorter(input)
             .Select(user => new UserDto(user))
             .ToPagedResult(input);
+    }
+
+    public async Task<UserDto> UpdateTheme(Guid userId, string theme, bool autoSave = false)
+    {
+        if (!ambientData.IsAdmin && userId != ambientData.UserId)
+            throw new SecurityException("You are not authorized to access this resource");
+
+        var user = await repository.Query()
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+            throw new Microsoft.AspNetCore.Http.BadHttpRequestException("User not found");
+
+        user.UpdateTheme(theme, DateTime.UtcNow);
+        await repository.UpdateAsync(user, autoSave);
+
+        return new UserDto(user);
     }
 }

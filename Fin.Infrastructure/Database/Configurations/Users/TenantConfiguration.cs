@@ -11,8 +11,20 @@ public class TenantConfiguration: IEntityTypeConfiguration<Tenant>
     {
         builder.HasKey(x => x.Id);
 
-        builder.Property(x => x.Locale).HasMaxLength(30);
-        builder.Property(x => x.Timezone).HasMaxLength(30);
+        builder.Property(x => x.Locale)
+            .HasMaxLength(10)
+            .IsRequired()
+            .HasDefaultValue("pt-BR");
+        
+        builder.Property(x => x.Timezone)
+            .HasMaxLength(50)
+            .IsRequired()
+            .HasDefaultValue("America/Sao_Paulo");
+        
+        builder.Property(x => x.Currency)
+            .HasMaxLength(3)
+            .IsRequired()
+            .HasDefaultValue("BRL");
 
         builder
             .HasMany(e => e.Users)

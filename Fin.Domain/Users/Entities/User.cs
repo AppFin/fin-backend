@@ -1,4 +1,5 @@
-﻿using Fin.Domain.Global.Interfaces;
+﻿using System.Text.Json.Serialization;
+using Fin.Domain.Global.Interfaces;
 using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Enums;
@@ -16,7 +17,8 @@ public class User: IEntity
     public UserGender Gender { get; set; }
     public DateOnly? BirthDate { get; set; }
     public string ImagePublicUrl { get; private set; } 
-        
+    public string Theme { get; set; } = "light";
+
     public bool IsAdmin { get; private set; } = false;
     public bool IsActivity { get; private set; }
     
@@ -24,6 +26,8 @@ public class User: IEntity
     public DateTime UpdatedAt { get; private set; }
 
     public UserCredential Credential { get; set; }
+    
+    [JsonIgnore]
     public ICollection<Tenant> Tenants { get; set; } = new List<Tenant>();
 
     public virtual ICollection<UserDeleteRequest> DeleteRequests { get; set; } = new List<UserDeleteRequest>();
@@ -82,6 +86,19 @@ public class User: IEntity
     public void SetImageIdentifier(string imageIdentifier)
     {
         ImagePublicUrl = imageIdentifier;
+    }
+    
+    public void UpdateTheme(string theme, DateTime now)
+    {
+        if (!string.IsNullOrWhiteSpace(theme))
+        {
+            var validThemes = new[] { "light", "dark", "auto" };
+            if (!validThemes.Contains(theme.ToLower()))
+                throw new ArgumentException("Theme must be one of: light, dark, auto");
+            
+            Theme = theme.ToLower();
+        }
+        UpdatedAt = now;
     }
 
     public void MakeAdmin()

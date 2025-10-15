@@ -8,6 +8,6 @@ public interface IAmbientData
     public bool IsAdmin { get; }
     public bool IsLogged { get; }
 
-    public void SetData(Guid tenantId, Guid userId, string displayName, bool isAdmin);
+    public void SetData(Guid tenantId, Guid userId, string? displayName, bool isAdmin);
     public void SetNotLogged();
 }
