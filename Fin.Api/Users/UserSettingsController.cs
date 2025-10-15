@@ -10,17 +10,17 @@ namespace Fin.Api.Users;
 public class UserSettingsController(IUserSettingsService service) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<UserSettingsDto>> Get()
+    public async Task<ActionResult<UserSettingsOutput>> Get()
     {
         var result = await service.Get();
         return result != null ? Ok(result) : NotFound();
     }
 
     [HttpPut]
-    public async Task<ActionResult<UserSettingsDto>> Update([FromBody] UserSettingsUpdateInput input)
+    public async Task<ActionResult> Update([FromBody] UserSettingsInput input)
     {
-        var result = await service.Update(input);
-        return Ok(result);
+        var success = await service.Update(input);
+        return success ? Ok() : UnprocessableEntity();
     }
 }
 

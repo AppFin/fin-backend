@@ -11,95 +11,43 @@ namespace Fin.Application.Users.Services;
 
 public interface IUserSettingsService
 {
-    Task<UserSettingsDto> Get();
-    Task<UserSettingsDto> Update(UserSettingsUpdateInput input);
+    Task<UserSettingsOutput> Get();
+    Task<bool> Update(UserSettingsInput input);
 }
 
 public class UserSettingsService(
-    IRepository<UserSettings> settingsRepository,
     IRepository<User> userRepository,
     IAmbientData ambientData
 ) : IUserSettingsService, IAutoTransient
 {
-    public async Task<UserSettingsDto> Get()
+    public async Task<UserSettingsOutput> Get()
     {
-        var userId = ambientData.UserId ?? throw new UnauthorizedAccessException("User not authenticated");
+        var userId = ambientData.UserId;
 
         var user = await userRepository.Query(false)
+            .Include(u => u.Tenants)
             .FirstOrDefaultAsync(u => u.Id == userId);
 
         if (user == null)
             return null;
 
-        var settings = await settingsRepository.Query(false)
-            .FirstOrDefaultAsync(s => s.UserId == userId);
-
-        return new UserSettingsDto(user, settings);
+        return new UserSettingsOutput(user, user.Tenants.FirstOrDefault());
     }
 
-    public async Task<UserSettingsDto> Update(UserSettingsUpdateInput input)
+    public async Task<bool> Update(UserSettingsInput input)
     {
-        var userId = ambientData.UserId ?? throw new UnauthorizedAccessException("User not authenticated");
+        var userId = ambientData.UserId;
 
         var user = await userRepository.Query()
-            .FirstOrDefaultAsync(u => u.Id == userId);
+            .FirstOrDefaultAsync(u => u.Id == userId && u.IsActivity);
 
         if (user == null)
-            throw new BadHttpRequestException("User not found");
+            return false;
+        user.Update(input);
+        user.Theme = input.Theme;
 
-        var now = DateTime.UtcNow;
-        var userChanged = false;
-
-        if (!string.IsNullOrEmpty(input.FirstName) || !string.IsNullOrEmpty(input.LastName) || 
-            !string.IsNullOrEmpty(input.DisplayName) || input.Gender != default || 
-            input.BirthDate.HasValue || !string.IsNullOrEmpty(input.ImagePublicUrl))
-        {
-            input.FirstName ??= user.FirstName;
-            input.LastName ??= user.LastName;
-            input.DisplayName ??= user.DisplayName;
-            input.Gender = input.Gender != default ? input.Gender : user.Gender;
-            input.BirthDate ??= user.BirthDate;
-            input.ImagePublicUrl ??= user.ImagePublicUrl;
-            
-            user.Update(input, now);
-            userChanged = true;
-        }
-
-        if (!string.IsNullOrEmpty(input.Theme))
-        {
-            user.UpdateTheme(input.Theme, now);
-            userChanged = true;
-        }
-
-        if (userChanged)
-            await userRepository.UpdateAsync(user, autoSave: false);
-
-        UserSettings settings = await settingsRepository.Query()
-            .FirstOrDefaultAsync(s => s.UserId == userId);
-
-        if (input.EmailNotifications.HasValue || input.PushNotifications.HasValue)
-        {
-            if (settings == null)
-            {
-                settings = new UserSettings(
-                    userId,
-                    input.EmailNotifications ?? true,
-                    input.PushNotifications ?? false
-                );
-                await settingsRepository.AddAsync(settings, autoSave: false);
-            }
-            else
-            {
-                settings.Update(
-                    input.EmailNotifications ?? settings.EmailNotifications,
-                    input.PushNotifications ?? settings.PushNotifications
-                );
-                await settingsRepository.UpdateAsync(settings, autoSave: false);
-            }
-        }
-
-        await userRepository.SaveChangesAsync();
-
-        return new UserSettingsDto(user, settings);
-    }
+        user.Tenants.FirstOrDefault().Update(input);
+        await userRepository.UpdateAsync(user, true);
+        return true;
+       }
 }

@@ -105,4 +105,14 @@ public class User: IEntity
     {
         IsAdmin = true;
     }
+
+    public void Update(UserUpdateOrCreateInput input)
+    {
+        FirstName = input.FirstName;
+        LastName = input.LastName;
+        DisplayName = input.DisplayName;
+        Gender = input.Gender;
+        BirthDate = input.BirthDate;
+        ImagePublicUrl = input.ImagePublicUrl;
+    }
 }

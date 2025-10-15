@@ -1,4 +1,5 @@
-﻿using Fin.Domain.Tenants.Entities;
+﻿using System.Text.Json.Serialization;
+using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Entities;
 using Fin.Domain.Users.Enums;
 
@@ -12,11 +13,11 @@ public class UserDto
     public string DisplayName { get; set; }
     public UserGender Gender { get; set; }
     public DateOnly? BirthDate { get; set; }
-    public string ImagePublicUrl { get; private set; }
-    public string Theme { get; set; }
-    
+    public string ImagePublicUrl { get; private set; }    
     public bool IsAdmin { get; } = false;
     public bool IsActivity { get; private set; }
+
+    [JsonIgnore]
     public List<Tenant> Tenants { get; private set; } = [];
 
     public UserDto()
@@ -32,7 +33,6 @@ public class UserDto
         Gender = user.Gender;
         BirthDate = user.BirthDate;
         ImagePublicUrl = user.ImagePublicUrl;
-        Theme = user.Theme;
         IsAdmin = user.IsAdmin;
         IsActivity = user.IsActivity;
         Tenants = user.Tenants?.ToList();
