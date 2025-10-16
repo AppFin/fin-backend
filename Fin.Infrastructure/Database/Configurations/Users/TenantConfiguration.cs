@@ -21,10 +21,9 @@ public class TenantConfiguration: IEntityTypeConfiguration<Tenant>
             .IsRequired()
             .HasDefaultValue("America/Sao_Paulo");
         
-        builder.Property(x => x.Currency)
-            .HasMaxLength(3)
-            .IsRequired()
-            .HasDefaultValue("BRL");
+        builder.Property(x => x.CurrencyCode)
+            .HasMaxLength(10)
+            .IsRequired();
 
         builder
             .HasMany(e => e.Users)

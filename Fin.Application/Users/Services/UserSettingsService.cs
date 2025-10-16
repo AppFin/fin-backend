@@ -39,6 +39,7 @@ public class UserSettingsService(
         var userId = ambientData.UserId;
 
         var user = await userRepository.Query()
+            .Include(u => u.Tenants)
             .FirstOrDefaultAsync(u => u.Id == userId && u.IsActivity);
 
         if (user == null)
