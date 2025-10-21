@@ -14,6 +14,7 @@ public class CreditCardOutput(CreditCard card)
     public Guid DebitWalletId { get; set; } = card.DebitWalletId;
     public Guid CardBrandId { get; set; } = card.CardBrandId;
     public Guid FinancialInstitutionId { get; set; } = card.FinancialInstitutionId;
+    public bool Inactivated { get; private set; } = card.Inactivated;
 
     public CreditCardOutput(): this(new CreditCard())
     {

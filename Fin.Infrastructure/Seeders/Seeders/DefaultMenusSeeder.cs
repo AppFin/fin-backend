@@ -87,7 +87,7 @@ public class DefaultMenusSeeder(
             new()
             {
                 Id = Guid.Parse("090183AC-2FBC-4DCE-BA22-CDD46B2C7494"),
-                FrontRoute = "/admin/credit-card",
+                FrontRoute = "/credit-cards",
                 Name = "finCore.features.creditCard.title",
                 Color = "#6d28d9",
                 Icon = "credit-card",
