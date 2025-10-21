@@ -1,3 +1,4 @@
+using Fin.Domain.CreditCards.Entities;
 using Fin.Domain.FinancialInstitutions.Dtos;
 using Fin.Domain.FinancialInstitutions.Enums;
 using Fin.Domain.Global.Interfaces;
@@ -15,6 +16,7 @@ public class FinancialInstitution : IAuditedEntity
     public bool Inactive { get; set; }
 
     public virtual ICollection<Wallet> Wallets { get; set; }
+    public virtual ICollection<CreditCard> CreditCards { get; set; }
     
     public Guid Id { get; set; }
     public Guid CreatedBy { get; set; }

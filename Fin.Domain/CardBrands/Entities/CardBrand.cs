@@ -1,4 +1,5 @@
 ﻿using Fin.Domain.CardBrands.Dtos;
+using Fin.Domain.CreditCards.Entities;
 using Fin.Domain.Global.Interfaces;
 
 namespace Fin.Domain.CardBrands.Entities;
@@ -9,6 +10,8 @@ public class CardBrand: IAuditedEntity
     public string Icon { get; set; }
     public string Color { get; set; }
 
+    public virtual ICollection<CreditCard> CreditCards { get; set; }
+    
     public Guid Id { get; set; }
     public Guid CreatedBy { get; set; }
     public Guid UpdatedBy { get; set; }

@@ -72,6 +72,28 @@ public class DefaultMenusSeeder(
                 OnlyForAdmin = true,
                 Position = MenuPosition.LeftTop,
                 KeyWords = "notifications, notificação, notificações"
+            },
+            new()
+            {
+                Id = Guid.Parse("7826C06C-7F7D-4D92-BAFD-68B5D5F247A9"),
+                FrontRoute = "/admin/card-brand",
+                Name = "finCore.features.cardBrand.title",
+                Color = "#6d28d9",
+                Icon = "credit-card",
+                OnlyForAdmin = true,
+                Position = MenuPosition.LeftTop,
+                KeyWords = "card brand, bandeira, cartao"
+            },
+            new()
+            {
+                Id = Guid.Parse("090183AC-2FBC-4DCE-BA22-CDD46B2C7494"),
+                FrontRoute = "/credit-cards",
+                Name = "finCore.features.creditCard.title",
+                Color = "#6d28d9",
+                Icon = "credit-card",
+                OnlyForAdmin = false,
+                Position = MenuPosition.LeftTop,
+                KeyWords = "credit card, cartao de crédito, cartão de credito, cartao"
             }
         };
         var defaultMenusIds = defaultMenus.Select(x => x.Id).ToList();
