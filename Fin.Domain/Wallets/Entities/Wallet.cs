@@ -1,6 +1,7 @@
 using Fin.Domain.CreditCards.Entities;
 using Fin.Domain.FinancialInstitutions.Entities;
 using Fin.Domain.Global.Interfaces;
+using Fin.Domain.Titles.Entities;
 using Fin.Domain.Wallets.Dtos;
 
 namespace Fin.Domain.Wallets.Entities;
@@ -27,6 +28,7 @@ public class Wallet: IAuditedTenantEntity
     
     
     public virtual ICollection<CreditCard> CreditCards { get; set; }
+    public virtual ICollection<Title> Titles { get; set; }
 
     public Wallet()
     {

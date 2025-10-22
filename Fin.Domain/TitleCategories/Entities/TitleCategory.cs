@@ -1,6 +1,7 @@
 using Fin.Domain.Global.Interfaces;
 using Fin.Domain.TitleCategories.Dtos;
 using Fin.Domain.TitleCategories.Enums;
+using Fin.Domain.Titles.Entities;
 
 namespace Fin.Domain.TitleCategories.Entities;
 
@@ -18,6 +19,8 @@ public class TitleCategory: IAuditedTenantEntity
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public Guid TenantId { get; set; }
+    
+    public virtual ICollection<Title> Titles { get; set; }
     
     public TitleCategory()
     {
