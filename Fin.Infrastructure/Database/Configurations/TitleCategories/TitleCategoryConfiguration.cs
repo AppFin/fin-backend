@@ -23,12 +23,12 @@ public class TitleCategoryConfiguration : IEntityTypeConfiguration<TitleCategory
             .UsingEntity<TitleTitleCategory>(
                 l => l
                     .HasOne(ttc => ttc.Title)
-                    .WithMany()
+                    .WithMany(title => title.TitleTitleCategories)
                     .HasForeignKey(e => e.TitleId) 
                     .OnDelete(DeleteBehavior.Cascade),
                 r => r
                     .HasOne(ttc => ttc.TitleCategory)
-                    .WithMany()
+                    .WithMany(category => category.TitleTitleCategories)
                     .HasForeignKey(e => e.TitleCategoryId)
                     .OnDelete(DeleteBehavior.Cascade)
             );

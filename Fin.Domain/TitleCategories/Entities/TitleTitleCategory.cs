@@ -9,4 +9,14 @@ public class TitleTitleCategory
     
     public Guid TitleCategoryId { get; set; }
     public virtual TitleCategory TitleCategory { get; set; }
+
+    public TitleTitleCategory()
+    {
+    }
+
+    public TitleTitleCategory(Guid categoryId, Guid titleId)
+    {
+        TitleId = titleId;
+        TitleCategoryId = categoryId;
+    }
 }

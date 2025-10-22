@@ -21,6 +21,7 @@ public class TitleCategory: IAuditedTenantEntity
     public Guid TenantId { get; set; }
     
     public virtual ICollection<Title> Titles { get; set; }
+    public virtual ICollection<TitleTitleCategory> TitleTitleCategories { get; set; }
     
     public TitleCategory()
     {
