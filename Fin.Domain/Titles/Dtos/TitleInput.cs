@@ -9,5 +9,5 @@ public class TitleInput
     public string Description { get; set; }
     public DateTime Date { get; set; }
     public Guid WalletId { get; set; }
-    public List<Guid> TitleCategoriesIds { get; set; }
+    public List<Guid> TitleCategoriesIds { get; set; } = [];
 }

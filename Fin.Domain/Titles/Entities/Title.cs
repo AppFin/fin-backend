@@ -42,7 +42,7 @@ public class Title: IAuditedTenantEntity
         
         Value = input.Value;
         Type = input.Type;
-        Description = input.Description;
+        Description = input.Description.Trim();
         Date = input.Date;
         WalletId = input.WalletId;
         
@@ -60,7 +60,7 @@ public class Title: IAuditedTenantEntity
     {
         Value = input.Value;
         Type = input.Type;
-        Description = input.Description;
+        Description = input.Description.Trim();
         Date = input.Date;
         WalletId = input.WalletId;
         
