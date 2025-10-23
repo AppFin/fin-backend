@@ -21,6 +21,7 @@ public class UnitOfWork(FinDbContext context): IUnitOfWork, IAutoScoped
     public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
         _transaction ??= await context.Database.BeginTransactionAsync(cancellationToken);
+        _disposed = false;
         return _transaction;
     }
 
