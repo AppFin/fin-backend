@@ -7,6 +7,7 @@ using Fin.Domain.Wallets.Entities;
 using Fin.Infrastructure.AutoServices.Interfaces;
 using Fin.Infrastructure.Database.Extensions;
 using Fin.Infrastructure.Database.Repositories;
+using Fin.Infrastructure.DateTimes;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fin.Application.Wallets.Services;
@@ -23,23 +24,25 @@ public interface IWalletService
 
 public class WalletService(
     IRepository<Wallet> repository,
-    IWalletValidationService validationService
+    IWalletValidationService validationService,
+    IDateTimeProvider dateTimeProvider
     ) : IWalletService, IAutoTransient
 {
     public async Task<WalletOutput> Get(Guid id)
     {
         var entity = await repository.Query(false).FirstOrDefaultAsync(n => n.Id == id);
-        return entity != null ? new WalletOutput(entity) : null;
+        return entity != null ? new WalletOutput(entity, dateTimeProvider.UtcNow()) : null;
     }
 
     public async Task<PagedOutput<WalletOutput>> GetList(WalletGetListInput input)
     {
+        var now = dateTimeProvider.UtcNow();
         return await repository.Query(false)
             .WhereIf(input.Inactivated.HasValue, n => n.Inactivated == input.Inactivated.Value)
             .OrderBy(m => m.Inactivated)
             .ThenBy(m => m.Name)
             .ApplyFilterAndSorter(input)
-            .Select(n => new WalletOutput(n))
+            .Select(n => new WalletOutput(n, now))
             .ToPagedResult(input);
     }
 
@@ -50,7 +53,7 @@ public class WalletService(
         
         var wallet = new Wallet(input);
         await repository.AddAsync(wallet, autoSave);
-        validation.Data = new WalletOutput(wallet);
+        validation.Data = new WalletOutput(wallet, dateTimeProvider.UtcNow());
         return validation;
     }
 

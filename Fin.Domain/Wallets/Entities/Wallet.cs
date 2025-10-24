@@ -24,11 +24,10 @@ public class Wallet: IAuditedTenantEntity
     public virtual FinancialInstitution FinancialInstitution { get; set; }
     
     public decimal InitialBalance { get; private set; }
-    public decimal CurrentBalance { get; set; }
-    
-    
-    public virtual ICollection<CreditCard> CreditCards { get; set; }
-    public virtual ICollection<Title> Titles { get; set; }
+
+
+    public virtual ICollection<CreditCard> CreditCards { get; set; } = [];
+    public virtual ICollection<Title> Titles { get; set; } = [];
 
     public Wallet()
     {
@@ -41,7 +40,6 @@ public class Wallet: IAuditedTenantEntity
         Icon = wallet.Icon;
         FinancialInstitutionId = wallet.FinancialInstitutionId;
         InitialBalance = wallet.InitialBalance;
-        CurrentBalance = wallet.InitialBalance;
     }
 
     public void Update(WalletInput wallet)
@@ -51,8 +49,19 @@ public class Wallet: IAuditedTenantEntity
         Icon = wallet.Icon;
         FinancialInstitutionId = wallet.FinancialInstitutionId;
         InitialBalance = wallet.InitialBalance;
-        // Here we don't update CurrentBalance because It's titles must be reprocesses
     }
     
     public void ToggleInactivated() => Inactivated = !Inactivated;
+
+    public decimal CalculateBalanceAt(DateTime dateTime)
+    {
+        if (Titles.Count == 0 || dateTime < CreatedAt) return 0;
+        
+        var lastTitle = Titles
+            .Where(title => title.Date <= dateTime)
+            .OrderByDescending(title => title.Date)
+            .FirstOrDefault();
+
+        return lastTitle?.ResultingBalance ?? InitialBalance;
+    }
 }
