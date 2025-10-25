@@ -16,8 +16,8 @@ public interface IWalletBalanceService
     public Task ReprocessBalance(Guid walletId, decimal newInitialBalance, bool autoSave = false , CancellationToken cancellationToken = default);
     public Task ReprocessBalance(Wallet wallet, bool autoSave = false , CancellationToken cancellationToken = default);
     public Task ReprocessBalance(List<Title> titles, decimal newInitialBalance, bool autoSave = false, CancellationToken cancellationToken = default);
-    public Task ReprocessBalanceFrom(Title title, bool autoSave = false, CancellationToken cancellationToken = default);
-    public Task ReprocessBalanceFrom(Guid titleId, bool autoSave = false, CancellationToken cancellationToken = default);
+    public Task ReprocessBalanceFrom(Title title, decimal newInitialBalance, bool autoSave = false, CancellationToken cancellationToken = default);
+    public Task ReprocessBalanceFrom(Guid titleId, decimal newInitialBalance, bool autoSave = false, CancellationToken cancellationToken = default);
 }
 
 public class WalletBalanceService(
@@ -64,15 +64,13 @@ public class WalletBalanceService(
             nextPreviousBalance = title.ResultingBalance;
         }
 
-        await using (await unitOfWork.BeginTransactionAsync(cancellationToken))
-        {
-            foreach (var title in orderedTitles)
-                await titleRepository.UpdateAsync(title, cancellationToken);
-            if (autoSave) await unitOfWork.CommitAsync(cancellationToken);
-        }
+        await using var scope = await unitOfWork.BeginTransactionAsync(cancellationToken);
+        foreach (var title in orderedTitles)
+            await titleRepository.UpdateAsync(title, cancellationToken);
+        if (autoSave) await scope.CompleteAsync(cancellationToken);
     }
 
-    public async Task ReprocessBalanceFrom(Title fromTitle, bool autoSave = false, CancellationToken cancellationToken = default)
+    public async Task ReprocessBalanceFrom(Title fromTitle, decimal newInitialBalance, bool autoSave = false, CancellationToken cancellationToken = default)
     {
         var titles = await titleRepository.Query(tracking: true)
             .Where(title => title.WalletId == fromTitle.WalletId)
@@ -80,14 +78,14 @@ public class WalletBalanceService(
             .ApplyDefaultTitleOrder()
             .ToListAsync(cancellationToken);
         var fromTitleIndex =  titles.FindIndex(title => title.Id == fromTitle.Id);
-        titles = titles.Skip(fromTitleIndex + 1).ToList();
-        await ReprocessBalance(titles, fromTitle.ResultingBalance, autoSave, cancellationToken);
+        titles = titles.Skip(fromTitleIndex).ToList();
+        await ReprocessBalance(titles, newInitialBalance, autoSave, cancellationToken);
     }
 
-    public async Task ReprocessBalanceFrom(Guid titleId, bool autoSave = false, CancellationToken cancellationToken = default)
+    public async Task ReprocessBalanceFrom(Guid titleId, decimal newInitialBalance, bool autoSave = false, CancellationToken cancellationToken = default)
     {
         var title = await titleRepository.Query(tracking: false)
             .FirstAsync(title => title.Id == titleId, cancellationToken);
-        await ReprocessBalanceFrom(title,  autoSave, cancellationToken);
+        await ReprocessBalanceFrom(title, newInitialBalance,  autoSave, cancellationToken);
     }
 }

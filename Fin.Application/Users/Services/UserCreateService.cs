@@ -240,7 +240,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
             InitialBalance = 0
         });
         
-        await using (await _unitOfWork.BeginTransactionAsync())
+        await using (var scope = await _unitOfWork.BeginTransactionAsync())
         {
             await _tenantRepository.AddAsync(tenant);
             firstWallet.TenantId = tenant.Id;
@@ -249,7 +249,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
             await _credentialRepository.AddAsync(credential);
             await _userRememberUseSettingRepository.AddAsync(rememberUseSetting);
             await _notificationSettingsRepository.AddAsync(notificationSetting);
-            await _unitOfWork.CommitAsync();
+            await scope.CompleteAsync();
         }
 
         if (!string.IsNullOrWhiteSpace(creationToken))
