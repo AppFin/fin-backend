@@ -36,7 +36,8 @@ public class Title: IAuditedTenantEntity
     {
     }
 
-    public Title(TitleInput input, decimal previousBalance)
+    public 
+        Title(TitleInput input, decimal previousBalance)
     {
         Id = Guid.NewGuid();
         
