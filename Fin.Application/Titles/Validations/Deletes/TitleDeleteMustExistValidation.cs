@@ -9,10 +9,10 @@ namespace Fin.Application.Titles.Validations.Deletes;
 
 public class TitleDeleteMustExistValidation(IRepository<Title> titleRepository): IValidationRule<Guid, TitleDeleteErrorCode>, IAutoTransient
 {
-    public async Task<ValidationPipelineOutput<TitleDeleteErrorCode>> ValidateAsync(Guid titleId, Guid? _)
+    public async Task<ValidationPipelineOutput<TitleDeleteErrorCode>> ValidateAsync(Guid titleId, Guid? _, CancellationToken cancellationToken = default)
     {
         var validation = new ValidationPipelineOutput<TitleDeleteErrorCode>();
-        var title = await titleRepository.Query(tracking: false).FirstOrDefaultAsync(t => t.Id == titleId);
+        var title = await titleRepository.Query(tracking: false).FirstOrDefaultAsync(t => t.Id == titleId, cancellationToken);
         return title == null ? validation.AddError(TitleDeleteErrorCode.TitleNotFound) : validation;
     }
 }

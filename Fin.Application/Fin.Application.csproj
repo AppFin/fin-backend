@@ -21,7 +21,6 @@
 
     <ItemGroup>
       <Folder Include="Notifications\Services\" />
-      <Folder Include="Titles\Services\" />
     </ItemGroup>
     
 </Project>

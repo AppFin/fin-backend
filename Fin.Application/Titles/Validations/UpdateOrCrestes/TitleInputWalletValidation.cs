@@ -11,12 +11,12 @@ namespace Fin.Application.Titles.Validations.UpdateOrCrestes;
 
 public class TitleInputWalletValidation(IRepository<Wallet> walletRepository): IValidationRule<TitleInput, TitleCreateOrUpdateErrorCode, List<Guid>>, IAutoTransient
 {
-    public async Task<ValidationPipelineOutput<TitleCreateOrUpdateErrorCode, List<Guid>>> ValidateAsync(TitleInput input, Guid? _)
+    public async Task<ValidationPipelineOutput<TitleCreateOrUpdateErrorCode, List<Guid>>> ValidateAsync(TitleInput input, Guid? _, CancellationToken cancellationToken = default)
     {
         var validation = new ValidationPipelineOutput<TitleCreateOrUpdateErrorCode, List<Guid>>();
         
         var wallet = await walletRepository.Query(tracking: false)
-            .FirstOrDefaultAsync(t => t.Id == input.WalletId);
+            .FirstOrDefaultAsync(t => t.Id == input.WalletId, cancellationToken);
 
         if (wallet == null)
         {

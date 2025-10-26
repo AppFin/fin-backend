@@ -15,19 +15,19 @@ public class TitleInputCategoriesValidation(
     IRepository<TitleCategory> categoryRepository
     ): IValidationRule<TitleInput, TitleCreateOrUpdateErrorCode, List<Guid>>, IAutoTransient
 {
-    public async Task<ValidationPipelineOutput<TitleCreateOrUpdateErrorCode, List<Guid>>> ValidateAsync(TitleInput input, Guid? editingId = null)
+    public async Task<ValidationPipelineOutput<TitleCreateOrUpdateErrorCode, List<Guid>>> ValidateAsync(TitleInput input, Guid? editingId = null, CancellationToken cancellationToken = default)
     {
         var validation = new ValidationPipelineOutput<TitleCreateOrUpdateErrorCode, List<Guid>>();
         
         var categories = await categoryRepository.Query(tracking: false)
             .Where(category => input.TitleCategoriesIds.Contains(category.Id))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         ValidateCategoriesExistence(input, categories, validation);
         if (!validation.Success) return validation;
 
         var titleEditing = !editingId.HasValue ? null : await titleRepository.Query(tracking: false)
-            .FirstOrDefaultAsync(title => title.Id == editingId.Value);
+            .FirstOrDefaultAsync(title => title.Id == editingId.Value, cancellationToken);
         ValidateCategoriesStatus(titleEditing, categories, validation);
         if (!validation.Success) return validation;
 

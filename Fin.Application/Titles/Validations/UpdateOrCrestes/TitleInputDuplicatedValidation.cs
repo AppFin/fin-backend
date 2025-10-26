@@ -10,7 +10,7 @@ namespace Fin.Application.Titles.Validations.UpdateOrCrestes;
 
 public class TitleInputDuplicatedValidation(IRepository<Title> titleRepository): IValidationRule<TitleInput, TitleCreateOrUpdateErrorCode>, IAutoTransient
 {
-    public async Task<ValidationPipelineOutput<TitleCreateOrUpdateErrorCode>> ValidateAsync(TitleInput input, Guid? editingId = null)
+    public async Task<ValidationPipelineOutput<TitleCreateOrUpdateErrorCode>> ValidateAsync(TitleInput input, Guid? editingId = null, CancellationToken cancellationToken = default)
     {
         var validation = new ValidationPipelineOutput<TitleCreateOrUpdateErrorCode>();
         
@@ -23,7 +23,7 @@ public class TitleInputDuplicatedValidation(IRepository<Title> titleRepository):
                         && t.Date.Hour == input.Date.Hour
                         && t.Date.Minute == input.Date.Minute
                         && (!editingId.HasValue || t.Id != editingId.Value))
-            .AnyAsync();
+            .AnyAsync(cancellationToken);
 
         if (duplicateExists)
             validation.AddError(TitleCreateOrUpdateErrorCode.DuplicateTitleInSameDateTimeMinute);

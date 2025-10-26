@@ -10,7 +10,7 @@ namespace Fin.Application.Titles.Validations.UpdateOrCrestes;
 
 public class TitleInputBasicFieldsValidation: IValidationRule<TitleInput, TitleCreateOrUpdateErrorCode>, IAutoTransient
 {
-    public async Task<ValidationPipelineOutput<TitleCreateOrUpdateErrorCode>> ValidateAsync(TitleInput input, Guid? _)
+    public async Task<ValidationPipelineOutput<TitleCreateOrUpdateErrorCode>> ValidateAsync(TitleInput input, Guid? _, CancellationToken __ = default)
     {
         var validation = new ValidationPipelineOutput<TitleCreateOrUpdateErrorCode>();
         
