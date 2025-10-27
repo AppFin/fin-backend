@@ -89,7 +89,7 @@ public class TitleService(
         var validationResult = await ValidateInput<bool>(input, id, cancellationToken);
         if (!validationResult.Success) return validationResult;
 
-        var title = await titleRepository.Query(tracking: true).FirstOrDefaultAsync(title => title.Id == id, cancellationToken);
+        var title = await titleRepository.Query(tracking: true).FirstAsync(title => title.Id == id, cancellationToken);
         var mustReprocess = title.MustReprocess(input);
 
         var context = await updateHelpService.PrepareUpdateContext(title, input, mustReprocess, cancellationToken);
@@ -104,10 +104,24 @@ public class TitleService(
         return validationResult.WithSuccess(true);
     }
 
-    public Task<ValidationResultDto<bool, TitleDeleteErrorCode>> Delete(Guid id, bool autoSave = false,
+    public async Task<ValidationResultDto<bool, TitleDeleteErrorCode>> Delete(Guid id, bool autoSave = false,
         CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var validationResult = await validation.Validate<Guid, TitleDeleteErrorCode>(id, null, cancellationToken);
+        var validationResultDto = validationResult.ToValidationResult<bool, TitleDeleteErrorCode>();
+        if (!validationResultDto.Success) return validationResultDto;
+        
+        var title = await titleRepository.Query(tracking: true).FirstAsync(title => title.Id == id, cancellationToken);
+        var titlesToReprocess = await updateHelpService.GetTitlesForReprocessing(title.WalletId, title.Date, title.Id, cancellationToken);
+
+        await using (var scope = await unitOfWork.BeginTransactionAsync(cancellationToken))
+        {
+            await titleRepository.DeleteAsync(title, cancellationToken);
+            await balanceService.ReprocessBalance(titlesToReprocess, title.PreviousBalance, autoSave: false, cancellationToken);
+            if (autoSave) await scope.CompleteAsync(cancellationToken);
+        }
+
+        return validationResultDto.WithSuccess(true);
     }
 
     private async Task<ValidationResultDto<TSuccess, TitleCreateOrUpdateErrorCode>> ValidateInput<TSuccess>(
