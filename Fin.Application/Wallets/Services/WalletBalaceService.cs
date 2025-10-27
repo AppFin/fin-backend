@@ -15,7 +15,6 @@ public interface IWalletBalanceService
     public Task<decimal> GetBalanceAt(Guid walletId, DateTime dateTime, CancellationToken cancellationToken = default);
     public Task<decimal> GetBalanceNow(Guid walletId, CancellationToken cancellationToken = default);
     public Task ReprocessBalance(Guid walletId, decimal newInitialBalance, bool autoSave = false , CancellationToken cancellationToken = default);
-    public Task ReprocessBalance(Guid walletId, DateTime fromFateNotInclusive, decimal newInitialBalance, bool autoSave = false , CancellationToken cancellationToken = default);
     public Task ReprocessBalance(Wallet wallet, bool autoSave = false , CancellationToken cancellationToken = default);
     public Task ReprocessBalance(List<Title> titles, decimal newInitialBalance, bool autoSave = false, CancellationToken cancellationToken = default);
     public Task ReprocessBalanceFrom(Title title, bool autoSave = false, CancellationToken cancellationToken = default);
@@ -50,18 +49,7 @@ public class WalletBalanceService(
             .FirstAsync(wallet => wallet.Id == walletId, cancellationToken);
         await ReprocessBalance(wallet.Titles.ToList(), newInitialBalance, autoSave, cancellationToken);
     }
-
-    public async Task ReprocessBalance(Guid walletId, DateTime fromFateNotInclusive, decimal newInitialBalance, bool autoSave = false,
-        CancellationToken cancellationToken = default)
-    {
-        var titles = await titleRepository.Query(tracking: true)
-            .Where(title => title.WalletId == walletId)
-            .Where(title => title.Date > fromFateNotInclusive)
-            .ApplyDefaultTitleOrder()
-            .ToListAsync(cancellationToken);
-        await ReprocessBalance(titles, newInitialBalance, autoSave, cancellationToken);
-    }
-
+    
     public async Task ReprocessBalance(Wallet wallet, bool autoSave = false, CancellationToken cancellationToken = default)
     {
         await ReprocessBalance(wallet.Titles.ToList(), wallet.InitialBalance, autoSave, cancellationToken);

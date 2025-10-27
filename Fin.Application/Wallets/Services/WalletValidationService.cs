@@ -67,10 +67,10 @@ public class WalletValidationService(
 
         return walletInUseByTitle switch
         {
-            true when walletInUseByCreditCard => validationResult.AddError(WalletDeleteErrorCode
+            true when walletInUseByCreditCard => validationResult.WithError(WalletDeleteErrorCode
                 .WalletInUseByCreditCardsAndTitle),
-            true => validationResult.AddError(WalletDeleteErrorCode.WalletInUseByTitles),
-            false when walletInUseByCreditCard => validationResult.AddError(WalletDeleteErrorCode
+            true => validationResult.WithError(WalletDeleteErrorCode.WalletInUseByTitles),
+            false when walletInUseByCreditCard => validationResult.WithError(WalletDeleteErrorCode
                 .WalletInUseByCreditCards),
             _ => validationResult
         };

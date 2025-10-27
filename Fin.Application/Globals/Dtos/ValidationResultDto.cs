@@ -39,14 +39,14 @@ public class ValidationResultDto<TDSuccess, TDError, TErroCode> where TErroCode 
     protected bool? InternalSuccess { get; set; }
     protected string? InternalMessage { get; set; }
 
-    public ValidationResultDto<TDSuccess, TDError, TErroCode> AddError(TErroCode errorCode, string? message = null)
+    public ValidationResultDto<TDSuccess, TDError, TErroCode> WithError(TErroCode errorCode, string? message = null)
     {
         ErrorCode = errorCode;
         InternalMessage = message;
         return this;
     }
 
-    public ValidationResultDto<TDSuccess, TDError, TErroCode> AddError(TErroCode errorCode, TDError errorData,
+    public ValidationResultDto<TDSuccess, TDError, TErroCode> WithError(TErroCode errorCode, TDError errorData,
         string? message = null)
     {
         ErrorCode = errorCode;
@@ -55,6 +55,12 @@ public class ValidationResultDto<TDSuccess, TDError, TErroCode> where TErroCode 
         return this;
     }
 
+    public ValidationResultDto<TDSuccess, TDError, TErroCode> WithSuccess(TDSuccess successData)
+    { 
+        Data = successData;
+        return this;
+    }
+    
     public static ValidationResultDto<TDSuccess, TDError, TErroCode> FromPipeline(
         ValidationPipelineOutput<TErroCode, TDError> pipelineOutput)
     {
@@ -69,10 +75,16 @@ public class ValidationResultDto<TDSuccess, TDError, TErroCode> where TErroCode 
 public class ValidationResultDto<TDSuccess, TErroCode> : ValidationResultDto<TDSuccess, object, TErroCode>
     where TErroCode : Enum
 {
-    public new ValidationResultDto<TDSuccess, TErroCode> AddError(TErroCode errorCode, string? message = null)
+    public new ValidationResultDto<TDSuccess, TErroCode> WithError(TErroCode errorCode, string? message = null)
     {
         ErrorCode = errorCode;
         InternalMessage = message;
+        return this;
+    }
+    
+    public new ValidationResultDto<TDSuccess, TErroCode> WithSuccess(TDSuccess successData)
+    { 
+        Data = successData;
         return this;
     }
 
@@ -88,6 +100,11 @@ public class ValidationResultDto<TDSuccess, TErroCode> : ValidationResultDto<TDS
 
 public class ValidationResultDto<TDSuccess> : ValidationResultDto<TDSuccess, object, Enum>
 {
+    public new ValidationResultDto<TDSuccess> WithSuccess(TDSuccess successData)
+    { 
+        Data = successData;
+        return this;
+    }
 }
 
 public static class ValidationResultDtoExtensions

@@ -20,19 +20,27 @@ namespace Fin.Application.Titles.Services;
 public interface ITitleService
 {
     public Task<TitleOutput> Get(Guid id, CancellationToken cancellationToken = default);
-    public Task<PagedOutput<TitleOutput>> GetList(TitleGetListInput input, CancellationToken cancellationToken = default);
-    public Task<ValidationResultDto<TitleOutput, TitleCreateOrUpdateErrorCode>> Create(TitleInput input, bool autoSave = false, CancellationToken cancellationToken = default);
-    public Task<ValidationResultDto<bool, TitleCreateOrUpdateErrorCode>> Update(Guid id, TitleInput input, bool autoSave = false, CancellationToken cancellationToken = default);
-    public Task<ValidationResultDto<bool, TitleDeleteErrorCode>> Delete(Guid id, bool autoSave = false, CancellationToken cancellationToken = default);
+
+    public Task<PagedOutput<TitleOutput>> GetList(TitleGetListInput input,
+        CancellationToken cancellationToken = default);
+
+    public Task<ValidationResultDto<TitleOutput, TitleCreateOrUpdateErrorCode>> Create(TitleInput input,
+        bool autoSave = false, CancellationToken cancellationToken = default);
+
+    public Task<ValidationResultDto<bool, TitleCreateOrUpdateErrorCode>> Update(Guid id, TitleInput input,
+        bool autoSave = false, CancellationToken cancellationToken = default);
+
+    public Task<ValidationResultDto<bool, TitleDeleteErrorCode>> Delete(Guid id, bool autoSave = false,
+        CancellationToken cancellationToken = default);
 }
 
 public class TitleService(
     IRepository<Title> titleRepository,
-    IRepository<TitleTitleCategory> titleTitleCategoryRepository,
+    ITitleUpdateHelpService updateHelpService,
     IWalletBalanceService balanceService,
     IUnitOfWork unitOfWork,
     IValidationPipelineOrchestrator validation
-    ): ITitleService
+) : ITitleService
 {
     public async Task<TitleOutput> Get(Guid id, CancellationToken cancellationToken = default)
     {
@@ -40,15 +48,16 @@ public class TitleService(
         return entity != null ? new TitleOutput(entity) : null;
     }
 
-    public async Task<PagedOutput<TitleOutput>> GetList(TitleGetListInput input, CancellationToken cancellationToken = default)
+    public async Task<PagedOutput<TitleOutput>> GetList(TitleGetListInput input,
+        CancellationToken cancellationToken = default)
     {
         return await titleRepository.Query(false)
             .Include(title => title.TitleCategories)
             .WhereIf(input.Type.HasValue, n => n.Type == input.Type)
             .WhereIf(input.WalletIds.Any(), title => input.WalletIds.Contains(title.WalletId))
-            .WhereIf(input.CategoryIds.Any() && input.CategoryOperator == MultiplyFilterOperator.And, title => 
+            .WhereIf(input.CategoryIds.Any() && input.CategoryOperator == MultiplyFilterOperator.And, title =>
                 input.CategoryIds.All(id => title.TitleCategories.Any(c => c.Id == id)))
-            .WhereIf(input.CategoryIds.Any() && input.CategoryOperator == MultiplyFilterOperator.Or, 
+            .WhereIf(input.CategoryIds.Any() && input.CategoryOperator == MultiplyFilterOperator.Or,
                 title => title.TitleCategories.Any(titleCategory => input.CategoryIds.Contains(titleCategory.Id)))
             .ApplyDefaultTitleOrder()
             .ApplyFilterAndSorter(input)
@@ -56,7 +65,8 @@ public class TitleService(
             .ToPagedResult(input, cancellationToken);
     }
 
-    public async Task<ValidationResultDto<TitleOutput, TitleCreateOrUpdateErrorCode>> Create(TitleInput input, bool autoSave = false, CancellationToken cancellationToken = default)
+    public async Task<ValidationResultDto<TitleOutput, TitleCreateOrUpdateErrorCode>> Create(TitleInput input,
+        bool autoSave = false, CancellationToken cancellationToken = default)
     {
         var validationResult = await ValidateInput<TitleOutput>(input, null, cancellationToken);
         if (!validationResult.Success) return validationResult;
@@ -73,62 +83,38 @@ public class TitleService(
         return validationResult;
     }
 
-    public async Task<ValidationResultDto<bool, TitleCreateOrUpdateErrorCode>> Update(Guid id, TitleInput input, bool autoSave = false, CancellationToken cancellationToken = default)
+    public async Task<ValidationResultDto<bool, TitleCreateOrUpdateErrorCode>> Update(Guid id, TitleInput input,
+        bool autoSave = false, CancellationToken cancellationToken = default)
     {
         var validationResult = await ValidateInput<bool>(input, id, cancellationToken);
         if (!validationResult.Success) return validationResult;
-        
-        var title = await titleRepository.Query(tracking: true)
-            .FirstAsync(title => title.Id == id, cancellationToken);
+
+        var title = await titleRepository.Query(tracking: true).FirstOrDefaultAsync(title => title.Id == id, cancellationToken);
         var mustReprocess = title.MustReprocess(input);
 
-        var previousWalletId = title.WalletId;
-        var previousDate = title.Date;
-        var previousWalletPreviousBalance = title.PreviousBalance;
-        
-        var previousBalance = mustReprocess ? await balanceService.GetBalanceAt(input.WalletId, input.Date, cancellationToken) : title.PreviousBalance;
-        if (mustReprocess && previousWalletId == input.WalletId && previousDate <= input.Date)
-        {
-            previousBalance += title.EffectiveValue * -1;
-        }
-        
-        var categoriesToRemove = title.UpdateAndReturnToRemoveTitleCategories(input, previousBalance);
-            
+        var context = await updateHelpService.PrepareUpdateContext(title, input, mustReprocess, cancellationToken);
+
         await using (var scope = await unitOfWork.BeginTransactionAsync(cancellationToken))
         {
-            await titleRepository.UpdateAsync(title, cancellationToken);
-            foreach (var category in categoriesToRemove)
-            {
-                await titleTitleCategoryRepository.DeleteAsync(category , cancellationToken);
-            }
-
-            if (mustReprocess)
-            {
-                var reprocessCurrentWalletFrom = previousWalletId != title.WalletId
-                    ? title.Date
-                    : previousDate > title.Date ? title.Date : previousDate;
-            
-                await balanceService.ReprocessBalance(title.WalletId, reprocessCurrentWalletFrom, title.ResultingBalance, autoSave = false, cancellationToken);
-                if (previousWalletId != title.WalletId)
-                {
-                    previousWalletId = title.WalletId;
-                    // TODO reprocess previous wallet
-                }   
-            }
+            await updateHelpService.UpdateTitleAndCategories(title, input, context.CategoriesToRemove, cancellationToken);
+            if (mustReprocess) await updateHelpService.ReprocessAffectedWallets(title, context, autoSave: false, cancellationToken);
+            if (autoSave) await scope.CompleteAsync(cancellationToken);
         }
 
-        validationResult.Data = true;
-        return validationResult;
+        return validationResult.WithSuccess(true);
     }
 
-    public Task<ValidationResultDto<bool, TitleDeleteErrorCode>> Delete(Guid id, bool autoSave = false, CancellationToken cancellationToken = default)
+    public Task<ValidationResultDto<bool, TitleDeleteErrorCode>> Delete(Guid id, bool autoSave = false,
+        CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }
 
-    private async Task<ValidationResultDto<TSuccess, TitleCreateOrUpdateErrorCode>> ValidateInput<TSuccess>(TitleInput input, Guid? editingId = null, CancellationToken cancellationToken = default)
+    private async Task<ValidationResultDto<TSuccess, TitleCreateOrUpdateErrorCode>> ValidateInput<TSuccess>(
+        TitleInput input, Guid? editingId = null, CancellationToken cancellationToken = default)
     {
-        var validationResult = await validation.Validate<TitleInput, TitleCreateOrUpdateErrorCode>(input, editingId, cancellationToken);
+        var validationResult =
+            await validation.Validate<TitleInput, TitleCreateOrUpdateErrorCode>(input, editingId, cancellationToken);
         return validationResult.ToValidationResult<TSuccess, TitleCreateOrUpdateErrorCode>();
     }
 }

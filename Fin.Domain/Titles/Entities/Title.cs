@@ -42,13 +42,7 @@ public class Title: IAuditedTenantEntity
     {
         Id = Guid.NewGuid();
         
-        Value = input.Value;
-        Type = input.Type;
-        Description = input.Description.Trim();
-        Date = input.Date;
-        WalletId = input.WalletId;
-        
-        PreviousBalance = previousBalance;
+        UpdateBasicProperties(input, previousBalance);
 
         TitleTitleCategories = new Collection<TitleTitleCategory>(
             input.TitleCategoriesIds
@@ -58,37 +52,10 @@ public class Title: IAuditedTenantEntity
             );
     } 
     
-    public List<TitleTitleCategory> UpdateAndReturnToRemoveTitleCategories(TitleInput input, decimal previousBalance)
+    public List<TitleTitleCategory> UpdateAndReturnCategoriesToRemove(TitleInput input, decimal previousBalance)
     {
-        Value = input.Value;
-        Type = input.Type;
-        Description = input.Description.Trim();
-        Date = input.Date;
-        WalletId = input.WalletId;
-        
-        PreviousBalance = previousBalance;
-        
-        var categoriesToDelete = new List<TitleTitleCategory>();
-        foreach (var titleTitleCategory in TitleTitleCategories)
-        {
-            var index = input.TitleCategoriesIds.FindIndex(ttcId => ttcId == titleTitleCategory.TitleCategoryId);
-            if (index != -1) continue;
-            categoriesToDelete.Add(titleTitleCategory);
-        }
-
-        foreach (var categoryToRemove in categoriesToDelete)
-        {
-            TitleTitleCategories.Remove(categoryToRemove);
-        }
-
-        foreach (var currentTitleCategoryId in input.TitleCategoriesIds)
-        {
-            var index = TitleTitleCategories.ToList().FindIndex(ttc => ttc.TitleCategoryId == currentTitleCategoryId);
-            if (index != -1) continue;
-            TitleTitleCategories.Add(new TitleTitleCategory(currentTitleCategoryId, Id));
-        }
-
-        return categoriesToDelete;
+        UpdateBasicProperties(input, previousBalance);
+        return SyncCategories(input.TitleCategoriesIds);
     }
 
     public bool MustReprocess(TitleInput input)
@@ -97,5 +64,39 @@ public class Title: IAuditedTenantEntity
                || input.Type != Type
                || input.Value != Value
                || input.WalletId != WalletId;
+    }
+    
+    private void UpdateBasicProperties(TitleInput input, decimal previousBalance)
+    {
+        Value = input.Value;
+        Type = input.Type;
+        Description = input.Description.Trim();
+        Date = input.Date;
+        WalletId = input.WalletId;
+        PreviousBalance = previousBalance;
+    }
+    
+    private List<TitleTitleCategory> SyncCategories(List<Guid> newCategoryIds)
+    {
+        var existingCategoryIds = TitleTitleCategories
+            .Select(ttc => ttc.TitleCategoryId)
+            .ToHashSet();
+        var newCategoryIdsSet = newCategoryIds.ToHashSet();
+        
+        var categoriesToRemove = TitleTitleCategories
+            .Where(ttc => !newCategoryIdsSet.Contains(ttc.TitleCategoryId))
+            .ToList();
+    
+        foreach (var category in categoriesToRemove)
+            TitleTitleCategories.Remove(category);
+    
+        var categoriesToAdd = newCategoryIds
+            .Where(id => !existingCategoryIds.Contains(id))
+            .Select(id => new TitleTitleCategory(id, Id));
+    
+        foreach (var category in categoriesToAdd)
+            TitleTitleCategories.Add(category);
+    
+        return categoriesToRemove;
     }
 }
