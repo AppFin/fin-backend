@@ -18,7 +18,8 @@ public class Title: IAuditedTenantEntity
     public Guid WalletId { get; set; }
     
     
-    public decimal ResultingBalance => PreviousBalance + (Value * (Type == TitleType.Expense ? -1 : 1));
+    public decimal ResultingBalance => PreviousBalance + EffectiveValue;
+    public decimal EffectiveValue => (Value * (Type == TitleType.Expense ? -1 : 1));
     
     public virtual Wallet Wallet { get; set; }
     public ICollection<TitleCategory> TitleCategories { get; set; } = [];
@@ -88,5 +89,13 @@ public class Title: IAuditedTenantEntity
         }
 
         return categoriesToDelete;
-    } 
+    }
+
+    public bool MustReprocess(TitleInput input)
+    {
+        return input.Date != Date
+               || input.Type != Type
+               || input.Value != Value
+               || input.WalletId != WalletId;
+    }
 }

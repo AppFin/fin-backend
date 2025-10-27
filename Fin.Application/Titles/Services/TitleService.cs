@@ -4,8 +4,10 @@ using Fin.Application.Titles.Enums;
 using Fin.Application.Wallets.Services;
 using Fin.Domain.Global.Classes;
 using Fin.Domain.Global.Enums;
+using Fin.Domain.TitleCategories.Entities;
 using Fin.Domain.Titles.Dtos;
 using Fin.Domain.Titles.Entities;
+using Fin.Domain.Titles.Enums;
 using Fin.Domain.Titles.Extensions;
 using Fin.Infrastructure.Database.Extensions;
 using Fin.Infrastructure.Database.Repositories;
@@ -26,6 +28,7 @@ public interface ITitleService
 
 public class TitleService(
     IRepository<Title> titleRepository,
+    IRepository<TitleTitleCategory> titleTitleCategoryRepository,
     IWalletBalanceService balanceService,
     IUnitOfWork unitOfWork,
     IValidationPipelineOrchestrator validation
@@ -70,9 +73,52 @@ public class TitleService(
         return validationResult;
     }
 
-    public Task<ValidationResultDto<bool, TitleCreateOrUpdateErrorCode>> Update(Guid id, TitleInput input, bool autoSave = false, CancellationToken cancellationToken = default)
+    public async Task<ValidationResultDto<bool, TitleCreateOrUpdateErrorCode>> Update(Guid id, TitleInput input, bool autoSave = false, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var validationResult = await ValidateInput<bool>(input, id, cancellationToken);
+        if (!validationResult.Success) return validationResult;
+        
+        var title = await titleRepository.Query(tracking: true)
+            .FirstAsync(title => title.Id == id, cancellationToken);
+        var mustReprocess = title.MustReprocess(input);
+
+        var previousWalletId = title.WalletId;
+        var previousDate = title.Date;
+        var previousWalletPreviousBalance = title.PreviousBalance;
+        
+        var previousBalance = mustReprocess ? await balanceService.GetBalanceAt(input.WalletId, input.Date, cancellationToken) : title.PreviousBalance;
+        if (mustReprocess && previousWalletId == input.WalletId && previousDate <= input.Date)
+        {
+            previousBalance += title.EffectiveValue * -1;
+        }
+        
+        var categoriesToRemove = title.UpdateAndReturnToRemoveTitleCategories(input, previousBalance);
+            
+        await using (var scope = await unitOfWork.BeginTransactionAsync(cancellationToken))
+        {
+            await titleRepository.UpdateAsync(title, cancellationToken);
+            foreach (var category in categoriesToRemove)
+            {
+                await titleTitleCategoryRepository.DeleteAsync(category , cancellationToken);
+            }
+
+            if (mustReprocess)
+            {
+                var reprocessCurrentWalletFrom = previousWalletId != title.WalletId
+                    ? title.Date
+                    : previousDate > title.Date ? title.Date : previousDate;
+            
+                await balanceService.ReprocessBalance(title.WalletId, reprocessCurrentWalletFrom, title.ResultingBalance, autoSave = false, cancellationToken);
+                if (previousWalletId != title.WalletId)
+                {
+                    previousWalletId = title.WalletId;
+                    // TODO reprocess previous wallet
+                }   
+            }
+        }
+
+        validationResult.Data = true;
+        return validationResult;
     }
 
     public Task<ValidationResultDto<bool, TitleDeleteErrorCode>> Delete(Guid id, bool autoSave = false, CancellationToken cancellationToken = default)

@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices.JavaScript;
 using Fin.Domain.Titles.Entities;
 using Fin.Domain.Titles.Extensions;
 using Fin.Domain.Wallets.Entities;
@@ -14,6 +15,7 @@ public interface IWalletBalanceService
     public Task<decimal> GetBalanceAt(Guid walletId, DateTime dateTime, CancellationToken cancellationToken = default);
     public Task<decimal> GetBalanceNow(Guid walletId, CancellationToken cancellationToken = default);
     public Task ReprocessBalance(Guid walletId, decimal newInitialBalance, bool autoSave = false , CancellationToken cancellationToken = default);
+    public Task ReprocessBalance(Guid walletId, DateTime fromFateNotInclusive, decimal newInitialBalance, bool autoSave = false , CancellationToken cancellationToken = default);
     public Task ReprocessBalance(Wallet wallet, bool autoSave = false , CancellationToken cancellationToken = default);
     public Task ReprocessBalance(List<Title> titles, decimal newInitialBalance, bool autoSave = false, CancellationToken cancellationToken = default);
     public Task ReprocessBalanceFrom(Title title, bool autoSave = false, CancellationToken cancellationToken = default);
@@ -49,6 +51,17 @@ public class WalletBalanceService(
         await ReprocessBalance(wallet.Titles.ToList(), newInitialBalance, autoSave, cancellationToken);
     }
 
+    public async Task ReprocessBalance(Guid walletId, DateTime fromFateNotInclusive, decimal newInitialBalance, bool autoSave = false,
+        CancellationToken cancellationToken = default)
+    {
+        var titles = await titleRepository.Query(tracking: true)
+            .Where(title => title.WalletId == walletId)
+            .Where(title => title.Date > fromFateNotInclusive)
+            .ApplyDefaultTitleOrder()
+            .ToListAsync(cancellationToken);
+        await ReprocessBalance(titles, newInitialBalance, autoSave, cancellationToken);
+    }
+
     public async Task ReprocessBalance(Wallet wallet, bool autoSave = false, CancellationToken cancellationToken = default)
     {
         await ReprocessBalance(wallet.Titles.ToList(), wallet.InitialBalance, autoSave, cancellationToken);
@@ -78,7 +91,6 @@ public class WalletBalanceService(
             .Where(title => title.Id > fromTitle.Id)
             .ApplyDefaultTitleOrder()
             .ToListAsync(cancellationToken);
-        titles = titles.ToList();
         await ReprocessBalance(titles, fromTitle.ResultingBalance, autoSave, cancellationToken);
     }
 
