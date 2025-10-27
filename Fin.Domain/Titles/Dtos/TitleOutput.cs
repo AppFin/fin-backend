@@ -5,6 +5,7 @@ namespace Fin.Domain.Titles.Dtos;
 
 public class TitleOutput(Title title)
 {
+    public Guid Id { get; set; } = title.Id;
     public string Description { get; set; } = title.Description;
     public decimal Value { get; set; } = title.Value;
     public decimal PreviousBalance { get; set; } = title.PreviousBalance;
