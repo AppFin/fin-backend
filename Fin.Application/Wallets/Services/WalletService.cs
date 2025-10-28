@@ -30,7 +30,7 @@ public class WalletService(
 {
     public async Task<WalletOutput> Get(Guid id)
     {
-        var entity = await repository.Query(false).FirstOrDefaultAsync(n => n.Id == id);
+        var entity = await repository.Query(false).Include(wallet => wallet.Titles).FirstOrDefaultAsync(n => n.Id == id);
         return entity != null ? new WalletOutput(entity, dateTimeProvider.UtcNow()) : null;
     }
 
@@ -38,6 +38,7 @@ public class WalletService(
     {
         var now = dateTimeProvider.UtcNow();
         return await repository.Query(false)
+            .Include(wallet => wallet.Titles)
             .WhereIf(input.Inactivated.HasValue, n => n.Inactivated == input.Inactivated.Value)
             .OrderBy(m => m.Inactivated)
             .ThenBy(m => m.Name)

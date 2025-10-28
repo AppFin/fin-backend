@@ -43,7 +43,9 @@ public class TitleService(
 {
     public async Task<TitleOutput> Get(Guid id, CancellationToken cancellationToken = default)
     {
-        var entity = await titleRepository.Query(false).FirstOrDefaultAsync(n => n.Id == id, cancellationToken);
+        var entity = await titleRepository.Query(false)
+            .Include(title => title.TitleCategories)
+            .FirstOrDefaultAsync(n => n.Id == id, cancellationToken);
         return entity != null ? new TitleOutput(entity) : null;
     }
 

@@ -55,7 +55,8 @@ public class Wallet: IAuditedTenantEntity
 
     public decimal CalculateBalanceAt(DateTime dateTime)
     {
-        if (Titles.Count == 0 || dateTime < CreatedAt) return 0;
+        if (dateTime < CreatedAt) return 0;
+        if (Titles.Count == 0 ) return InitialBalance;
         
         var lastTitle = Titles
             .Where(title => title.Date <= dateTime)
