@@ -6,11 +6,11 @@ public static class TitleExtensions
 {
     public static IEnumerable<Title> ApplyDefaultTitleOrder(this IEnumerable<Title> titles)
     {
-        return titles.OrderBy(m => m.Date).ThenBy(m => m.Id);
+        return titles.OrderByDescending(m => m.Date).ThenByDescending(m => m.Id);
     }
     
     public static IQueryable<Title> ApplyDefaultTitleOrder(this IQueryable<Title> titles)
     {
-        return titles.OrderBy(m => m.Date).ThenBy(m => m.Id);
+        return titles.OrderByDescending(m => m.Date).ThenByDescending(m => m.Id);
     }
 }

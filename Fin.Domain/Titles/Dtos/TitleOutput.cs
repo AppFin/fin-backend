@@ -8,6 +8,7 @@ public class TitleOutput(Title title)
     public Guid Id { get; set; } = title.Id;
     public string Description { get; set; } = title.Description;
     public decimal Value { get; set; } = title.Value;
+    public decimal EffectiveValue { get; set; } = title.EffectiveValue;
     public decimal PreviousBalance { get; set; } = title.PreviousBalance;
     public decimal ResultingBalance { get; set; } = title.ResultingBalance;
     public TitleType Type { get; set; } = title.Type;

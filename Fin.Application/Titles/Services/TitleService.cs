@@ -4,11 +4,10 @@ using Fin.Application.Titles.Enums;
 using Fin.Application.Wallets.Services;
 using Fin.Domain.Global.Classes;
 using Fin.Domain.Global.Enums;
-using Fin.Domain.TitleCategories.Entities;
 using Fin.Domain.Titles.Dtos;
 using Fin.Domain.Titles.Entities;
-using Fin.Domain.Titles.Enums;
 using Fin.Domain.Titles.Extensions;
+using Fin.Infrastructure.AutoServices.Interfaces;
 using Fin.Infrastructure.Database.Extensions;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.UnitOfWorks;
@@ -40,7 +39,7 @@ public class TitleService(
     IWalletBalanceService balanceService,
     IUnitOfWork unitOfWork,
     IValidationPipelineOrchestrator validation
-) : ITitleService
+) : ITitleService, IAutoTransient
 {
     public async Task<TitleOutput> Get(Guid id, CancellationToken cancellationToken = default)
     {

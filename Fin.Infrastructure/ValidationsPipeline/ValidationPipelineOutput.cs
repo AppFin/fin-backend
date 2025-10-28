@@ -2,11 +2,12 @@
 namespace Fin.Infrastructure.ValidationsPipeline;
 
 public class ValidationPipelineOutput<TErrorCode, TErrorData>(ValidationPipelineOutput<TErrorCode> validation)
+    where TErrorCode : struct 
 {
     public TErrorCode? Code { get; set; } = validation.Code;
     public TErrorData? Data { get; set; } 
     
-    public bool Success =>  Code == null;
+    public bool Success => !Code.HasValue; 
 
     public ValidationPipelineOutput(): this(new ValidationPipelineOutput<TErrorCode>())
     {
@@ -27,9 +28,14 @@ public class ValidationPipelineOutput<TErrorCode, TErrorData>(ValidationPipeline
 }
 
 public class ValidationPipelineOutput<TErrorCode>
+    where TErrorCode : struct 
 {
     public TErrorCode? Code { get; set; } 
-    public bool Success =>  Code == null; 
+    public bool Success => !Code.HasValue; 
+
+    public ValidationPipelineOutput()
+    {
+    }
     
     public ValidationPipelineOutput<TErrorCode> AddError(TErrorCode code)
     {
