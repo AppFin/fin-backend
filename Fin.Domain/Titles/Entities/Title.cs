@@ -78,25 +78,28 @@ public class Title: IAuditedTenantEntity
     
     private List<TitleTitleCategory> SyncCategories(List<Guid> newCategoryIds)
     {
-        var existingCategoryIds = TitleTitleCategories
-            .Select(ttc => ttc.TitleCategoryId)
-            .ToHashSet();
-        var newCategoryIdsSet = newCategoryIds.ToHashSet();
+        var updatedCategories = newCategoryIds.Select(userId => new TitleTitleCategory(userId, Id)).ToList();
         
-        var categoriesToRemove = TitleTitleCategories
-            .Where(ttc => !newCategoryIdsSet.Contains(ttc.TitleCategoryId))
-            .ToList();
-    
-        foreach (var category in categoriesToRemove)
-            TitleTitleCategories.Remove(category);
-    
-        var categoriesToAdd = newCategoryIds
-            .Where(id => !existingCategoryIds.Contains(id))
-            .Select(id => new TitleTitleCategory(id, Id));
-    
-        foreach (var category in categoriesToAdd)
-            TitleTitleCategories.Add(category);
-    
-        return categoriesToRemove;
+        var categoriesToDelete = new List<TitleTitleCategory>();
+        foreach (var currentDelivery in TitleTitleCategories)
+        {
+            var index = updatedCategories.FindIndex(c => c.TitleCategoryId == currentDelivery.TitleCategoryId);
+            if (index != -1) continue;
+            categoriesToDelete.Add(currentDelivery);
+        }
+
+        foreach (var currentDelivery in categoriesToDelete)
+        {
+            TitleTitleCategories.Remove(currentDelivery);
+        }
+
+        foreach (var updatedDelivery in updatedCategories)
+        {
+            var index = TitleTitleCategories.ToList().FindIndex(c => c.TitleCategoryId == updatedDelivery.TitleCategoryId);
+            if (index != -1) continue;
+            TitleTitleCategories.Add(updatedDelivery);
+        }
+
+        return categoriesToDelete;
     }
 }

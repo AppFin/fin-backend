@@ -90,7 +90,9 @@ public class TitleService(
         var validationResult = await ValidateInput<bool>(input, id, cancellationToken);
         if (!validationResult.Success) return validationResult;
 
-        var title = await titleRepository.Query(tracking: true).FirstAsync(title => title.Id == id, cancellationToken);
+        var title = await titleRepository
+            .Include(title => title.TitleTitleCategories)
+            .FirstAsync(title => title.Id == id, cancellationToken);
         var mustReprocess = title.MustReprocess(input);
 
         var context = await updateHelpService.PrepareUpdateContext(title, input, mustReprocess, cancellationToken);
