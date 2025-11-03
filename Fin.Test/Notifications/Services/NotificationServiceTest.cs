@@ -219,7 +219,7 @@ public class NotificationServiceTest : TestUtils.BaseTestWithContext
             UserIds = [TestUtils.Guids[1], TestUtils.Guids[2]]
         });
         await resources.NotificationRepository.AddAsync(notification);
-        await UnitOfWork.SaveChangesAsync();
+        await resources.NotificationRepository.Context.SaveChangesAsync();
 
         var input = new NotificationInput
         {

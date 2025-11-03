@@ -317,7 +317,7 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
 
         // Assert
         result.Success.Should().BeTrue();
-        result.ErrorCode.Should().NotBeDefined();
+        result.ErrorCode.Should().Be(null);
         result.Message.Should().NotBeNullOrEmpty();
         result.Data.Should().BeTrue();
         
