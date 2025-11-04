@@ -171,7 +171,7 @@ public class TitleUpdateHelpService(
         Guid afterTitleId,
         CancellationToken cancellationToken)
     {
-        return await titleRepository.Query(tracking: true)
+        return await titleRepository
             .Where(t => t.WalletId == walletId)
             .Where(t => t.Date >= fromDate && t.Id > afterTitleId)
             .ToListAsync(cancellationToken);

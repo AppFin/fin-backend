@@ -2,6 +2,9 @@
 using Fin.Domain.FinancialInstitutions.Entities;
 using Fin.Domain.FinancialInstitutions.Enums;
 using Fin.Domain.Tenants.Entities;
+using Fin.Domain.TitleCategories.Dtos;
+using Fin.Domain.TitleCategories.Entities;
+using Fin.Domain.TitleCategories.Enums;
 using Fin.Domain.Users.Entities;
 using Fin.Domain.Wallets.Dtos;
 using Fin.Domain.Wallets.Entities;
@@ -24,6 +27,7 @@ public abstract class TestUtils
 
         protected BaseTest()
         {
+            DateTimeProvider.Setup(dtp => dtp.UtcNow()).Returns(UtcDateTimes[0]);
         }
 
         protected async Task ConfigureLoggedAmbientAsync(bool isAdmin = true)
@@ -43,6 +47,7 @@ public abstract class TestUtils
         protected BaseTestWithContext()
         {
             var dateTimeProviderMockForContext = new Mock<IDateTimeProvider>();
+            dateTimeProviderMockForContext.Setup(dtp => dtp.UtcNow()).Returns(UtcDateTimes[0]);
             Context = TestDbContextFactory.Create(out _connection, out _dbFilePath, AmbientData,
                 dateTimeProviderMockForContext.Object, useFile: true);
             UnitOfWork = new UnitOfWork(Context);
@@ -180,5 +185,23 @@ public abstract class TestUtils
         new(WalletsInputs[2]),
         new(WalletsInputs[3]),
         new(WalletsInputs[4])
+    ];
+    
+    public static List<TitleCategoryInput> TitleCategoriesInputs =>
+    [
+        new() { Name = Strings[0], Color = Strings[1], Icon = Strings[2], Type = TitleCategoryType.Income },
+        new() { Name = Strings[2], Color = Strings[3], Icon = Strings[4], Type = TitleCategoryType.Expense },
+        new() { Name = Strings[4], Color = Strings[5], Icon = Strings[6], Type = TitleCategoryType.Income },
+        new() { Name = Strings[6], Color = Strings[7], Icon = Strings[8], Type = TitleCategoryType.Expense },
+        new() { Name = Strings[8], Color = Strings[9], Icon = Strings[0], Type = TitleCategoryType.Income }
+    ];
+
+    public static List<TitleCategory> TitleCategories =>
+    [
+        new(TitleCategoriesInputs[0]),
+        new(TitleCategoriesInputs[1]),
+        new(TitleCategoriesInputs[2]),
+        new(TitleCategoriesInputs[3]),
+        new(TitleCategoriesInputs[4])
     ];
 }

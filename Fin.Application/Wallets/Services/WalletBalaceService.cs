@@ -57,7 +57,7 @@ public class WalletBalanceService(
 
     public async Task ReprocessBalance(List<Title> titles, decimal initialBalance, bool autoSave = false, CancellationToken cancellationToken = default)
     {
-        var orderedTitles = titles.ApplyDefaultTitleOrder().ToList();
+        var orderedTitles = titles.ApplyDefaultTitleOrder().Reverse().ToList();
         var nextPreviousBalance = initialBalance;
         foreach (var title in orderedTitles)
         {
@@ -77,7 +77,6 @@ public class WalletBalanceService(
             .Where(title => title.WalletId == fromTitle.WalletId)
             .Where(title => title.Date >= fromTitle.Date)
             .Where(title => title.Id > fromTitle.Id)
-            .ApplyDefaultTitleOrder()
             .ToListAsync(cancellationToken);
         await ReprocessBalance(titles, fromTitle.ResultingBalance, autoSave, cancellationToken);
     }
