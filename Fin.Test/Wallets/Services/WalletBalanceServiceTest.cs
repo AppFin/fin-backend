@@ -548,30 +548,32 @@ public class WalletBalanceServiceTest : TestUtils.BaseTestWithContext
             Icon = TestUtils.Strings[2],
             InitialBalance = 1000m
         });
-        await resources.WalletRepository.AddAsync(wallet, autoSave: true);
 
         var title1 = new Title(new TitleInput
         {
             Description = TestUtils.Strings[3],
             Value = 500m,
             Type = TitleType.Income,
-            Date = TestUtils.UtcDateTimes[0],
+            Date = TestUtils.UtcDateTimes[1],
             WalletId = wallet.Id,
             TitleCategoriesIds = new List<Guid>()
         }, 1000m);
+        title1.Id =TestUtils.Guids[0];
 
         var title2 = new Title(new TitleInput
         {
             Description = TestUtils.Strings[4],
             Value = 200m,
             Type = TitleType.Expense,
-            Date = TestUtils.UtcDateTimes[1],
+            Date = TestUtils.UtcDateTimes[2],
             WalletId = wallet.Id,
             TitleCategoriesIds = new List<Guid>()
         }, 0m); // Wrong balance
-
-        await resources.TitleRepository.AddAsync(title1, autoSave: true);
-        await resources.TitleRepository.AddAsync(title2, autoSave: true);
+        title2.Id =TestUtils.Guids[1];
+        
+        wallet.Titles.Add(title1);
+        wallet.Titles.Add(title2);
+        await resources.WalletRepository.AddAsync(wallet, autoSave: true);
 
         // Act
         await service.ReprocessBalanceFrom(title1.Id, autoSave: true);

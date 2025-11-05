@@ -504,42 +504,44 @@ public class TitleUpdateHelpServiceTest : TestUtils.BaseTestWithContext
             Icon = TestUtils.Strings[5],
             InitialBalance = 2000m
         });
-        await resources.WalletRepository.AddAsync(wallet1, autoSave: true);
-        await resources.WalletRepository.AddAsync(wallet2, autoSave: true);
 
         var title1 = new Title(new TitleInput
         {
             Description = TestUtils.Strings[6],
             Value = 500m,
             Type = TitleType.Income,
-            Date = TestUtils.UtcDateTimes[0],
+            Date = TestUtils.UtcDateTimes[1],
             WalletId = wallet1.Id,
             TitleCategoriesIds = new List<Guid>()
         }, 1000m);
+        title1.Id = TestUtils.Guids[0];
 
         var title2 = new Title(new TitleInput
         {
             Description = TestUtils.Strings[7],
             Value = 200m,
             Type = TitleType.Expense,
-            Date = TestUtils.UtcDateTimes[2],
+            Date = TestUtils.UtcDateTimes[3],
             WalletId = wallet1.Id,
             TitleCategoriesIds = new List<Guid>()
         }, 1500m);
+        title2.Id = TestUtils.Guids[1];
 
         var title3 = new Title(new TitleInput
         {
             Description = TestUtils.Strings[8],
             Value = 300m,
             Type = TitleType.Income,
-            Date = TestUtils.UtcDateTimes[2],
+            Date = TestUtils.UtcDateTimes[3],
             WalletId = wallet2.Id, // Different wallet
             TitleCategoriesIds = new List<Guid>()
         }, 2000m);
-
-        await resources.TitleRepository.AddAsync(title1, autoSave: true);
-        await resources.TitleRepository.AddAsync(title2, autoSave: true);
-        await resources.TitleRepository.AddAsync(title3, autoSave: true);
+        title3.Id = TestUtils.Guids[2];
+        wallet1.Titles.Add(title1);
+        wallet1.Titles.Add(title2);
+        wallet2.Titles.Add(title3);
+        
+        await resources.WalletRepository.AddRangeAsync([wallet1, wallet2], autoSave: true);
 
         // Act
         var titles = await service.GetTitlesForReprocessing(
