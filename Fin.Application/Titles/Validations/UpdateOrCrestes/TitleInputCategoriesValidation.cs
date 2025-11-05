@@ -19,14 +19,15 @@ public class TitleInputCategoriesValidation(
     {
         var validation = new ValidationPipelineOutput<TitleCreateOrUpdateErrorCode, List<Guid>>();
         
-        var categories = await categoryRepository.Query(tracking: false)
+        var categories = await categoryRepository
             .Where(category => input.TitleCategoriesIds.Contains(category.Id))
             .ToListAsync(cancellationToken);
 
         ValidateCategoriesExistence(input, categories, validation);
         if (!validation.Success) return validation;
 
-        var titleEditing = !editingId.HasValue ? null : await titleRepository.Query(tracking: false)
+        var titleEditing = !editingId.HasValue ? null : await titleRepository
+            .Include(title => title.TitleTitleCategories)
             .FirstOrDefaultAsync(title => title.Id == editingId.Value, cancellationToken);
         ValidateCategoriesStatus(titleEditing, categories, validation);
         if (!validation.Success) return validation;
@@ -55,8 +56,8 @@ public class TitleInputCategoriesValidation(
         List<TitleCategory> categories,
         ValidationPipelineOutput<TitleCreateOrUpdateErrorCode, List<Guid>> validation)
     {
-        var previousCategoriesIds = titleEditing?.TitleCategories
-            .Select(tc => tc.Id)
+        var previousCategoriesIds = titleEditing?.TitleTitleCategories?
+            .Select(tc => tc.TitleCategoryId)?
             .ToList() ?? new List<Guid>();
 
         var inactiveCategoriesIds = categories
