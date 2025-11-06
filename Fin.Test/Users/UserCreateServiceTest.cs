@@ -165,7 +165,7 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
         // Assert
         result.Success.Should().BeTrue();
         result.Data.Should().NotBeNull();
-        result.ErrorCode.Should().NotBeDefined();
+        result.ErrorCode.Should().Be(null);
 
         result.Data?.Email.Should().Be(input.Email);
         result.Data?.SentEmailDateTime.Should().Be(sentDateTime);

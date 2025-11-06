@@ -4,66 +4,77 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Fin.Infrastructure.UnitOfWorks;
 
-public interface IUnitOfWork : IDisposable, IAsyncDisposable
+public interface IUnitOfWork
 {
-    Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
-    Task<int> CommitAsync(CancellationToken cancellationToken = default);
-    Task RollbackAsync(CancellationToken cancellationToken = default);
-    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+    Task<UnitOfWork.ITransactionScope> BeginTransactionAsync(CancellationToken cancellationToken = default);
     bool IsInTransaction();
 }
 
-public class UnitOfWork(FinDbContext context): IUnitOfWork, IAutoScoped
+public class UnitOfWork(FinDbContext context) : IUnitOfWork, IAutoScoped
 {
+    private readonly FinDbContext _context = context;
+
     private IDbContextTransaction _transaction;
-    private bool _disposed;
+    private int _transactionDepth;
 
-    public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+    public async Task<ITransactionScope> BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
-        _transaction ??= await context.Database.BeginTransactionAsync(cancellationToken);
-        return _transaction;
-    }
-
-    public async Task<int> CommitAsync(CancellationToken cancellationToken = default)
-    {
-        var result = await context.SaveChangesAsync(cancellationToken);
-        
-        if (IsInTransaction())
-            await _transaction.CommitAsync(cancellationToken);
-        return result;
-    }
-
-    public async Task RollbackAsync(CancellationToken cancellationToken = default)
-    {
-        if (IsInTransaction())
+        if (_transactionDepth == 0 && _transaction == null)
         {
-            await _transaction?.RollbackAsync(cancellationToken)!;
+            _transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+            
         }
-    }
 
-    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => await context.SaveChangesAsync(cancellationToken);
+        _transactionDepth++;
+        
+        return new TransactionScope(this, _transaction);
+    }
     
     public bool IsInTransaction()
     {
         return _transaction != null;
     }
-
-    public void Dispose()
+    
+    public interface ITransactionScope: IAsyncDisposable
     {
-        if (_disposed) return;
-
-        _transaction?.Dispose();
-        context.Dispose();
-        _disposed = true;
+        Task<int> CompleteAsync(CancellationToken cancellationToken = default);
+        Task RollbackAsync(CancellationToken cancellationToken = default);
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
-
-    public async  ValueTask DisposeAsync()
+    
+    private class TransactionScope(UnitOfWork uow, IDbContextTransaction transaction) : ITransactionScope
     {
-        if (_disposed) return;
+        private bool _completed;
 
-        if (_transaction != null) await _transaction.DisposeAsync();
-        await context.DisposeAsync();
+        public async Task<int> CompleteAsync(CancellationToken cancellationToken = default)
+        {
+            _completed = true;
+            return await uow._context.SaveChangesAsync(cancellationToken);
+        }
 
-        _disposed = true;
+        public async Task RollbackAsync(CancellationToken cancellationToken = default)
+        {
+            if (uow.IsInTransaction())
+            {
+                await transaction.RollbackAsync(cancellationToken)!;
+            }
+        }
+
+        public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => await uow._context.SaveChangesAsync(cancellationToken);
+        
+        public async ValueTask DisposeAsync()
+        {
+            uow._transactionDepth--;
+            
+            if (uow._transactionDepth == 0 && uow.IsInTransaction())
+            {
+                if (_completed)
+                    await transaction.CommitAsync();
+                else
+                    await transaction.RollbackAsync();
+                    
+                await transaction.DisposeAsync();
+            }
+        }
     }
 }

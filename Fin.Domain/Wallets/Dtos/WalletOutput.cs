@@ -2,7 +2,7 @@ using Fin.Domain.Wallets.Entities;
 
 namespace Fin.Domain.Wallets.Dtos;
 
-public class WalletOutput(Wallet wallet)
+public class WalletOutput(Wallet wallet, DateTime now)
 {
     public Guid Id { get; set; } = wallet.Id;
     public string Name { get; set; } = wallet.Name;
@@ -11,9 +11,9 @@ public class WalletOutput(Wallet wallet)
     public bool Inactivated { get; set; } = wallet.Inactivated;
     public Guid? FinancialInstitutionId { get; set; } = wallet.FinancialInstitutionId;
     public decimal InitialBalance { get; set; } = wallet.InitialBalance;
-    public decimal CurrentBalance { get; set; } = wallet.CurrentBalance;
+    public decimal CurrentBalance { get; set; } = wallet.CalculateBalanceAt(now);
 
-    public WalletOutput(): this(new Wallet())
+    public WalletOutput(): this(new Wallet(), DateTime.Now)
     {
     }
 }

@@ -2,6 +2,7 @@ using Fin.Application.FinancialInstitutions;
 using Fin.Application.Globals.Dtos;
 using Fin.Application.Wallets.Enums;
 using Fin.Domain.CreditCards.Entities;
+using Fin.Domain.Titles.Entities;
 using Fin.Domain.Wallets.Dtos;
 using Fin.Domain.Wallets.Entities;
 using Fin.Infrastructure.AutoServices.Interfaces;
@@ -22,6 +23,7 @@ public interface IWalletValidationService
 public class WalletValidationService(
     IRepository<Wallet> walletRepository,
     IRepository<CreditCard> creditCardRepository,
+    IRepository<Title> titleRepository,
     IFinancialInstitutionService financialInstitutionService
 ) : IWalletValidationService, IAutoTransient
 {
@@ -57,22 +59,21 @@ public class WalletValidationService(
         if (!walletExists)
         {
             validationResult.ErrorCode = WalletDeleteErrorCode.WalletNotFound;
-            validationResult.Message = "Wallet not found to delete.";
             return validationResult;
         }
-        
+
         var walletInUseByCreditCard = await creditCardRepository.Query().AnyAsync(n => n.DebitWalletId == walletId);
-        if (walletInUseByCreditCard)
+        var walletInUseByTitle = await titleRepository.Query().AnyAsync(n => n.WalletId == walletId);
+
+        return walletInUseByTitle switch
         {
-            validationResult.ErrorCode = WalletDeleteErrorCode.WalletInUseByCreditCards;
-            validationResult.Message = "Wallet in use by credit cards.";
-            return validationResult;
-        }
-
-        // TODO here validate relations
-
-        validationResult.Success = true;
-        return validationResult;
+            true when walletInUseByCreditCard => validationResult.WithError(WalletDeleteErrorCode
+                .WalletInUseByCreditCardsAndTitle),
+            true => validationResult.WithError(WalletDeleteErrorCode.WalletInUseByTitles),
+            false when walletInUseByCreditCard => validationResult.WithError(WalletDeleteErrorCode
+                .WalletInUseByCreditCards),
+            _ => validationResult
+        };
     }
 
     public async Task<ValidationResultDto<T, WalletCreateOrUpdateErrorCode>> ValidateInput<T>(WalletInput input,

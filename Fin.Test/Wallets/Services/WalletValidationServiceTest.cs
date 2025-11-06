@@ -3,9 +3,11 @@ using Fin.Application.Wallets.Enums;
 using Fin.Application.Wallets.Services;
 using Fin.Domain.CreditCards.Entities;
 using Fin.Domain.FinancialInstitutions.Dtos;
+using Fin.Domain.Titles.Entities;
 using Fin.Domain.Wallets.Dtos;
 using Fin.Domain.Wallets.Entities;
 using Fin.Infrastructure.Database.Repositories;
+using Fin.Infrastructure.Errors;
 using FluentAssertions;
 using Moq;
 
@@ -17,7 +19,7 @@ public class WalletValidationServiceTest : TestUtils.BaseTestWithContext
 
     private WalletValidationService GetService(Resources resources)
     {
-        return new WalletValidationService(resources.WalletRepository, resources.CreditCardRepository, resources.FakeFinancialInstitution.Object);
+        return new WalletValidationService(resources.WalletRepository, resources.CreditCardRepository, resources.TitleRepository, resources.FakeFinancialInstitution.Object);
     }
 
     private Resources GetResources()
@@ -26,6 +28,7 @@ public class WalletValidationServiceTest : TestUtils.BaseTestWithContext
         {
             WalletRepository = GetRepository<Wallet>(),
             CreditCardRepository = GetRepository<CreditCard>(),
+            TitleRepository = GetRepository<Title>(),
             FakeFinancialInstitution = new Mock<IFinancialInstitutionService>()
         };
     }
@@ -34,6 +37,7 @@ public class WalletValidationServiceTest : TestUtils.BaseTestWithContext
     {
         public IRepository<Wallet> WalletRepository { get; set; }
         public IRepository<CreditCard> CreditCardRepository { get; set; }
+        public IRepository<Title> TitleRepository { get; set; }
         public Mock<IFinancialInstitutionService> FakeFinancialInstitution { get; set; }
     }
 
@@ -112,7 +116,7 @@ public class WalletValidationServiceTest : TestUtils.BaseTestWithContext
         result.Should().NotBeNull();
         result.Success.Should().BeFalse();
         result.ErrorCode.Should().Be(WalletDeleteErrorCode.WalletNotFound);
-        result.Message.Should().Be("Wallet not found to delete.");
+        result.Message.Should().Be(WalletDeleteErrorCode.WalletNotFound.GetErrorMessage());
     }
 
     #endregion

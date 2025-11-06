@@ -138,7 +138,6 @@ public class WalletServiceTest : TestUtils.BaseTestWithContext
         dbWallet.Should().NotBeNull();
         dbWallet.Name.Should().Be(input.Name);
         dbWallet.InitialBalance.Should().Be(input.InitialBalance);
-        dbWallet.CurrentBalance.Should().Be(input.InitialBalance);
     }
 
     [Fact]
@@ -370,7 +369,7 @@ public class WalletServiceTest : TestUtils.BaseTestWithContext
 
     private WalletService GetService(Resources resources)
     {
-        return new WalletService(resources.WalletRepository, _validationServiceMock.Object);
+        return new WalletService(resources.WalletRepository, _validationServiceMock.Object, DateTimeProvider.Object);
     }
 
     private Resources GetResources()

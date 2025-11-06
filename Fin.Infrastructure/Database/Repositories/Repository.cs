@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Collections;
+using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 
 namespace Fin.Infrastructure.Database.Repositories;
 
@@ -14,6 +16,21 @@ public class Repository<T> : IRepository<T> where T : class
         _context = context;
         _dbSet = _context.Set<T>();
     }
+
+    public Type ElementType => _dbSet.AsQueryable().ElementType;
+    public Expression Expression => _dbSet.AsQueryable().Expression;
+    public IQueryProvider Provider => _dbSet.AsQueryable().Provider;
+
+    public IEnumerator<T> GetEnumerator() => _dbSet.AsQueryable().GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    public IQueryable<T> AsNoTracking() => _dbSet.AsNoTracking();
+
+    public async Task<T?> FindAsync(object keyValue, CancellationToken cancellationToken = default) =>
+        await _dbSet.FindAsync(new[] { keyValue }, cancellationToken);
+
+    public async Task<T?> FindAsync(object[] keyValues, CancellationToken cancellationToken = default) =>
+        await _dbSet.FindAsync(keyValues, cancellationToken);
 
     public IQueryable<T> Query(bool tracking = true)
     {
@@ -32,7 +49,8 @@ public class Repository<T> : IRepository<T> where T : class
         return AddAsync(entity, false, cancellationToken);
     }
 
-    public async Task AddRangeAsync(IEnumerable<T> entities, bool autoSave = false, CancellationToken cancellationToken = default)
+    public async Task AddRangeAsync(IEnumerable<T> entities, bool autoSave = false,
+        CancellationToken cancellationToken = default)
     {
         await _dbSet.AddRangeAsync(entities, cancellationToken);
         if (autoSave)

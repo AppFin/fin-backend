@@ -94,6 +94,17 @@ public class DefaultMenusSeeder(
                 OnlyForAdmin = false,
                 Position = MenuPosition.LeftTop,
                 KeyWords = "credit card, cartao de crédito, cartão de credito, cartao"
+            },
+            new()
+            {
+                Id = Guid.Parse("019a27f7-c052-7e62-b344-2112b0737691"),
+                FrontRoute = "/titles",
+                Name = "finCore.features.title.title",
+                Color = "#6d28d9",
+                Icon = "coins",
+                OnlyForAdmin = false,
+                Position = MenuPosition.LeftTop,
+                KeyWords = "titles, títulos, lançamentos, gostos, recebidos"
             }
         };
         var defaultMenusIds = defaultMenus.Select(x => x.Id).ToList();

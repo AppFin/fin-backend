@@ -153,7 +153,7 @@ public class UserDeleteService(
         var notifications = notificationDeliveries.Select(n => n.Notification)
             .Where(n => n.UserDeliveries.Count == 1);
 
-        await using (await unitOfWork.BeginTransactionAsync(cancellationToken))
+        await using (var scope = await unitOfWork.BeginTransactionAsync(cancellationToken))
         {
 
             foreach (var notification in notifications)
@@ -180,7 +180,7 @@ public class UserDeleteService(
             await emailSender.SendEmailAsync(userEmail, "Conta deletada",
                 "Sua conta no FinApp foi deletada. Agora você não poderá mais acessar seus dados e eles foram removidos da plataforma.");
 
-            await unitOfWork.CommitAsync(cancellationToken);
+            await scope.CompleteAsync(cancellationToken);
         }
     }
 }

@@ -25,21 +25,21 @@ public class CreditCardConfiguration: IEntityTypeConfiguration<CreditCard>
             .HasOne(creditCard => creditCard.FinancialInstitution)
             .WithMany(financialInstitution => financialInstitution.CreditCards)
             .HasForeignKey(creditCard => creditCard.FinancialInstitutionId)
-            .IsRequired(false)
+            .IsRequired()
             .OnDelete(DeleteBehavior.Restrict);
         
         builder
             .HasOne(creditCard => creditCard.CardBrand)
             .WithMany(cardBrand => cardBrand.CreditCards)
             .HasForeignKey(creditCard => creditCard.CardBrandId)
-            .IsRequired(false)
+            .IsRequired()
             .OnDelete(DeleteBehavior.Restrict);
         
         builder
             .HasOne(creditCard => creditCard.DebitWallet)
             .WithMany(debitWallet => debitWallet.CreditCards)
             .HasForeignKey(creditCard => creditCard.DebitWalletId)
-            .IsRequired(false)
+            .IsRequired()
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

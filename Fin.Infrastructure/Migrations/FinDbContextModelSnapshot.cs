@@ -485,6 +485,71 @@ namespace Fin.Infrastructure.Migrations
                     b.ToTable("TitleCategories", "public");
                 });
 
+            modelBuilder.Entity("Fin.Domain.TitleCategories.Entities.TitleTitleCategory", b =>
+                {
+                    b.Property<Guid>("TitleCategoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TitleId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("TitleCategoryId", "TitleId");
+
+                    b.HasIndex("TitleId");
+
+                    b.ToTable("TitleTitleCategories", "public");
+                });
+
+            modelBuilder.Entity("Fin.Domain.Titles.Entities.Title", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<decimal>("PreviousBalance")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("numeric(19,4)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<byte>("Type")
+                        .HasColumnType("smallint");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Value")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("numeric(19,4)");
+
+                    b.Property<Guid>("WalletId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WalletId");
+
+                    b.ToTable("Titles", "public");
+                });
+
             modelBuilder.Entity("Fin.Domain.Users.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -634,9 +699,6 @@ namespace Fin.Infrastructure.Migrations
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<decimal>("CurrentBalance")
-                        .HasColumnType("numeric");
-
                     b.Property<Guid?>("FinancialInstitutionId")
                         .HasColumnType("uuid");
 
@@ -681,17 +743,20 @@ namespace Fin.Infrastructure.Migrations
                     b.HasOne("Fin.Domain.CardBrands.Entities.CardBrand", "CardBrand")
                         .WithMany("CreditCards")
                         .HasForeignKey("CardBrandId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Fin.Domain.Wallets.Entities.Wallet", "DebitWallet")
                         .WithMany("CreditCards")
                         .HasForeignKey("DebitWalletId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Fin.Domain.FinancialInstitutions.Entities.FinancialInstitution", "FinancialInstitution")
                         .WithMany("CreditCards")
                         .HasForeignKey("FinancialInstitutionId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("CardBrand");
 
@@ -756,6 +821,36 @@ namespace Fin.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Fin.Domain.TitleCategories.Entities.TitleTitleCategory", b =>
+                {
+                    b.HasOne("Fin.Domain.TitleCategories.Entities.TitleCategory", "TitleCategory")
+                        .WithMany("TitleTitleCategories")
+                        .HasForeignKey("TitleCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Fin.Domain.Titles.Entities.Title", "Title")
+                        .WithMany("TitleTitleCategories")
+                        .HasForeignKey("TitleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Title");
+
+                    b.Navigation("TitleCategory");
+                });
+
+            modelBuilder.Entity("Fin.Domain.Titles.Entities.Title", b =>
+                {
+                    b.HasOne("Fin.Domain.Wallets.Entities.Wallet", "Wallet")
+                        .WithMany("Titles")
+                        .HasForeignKey("WalletId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Wallet");
+                });
+
             modelBuilder.Entity("Fin.Domain.Users.Entities.UserCredential", b =>
                 {
                     b.HasOne("Fin.Domain.Users.Entities.User", "User")
@@ -811,6 +906,16 @@ namespace Fin.Infrastructure.Migrations
                     b.Navigation("UserDeliveries");
                 });
 
+            modelBuilder.Entity("Fin.Domain.TitleCategories.Entities.TitleCategory", b =>
+                {
+                    b.Navigation("TitleTitleCategories");
+                });
+
+            modelBuilder.Entity("Fin.Domain.Titles.Entities.Title", b =>
+                {
+                    b.Navigation("TitleTitleCategories");
+                });
+
             modelBuilder.Entity("Fin.Domain.Users.Entities.User", b =>
                 {
                     b.Navigation("Credential");
@@ -821,6 +926,8 @@ namespace Fin.Infrastructure.Migrations
             modelBuilder.Entity("Fin.Domain.Wallets.Entities.Wallet", b =>
                 {
                     b.Navigation("CreditCards");
+
+                    b.Navigation("Titles");
                 });
 #pragma warning restore 612, 618
         }
