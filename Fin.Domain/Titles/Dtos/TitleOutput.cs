@@ -1,3 +1,4 @@
+using Fin.Domain.People.Dtos;
 using Fin.Domain.Titles.Entities;
 using Fin.Domain.Titles.Enums;
 
@@ -16,6 +17,8 @@ public class TitleOutput(Title title)
     public Guid WalletId { get; set; } = title.WalletId;
     public List<Guid> TitleCategoriesIds { get; set; } = title.TitleCategories
         .Select(x => x.Id).ToList();
+    public List<TitlePersonOutput> TitlePeople { get; set; } = title.TitlePeople
+        .Select(x => new TitlePersonOutput(x)).ToList();
 
     public TitleOutput(): this(new Title())
     {

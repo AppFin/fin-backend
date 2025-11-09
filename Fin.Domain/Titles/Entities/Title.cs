@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using Fin.Domain.Global.Interfaces;
+using Fin.Domain.People.Dtos;
 using Fin.Domain.People.Entities;
 using Fin.Domain.TitleCategories.Entities;
 using Fin.Domain.Titles.Dtos;
@@ -26,8 +27,8 @@ public class Title: IAuditedTenantEntity
     public ICollection<TitleCategory> TitleCategories { get; set; } = [];
     public ICollection<TitleTitleCategory> TitleTitleCategories { get; set; } = [];
     
-    public virtual ICollection<Person> People { get; set; } = [];
-    public virtual ICollection<TitlePerson> TitlePeople { get; set; } = [];
+    public ICollection<Person> People { get; set; } = [];
+    public ICollection<TitlePerson> TitlePeople { get; set; } = [];
     
     
     public Guid Id { get; set; }
@@ -46,7 +47,12 @@ public class Title: IAuditedTenantEntity
     {
         Id = Guid.NewGuid();
         
-        UpdateBasicProperties(input, previousBalance);
+        Value = input.Value;
+        Type = input.Type;
+        Description = input.Description.Trim();
+        Date = input.Date;
+        WalletId = input.WalletId;
+        PreviousBalance = previousBalance;
 
         TitleTitleCategories = new Collection<TitleTitleCategory>(
             input.TitleCategoriesIds
@@ -54,12 +60,21 @@ public class Title: IAuditedTenantEntity
                 .Select(categoryId => new TitleTitleCategory(categoryId, Id))
                 .ToList()
             );
+
+        TitlePeople = new Collection<TitlePerson>(
+            input.TitlePeople.DistinctBy(x => x.PersonId)
+                .Select(x => new TitlePerson(Id, x))
+                .ToList());
     } 
     
-    public List<TitleTitleCategory> UpdateAndReturnCategoriesToRemove(TitleInput input, decimal previousBalance)
+    public void Update(TitleInput input, decimal previousBalance)
     {
-        UpdateBasicProperties(input, previousBalance);
-        return SyncCategories(input.TitleCategoriesIds);
+        Value = input.Value;
+        Type = input.Type;
+        Description = input.Description.Trim();
+        Date = input.Date;
+        WalletId = input.WalletId;
+        PreviousBalance = previousBalance;
     }
 
     public bool MustReprocess(TitleInput input)
@@ -70,17 +85,7 @@ public class Title: IAuditedTenantEntity
                || input.WalletId != WalletId;
     }
     
-    private void UpdateBasicProperties(TitleInput input, decimal previousBalance)
-    {
-        Value = input.Value;
-        Type = input.Type;
-        Description = input.Description.Trim();
-        Date = input.Date;
-        WalletId = input.WalletId;
-        PreviousBalance = previousBalance;
-    }
-    
-    private List<TitleTitleCategory> SyncCategories(List<Guid> newCategoryIds)
+    public  List<TitleTitleCategory> SyncCategoriesAndReturnToRemove(List<Guid> newCategoryIds)
     {
         var updatedCategories = newCategoryIds.Select(userId => new TitleTitleCategory(userId, Id)).ToList();
         
@@ -105,5 +110,35 @@ public class Title: IAuditedTenantEntity
         }
 
         return categoriesToDelete;
+    }
+    
+    public  List<TitlePerson> SyncPeopleAndReturnToRemove(List<TitlePersonInput> titlePersonInputs)
+    {
+        var updatedPeople = titlePersonInputs.Select(titlePerson => new TitlePerson(Id, titlePerson)).ToList();
+        
+        var titlePeopleToDelete = new List<TitlePerson>();
+        foreach (var currentPerson in TitlePeople)
+        {
+            var index = updatedPeople.FindIndex(c => c.PersonId == currentPerson.PersonId);
+            if (index != -1)
+            {
+                currentPerson.Update(updatedPeople[index].Percentage);
+            }
+            titlePeopleToDelete.Add(currentPerson);
+        }
+
+        foreach (var currentDelivery in titlePeopleToDelete)
+        {
+            TitlePeople.Remove(currentDelivery);
+        }
+
+        foreach (var updatePerson in updatedPeople)
+        {
+            var index = TitlePeople.ToList().FindIndex(c => c.PersonId == updatePerson.PersonId);
+            if (index != -1) continue;
+            TitlePeople.Add(updatePerson);
+        }
+
+        return titlePeopleToDelete;
     }
 }

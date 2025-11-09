@@ -1,5 +1,4 @@
 ﻿using Fin.Domain.TitleCategories.Entities;
-using Fin.Domain.Titles.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
