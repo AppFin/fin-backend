@@ -28,7 +28,7 @@ public class TenantEntityInterceptor: SaveChangesInterceptor
         
         if (!hasTenantId) return base.SavingChangesAsync(eventData, result, cancellationToken);
         
-        foreach (var entry in context.ChangeTracker.Entries<ITenantEntity>())
+        foreach (var entry in context.ChangeTracker.Entries<ITenant>())
         {
             if (entry.State == EntityState.Added)
             {

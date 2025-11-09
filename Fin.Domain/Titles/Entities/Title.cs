@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using Fin.Domain.Global.Interfaces;
+using Fin.Domain.People.Entities;
 using Fin.Domain.TitleCategories.Entities;
 using Fin.Domain.Titles.Dtos;
 using Fin.Domain.Titles.Enums;
@@ -24,6 +25,9 @@ public class Title: IAuditedTenantEntity
     public virtual Wallet Wallet { get; set; }
     public ICollection<TitleCategory> TitleCategories { get; set; } = [];
     public ICollection<TitleTitleCategory> TitleTitleCategories { get; set; } = [];
+    
+    public virtual ICollection<Person> People { get; set; } = [];
+    public virtual ICollection<TitlePerson> TitlePeople { get; set; } = [];
     
     
     public Guid Id { get; set; }
