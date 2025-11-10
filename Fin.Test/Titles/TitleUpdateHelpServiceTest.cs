@@ -75,7 +75,7 @@ public class TitleUpdateHelpServiceTest : TestUtils.BaseTestWithContext
         title.UpdateAndReturnCategoriesToRemove(updateInput, 1000m);
 
         // Act
-        await service.UpdateTitleAndCategories(title, updateInput, categoriesToRemove, CancellationToken.None);
+        await service.PerformUpdateTitle(title, updateInput, categoriesToRemove, CancellationToken.None);
         await Context.SaveChangesAsync();
 
         // Assert

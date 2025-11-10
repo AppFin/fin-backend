@@ -1,4 +1,5 @@
 using Fin.Application.Wallets.Services;
+using Fin.Domain.People.Entities;
 using Fin.Domain.TitleCategories.Entities;
 using Fin.Domain.Titles.Dtos;
 using Fin.Domain.Titles.Entities;
@@ -10,10 +11,10 @@ namespace Fin.Application.Titles.Services;
 
 public interface ITitleUpdateHelpService
 {
-    Task UpdateTitleAndCategories(
+    Task PerformUpdateTitle(
         Title title,
         TitleInput input,
-        List<TitleTitleCategory> categoriesToRemove,
+        UpdateTitleContext context,
         CancellationToken cancellationToken);
 
     Task<UpdateTitleContext> PrepareUpdateContext(
@@ -55,20 +56,22 @@ public interface ITitleUpdateHelpService
 public class TitleUpdateHelpService(
     IRepository<Title> titleRepository,
     IRepository<TitleTitleCategory> titleTitleCategoryRepository,
+    IRepository<TitlePerson> titlePeopleRepository,
     IWalletBalanceService balanceService
 ): ITitleUpdateHelpService, IAutoTransient
 {
-    public async Task UpdateTitleAndCategories(
+    public async Task PerformUpdateTitle(
         Title title,
         TitleInput input,
-        List<TitleTitleCategory> categoriesToRemove,
+        UpdateTitleContext context,
         CancellationToken cancellationToken)
     {
         await titleRepository.UpdateAsync(title, cancellationToken);
-        foreach (var category in categoriesToRemove)
-        {
+        foreach (var category in context.CategoriesToRemove)
             await titleTitleCategoryRepository.DeleteAsync(category, cancellationToken);
-        }
+        foreach (var person in context.PeopleToRemove)
+            await titlePeopleRepository.DeleteAsync(person, cancellationToken);
+
     }
 
     public async Task<UpdateTitleContext> PrepareUpdateContext(
@@ -81,13 +84,16 @@ public class TitleUpdateHelpService(
             ? await CalculatePreviousBalance(title, input, cancellationToken)
             : title.PreviousBalance;
 
-        var categoriesToRemove = title.UpdateAndReturnCategoriesToRemove(input, previousBalance);
+        title.Update(input, previousBalance);
+        var categoriesToRemove = title.SyncCategoriesAndReturnToRemove(input.TitleCategoriesIds);
+        var peopleToRemove = title.SyncPeopleAndReturnToRemove(input.TitlePeople);
 
         return new UpdateTitleContext(
             PreviousWalletId: title.WalletId,
             PreviousDate: title.Date,
             PreviousBalance: title.PreviousBalance,
-            CategoriesToRemove: categoriesToRemove
+            CategoriesToRemove: categoriesToRemove,
+            PeopleToRemove: peopleToRemove
         );
     }
 
@@ -182,6 +188,6 @@ public record UpdateTitleContext(
     Guid PreviousWalletId,
     DateTime PreviousDate,
     decimal PreviousBalance,
-    List<TitleTitleCategory> CategoriesToRemove
-);
+    List<TitleTitleCategory> CategoriesToRemove,
+    List<TitlePerson> PeopleToRemove);
 

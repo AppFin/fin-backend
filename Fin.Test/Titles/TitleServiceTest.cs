@@ -457,7 +457,7 @@ public class TitleServiceTest : TestUtils.BaseTestWithContext
             .ReturnsAsync(context);
 
         _updateHelpServiceMock
-            .Setup(u => u.UpdateTitleAndCategories(
+            .Setup(u => u.PerformUpdateTitle(
                 It.IsAny<Title>(),
                 updateInput,
                 It.IsAny<List<TitleTitleCategory>>(),

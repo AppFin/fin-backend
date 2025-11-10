@@ -92,6 +92,7 @@ public class TitleService(
 
         var title = await titleRepository
             .Include(title => title.TitleTitleCategories)
+            .Include(title => title.TitlePeople)
             .FirstAsync(title => title.Id == id, cancellationToken);
         var mustReprocess = title.MustReprocess(input);
 
@@ -99,7 +100,7 @@ public class TitleService(
 
         await using (var scope = await unitOfWork.BeginTransactionAsync(cancellationToken))
         {
-            await updateHelpService.UpdateTitleAndCategories(title, input, context.CategoriesToRemove, cancellationToken);
+            await updateHelpService.PerformUpdateTitle(title, input, context, cancellationToken);
             if (mustReprocess) await updateHelpService.ReprocessAffectedWallets(title, context, autoSave: false, cancellationToken);
             if (autoSave) await scope.CompleteAsync(cancellationToken);
         }

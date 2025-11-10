@@ -24,6 +24,7 @@ public class Title: IAuditedTenantEntity
     public decimal EffectiveValue => (Value * (Type == TitleType.Expense ? -1 : 1));
     
     public virtual Wallet Wallet { get; set; }
+    
     public ICollection<TitleCategory> TitleCategories { get; set; } = [];
     public ICollection<TitleTitleCategory> TitleTitleCategories { get; set; } = [];
     
