@@ -233,8 +233,8 @@
     </div>
 
     <div class="links">
-        <a href="/swagger" class="link-button">📚 Swagger Documentation</a>
-        <a href="/health" class="link-button">💚 Health Check</a>
+        <a href="/v1/swagger" class="link-button">Swagger Documentation</a>
+        <a href="/v1/health" class="link-button">Health Check</a>
     </div>
 
     <div class="footer">
@@ -246,7 +246,7 @@
     // Load health check information when page loads
     async function loadHealthInfo() {
         try {
-            const response = await fetch('/health');
+            const response = await fetch('/v1/health');
             const data = await response.json();
 
             // Update status
