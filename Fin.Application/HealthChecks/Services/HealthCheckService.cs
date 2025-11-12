@@ -1,6 +1,7 @@
 ﻿using Fin.Application.HealthChecks.Dtos;
 using Fin.Infrastructure.AutoServices;
 using Fin.Infrastructure.AutoServices.Interfaces;
+using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.DateTimes;
 using Microsoft.Extensions.Configuration;
 
@@ -19,7 +20,7 @@ public class HealthCheckService(IConfiguration configuration, IDateTimeProvider 
         return new HealthCheckOutput
         {
             Status = "OK",
-            Version = configuration["ApiSettings:Version"] ?? "",
+            Version = configuration[AppConstants.VersionConfigKey] ?? "",
             Timestamp = dateTimeProvider.UtcNow()
         };
     }
