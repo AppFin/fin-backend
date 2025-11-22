@@ -43,8 +43,9 @@ public class TitleService(
 {
     public async Task<TitleOutput> Get(Guid id, CancellationToken cancellationToken = default)
     {
-        var entity = await titleRepository.Query(false)
+        var entity = await titleRepository
             .Include(title => title.TitleCategories)
+            .Include(title => title.TitlePeople)
             .FirstOrDefaultAsync(n => n.Id == id, cancellationToken);
         return entity != null ? new TitleOutput(entity) : null;
     }
@@ -52,8 +53,9 @@ public class TitleService(
     public async Task<PagedOutput<TitleOutput>> GetList(TitleGetListInput input,
         CancellationToken cancellationToken = default)
     {
-        return await titleRepository.Query(false)
+        return await titleRepository
             .Include(title => title.TitleCategories)
+            .Include(title => title.TitlePeople)
             .WhereIf(input.Type.HasValue, n => n.Type == input.Type)
             .WhereIf(input.WalletIds.Any(), title => input.WalletIds.Contains(title.WalletId))
             .WhereIf(input.CategoryIds.Any() && input.CategoryOperator == MultiplyFilterOperator.And, title =>

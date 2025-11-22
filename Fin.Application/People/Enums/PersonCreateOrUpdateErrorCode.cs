@@ -13,6 +13,6 @@ public enum PersonCreateOrUpdateErrorCode
     [ErrorMessage("Name max lenght 100")]
     NameTooLong = 2,
     
-    [ErrorMessage("Name max lenght 100")]
+    [ErrorMessage("Person not found.")]
     PersonNotFound = 4
 }
