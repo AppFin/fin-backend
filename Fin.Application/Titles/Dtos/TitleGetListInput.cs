@@ -8,6 +8,8 @@ public class TitleGetListInput: PagedFilteredAndSortedInput
 {
     public List<Guid> CategoryIds { get; set; } = [];
     public MultiplyFilterOperator CategoryOperator { get; set; }
+    public List<Guid> PersonIds { get; set; } = [];
+    public MultiplyFilterOperator PersonOperator { get; set; }
     public List<Guid> WalletIds { get; set; } = [];
     public TitleType? Type { get; set; }
 }

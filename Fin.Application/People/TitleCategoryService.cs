@@ -75,7 +75,7 @@ public class PersonService(
             .Include(u => u.TitlePeople)
             .FirstOrDefaultAsync(u => u.Id == id);
         if (person == null) return validation.WithError(PersonDeleteErrorCode.PersonNotFound);
-        if (person.TitlePeople != null && person.TitlePeople.Any()) validation.WithError(PersonDeleteErrorCode.PersonInUse);
+        if (person.TitlePeople != null && person.TitlePeople.Any()) return validation.WithError(PersonDeleteErrorCode.PersonInUse);
 
         await repository.DeleteAsync(person, autoSave);
         return validation.WithSuccess(true);
