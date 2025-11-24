@@ -1,5 +1,6 @@
 using Fin.Application.Titles.Services;
 using Fin.Application.Wallets.Services;
+using Fin.Domain.People.Entities;
 using Fin.Domain.TitleCategories.Entities;
 using Fin.Domain.Titles.Dtos;
 using Fin.Domain.Titles.Entities;
@@ -43,7 +44,6 @@ public class TitleUpdateHelpServiceTest : TestUtils.BaseTestWithContext
 
         var titleCategory1 = TestUtils.TitleCategories[0];
         var titleCategory2 = TestUtils.TitleCategories[1];
-        var titleCategory3 = TestUtils.TitleCategories[2];
 
         await resources.TitleCategoryRepository.AddAsync(titleCategory1, autoSave: true);
         await resources.TitleCategoryRepository.AddAsync(titleCategory2, autoSave: true);
@@ -58,6 +58,7 @@ public class TitleUpdateHelpServiceTest : TestUtils.BaseTestWithContext
             TitleCategoriesIds = new List<Guid> { titleCategory1.Id, titleCategory2.Id }
         }, 1000m);
         await resources.TitleRepository.AddAsync(title, autoSave: true);
+        var previousBalance = title.PreviousBalance;
 
         // Create categories to remove
         var categoriesToRemove = title.TitleTitleCategories.Take(1).ToList();
@@ -72,10 +73,19 @@ public class TitleUpdateHelpServiceTest : TestUtils.BaseTestWithContext
             TitleCategoriesIds = new List<Guid> { titleCategory2.Id }
         };
 
-        title.UpdateAndReturnCategoriesToRemove(updateInput, 1000m);
+        title.Update(updateInput, 1000m);
+        title.SyncCategoriesAndReturnToRemove(updateInput.TitleCategoriesIds);
 
+        var udpateContext = new UpdateTitleContext(
+            wallet.Id, 
+            TestUtils.UtcDateTimes[0],
+            previousBalance,
+            categoriesToRemove,
+            new List<TitlePerson>()
+            );
+        
         // Act
-        await service.PerformUpdateTitle(title, updateInput, categoriesToRemove, CancellationToken.None);
+        await service.PerformUpdateTitle(title, udpateContext,  CancellationToken.None);
         await Context.SaveChangesAsync();
 
         // Assert
@@ -600,7 +610,8 @@ public class TitleUpdateHelpServiceTest : TestUtils.BaseTestWithContext
             PreviousWalletId: wallet1.Id, // Was in wallet1
             PreviousDate: TestUtils.UtcDateTimes[0],
             PreviousBalance: 1000m,
-            CategoriesToRemove: new List<TitleTitleCategory>()
+            CategoriesToRemove: new List<TitleTitleCategory>(),
+            PeopleToRemove: new  List<TitlePerson>()
         );
 
         _balanceServiceMock
@@ -657,7 +668,8 @@ public class TitleUpdateHelpServiceTest : TestUtils.BaseTestWithContext
             PreviousWalletId: wallet.Id, // Same wallet
             PreviousDate: TestUtils.UtcDateTimes[0],
             PreviousBalance: 1000m,
-            CategoriesToRemove: new List<TitleTitleCategory>()
+            CategoriesToRemove: new List<TitleTitleCategory>(),
+            PeopleToRemove: new  List<TitlePerson>()
         );
 
         _balanceServiceMock
@@ -689,6 +701,7 @@ public class TitleUpdateHelpServiceTest : TestUtils.BaseTestWithContext
         return new TitleUpdateHelpService(
             resources.TitleRepository,
             resources.TitleTitleCategoryRepository,
+            resources.TitlePersonsRepository,
             _balanceServiceMock.Object
         );
     }
@@ -700,7 +713,8 @@ public class TitleUpdateHelpServiceTest : TestUtils.BaseTestWithContext
             TitleRepository = GetRepository<Title>(),
             TitleTitleCategoryRepository = GetRepository<TitleTitleCategory>(),
             TitleCategoryRepository = GetRepository<TitleCategory>(),
-            WalletRepository = GetRepository<Wallet>()
+            WalletRepository = GetRepository<Wallet>(),
+            TitlePersonsRepository = GetRepository<TitlePerson>()
         };
     }
 
@@ -709,6 +723,7 @@ public class TitleUpdateHelpServiceTest : TestUtils.BaseTestWithContext
         public IRepository<Title> TitleRepository { get; set; }
         public IRepository<TitleTitleCategory> TitleTitleCategoryRepository { get; set; }
         public IRepository<TitleCategory> TitleCategoryRepository { get; set; }
+        public IRepository<TitlePerson> TitlePersonsRepository { get; set; }
         public IRepository<Wallet> WalletRepository { get; set; }
     }
 }

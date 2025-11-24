@@ -109,7 +109,7 @@ public class TitleService(
 
         await using (var scope = await unitOfWork.BeginTransactionAsync(cancellationToken))
         {
-            await updateHelpService.PerformUpdateTitle(title, input, context, cancellationToken);
+            await updateHelpService.PerformUpdateTitle(title, context, cancellationToken);
             if (mustReprocess) await updateHelpService.ReprocessAffectedWallets(title, context, autoSave: false, cancellationToken);
             if (autoSave) await scope.CompleteAsync(cancellationToken);
         }

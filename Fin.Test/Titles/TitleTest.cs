@@ -237,10 +237,10 @@ public class TitleTest
 
     #endregion
 
-    #region UpdateAndReturnCategoriesToRemove
+    #region Update
 
     [Fact]
-    public void UpdateAndReturnCategoriesToRemove_ShouldUpdateBasicProperties()
+    public void Update_ShouldUpdateBasicProperties()
     {
         // Arrange
         var initialInput = new TitleInput
@@ -266,7 +266,7 @@ public class TitleTest
         var newPreviousBalance = 150m;
 
         // Act
-        var result = title.UpdateAndReturnCategoriesToRemove(updateInput, newPreviousBalance);
+        title.Update(updateInput, newPreviousBalance);
 
         // Assert
         title.Value.Should().Be(200m);
@@ -275,11 +275,10 @@ public class TitleTest
         title.Date.Should().Be(updateInput.Date);
         title.WalletId.Should().Be(TestUtils.Guids[2]);
         title.PreviousBalance.Should().Be(150m);
-        result.Should().NotBeNull();
     }
 
     [Fact]
-    public void UpdateAndReturnCategoriesToRemove_ShouldAddNewCategories()
+    public void SyncCategoriesAndReturnToRemove_ShouldAddNewCategories()
     {
         // Arrange
         var initialInput = new TitleInput
@@ -304,7 +303,7 @@ public class TitleTest
         };
 
         // Act
-        var result = title.UpdateAndReturnCategoriesToRemove(updateInput, 0);
+        var result = title.SyncCategoriesAndReturnToRemove(updateInput.TitleCategoriesIds);
 
         // Assert
         title.TitleTitleCategories.Should().HaveCount(3);
@@ -315,7 +314,7 @@ public class TitleTest
     }
 
     [Fact]
-    public void UpdateAndReturnCategoriesToRemove_ShouldRemoveCategories()
+    public void SyncCategoriesAndReturnToRemove_ShouldRemoveCategories()
     {
         // Arrange
         var initialInput = new TitleInput
@@ -340,7 +339,7 @@ public class TitleTest
         };
 
         // Act
-        var result = title.UpdateAndReturnCategoriesToRemove(updateInput, 0);
+        var result = title.SyncCategoriesAndReturnToRemove(updateInput.TitleCategoriesIds);
 
         // Assert
         title.TitleTitleCategories.Should().HaveCount(1);
@@ -351,7 +350,7 @@ public class TitleTest
     }
 
     [Fact]
-    public void UpdateAndReturnCategoriesToRemove_ShouldKeepExistingCategories()
+    public void SyncCategoriesAndReturnToRemove_ShouldKeepExistingCategories()
     {
         // Arrange
         var initialInput = new TitleInput
@@ -376,7 +375,7 @@ public class TitleTest
         };
 
         // Act
-        var result = title.UpdateAndReturnCategoriesToRemove(updateInput, 0);
+        var result = title.SyncCategoriesAndReturnToRemove(updateInput.TitleCategoriesIds);
 
         // Assert
         title.TitleTitleCategories.Should().HaveCount(2);
@@ -386,7 +385,7 @@ public class TitleTest
     }
 
     [Fact]
-    public void UpdateAndReturnCategoriesToRemove_ShouldRemoveAllCategories()
+    public void Update_ShouldRemoveAllCategories()
     {
         // Arrange
         var initialInput = new TitleInput
@@ -411,7 +410,7 @@ public class TitleTest
         };
 
         // Act
-        var result = title.UpdateAndReturnCategoriesToRemove(updateInput, 0);
+        var result = title.SyncCategoriesAndReturnToRemove(updateInput.TitleCategoriesIds);
 
         // Assert
         title.TitleTitleCategories.Should().BeEmpty();

@@ -13,7 +13,6 @@ public interface ITitleUpdateHelpService
 {
     Task PerformUpdateTitle(
         Title title,
-        TitleInput input,
         UpdateTitleContext context,
         CancellationToken cancellationToken);
 
@@ -62,7 +61,6 @@ public class TitleUpdateHelpService(
 {
     public async Task PerformUpdateTitle(
         Title title,
-        TitleInput input,
         UpdateTitleContext context,
         CancellationToken cancellationToken)
     {
