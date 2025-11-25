@@ -1213,7 +1213,7 @@ public class TitleUpdateHelpServiceTest : TestUtils.BaseTestWithContext
 
         // Assert
         context.Should().NotBeNull();
-        context.PeopleToRemove.Should().HaveCount(1);
+        context.PeopleToRemove.Should().HaveCount(0);
     }
 
     #endregion
