@@ -76,7 +76,7 @@ public class FinDbContext : DbContext
     {
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
-            if (typeof(ITenantEntity).IsAssignableFrom(entityType.ClrType))
+            if (typeof(ITenant).IsAssignableFrom(entityType.ClrType))
             {
                 var method = typeof(FinDbContext)
                     .GetMethod(nameof(SetTenantFilter), BindingFlags.NonPublic | BindingFlags.Instance)
@@ -87,7 +87,7 @@ public class FinDbContext : DbContext
         }
     }
 
-    private void SetTenantFilter<TEntity>(ModelBuilder modelBuilder) where TEntity : class, ITenantEntity
+    private void SetTenantFilter<TEntity>(ModelBuilder modelBuilder) where TEntity : class, ITenant
     {
         if (Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite") return;
         modelBuilder.Entity<TEntity>().HasQueryFilter(e => _ambientData.IsLogged && e.TenantId == _ambientData.TenantId);

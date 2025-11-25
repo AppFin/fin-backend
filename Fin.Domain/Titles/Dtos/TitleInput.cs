@@ -1,3 +1,4 @@
+using Fin.Domain.People.Dtos;
 using Fin.Domain.Titles.Enums;
 
 namespace Fin.Domain.Titles.Dtos;
@@ -10,4 +11,5 @@ public class TitleInput
     public DateTime Date { get; set; }
     public Guid WalletId { get; set; }
     public List<Guid> TitleCategoriesIds { get; set; } = [];
+    public List<TitlePersonInput> TitlePeople { get; set; } = [];
 }

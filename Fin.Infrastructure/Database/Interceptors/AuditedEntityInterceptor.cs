@@ -31,7 +31,7 @@ public class AuditedEntityInterceptor: SaveChangesInterceptor
         var hasUserId = userId != Guid.Empty;
         
 
-        foreach (var entry in context.ChangeTracker.Entries<IAuditedEntity>())
+        foreach (var entry in context.ChangeTracker.Entries<IAudited>())
         {
             if (entry.State == EntityState.Added)
             {

@@ -9,6 +9,7 @@ using NSwag;
 var builder = WebApplication.CreateBuilder(args);
 
 var frontEndUrl = builder.Configuration.GetSection(AppConstants.FrontUrlConfigKey).Get<string>();
+var version = builder.Configuration.GetSection(AppConstants.VersionConfigKey).Get<string>();
 
 builder.Services
     .AddInfrastructure(builder.Configuration)
@@ -41,6 +42,14 @@ builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
 var app = builder.Build();
 
+if (!string.IsNullOrWhiteSpace(version))
+{
+    var versionPathBase = version;
+    if (!versionPathBase.StartsWith("/")) versionPathBase = $"/{versionPathBase}";
+    app.UsePathBase(versionPathBase);
+}
+
+
 if (app.Environment.IsDevelopment())
 {
     app.UseOpenApi();
@@ -55,11 +64,14 @@ app.UseFinMiddlewares();
 await app.UseDbMigrations();
 await app.UseSeeders();
 
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.UseHsts();
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 app.Run();

@@ -1,6 +1,6 @@
 ﻿namespace Fin.Domain.Global.Interfaces;
 
-public interface ITenantEntity: IEntity
+public interface ITenantEntity: IEntity, ITenant
 {
-    public Guid TenantId { get; set; }
+    
 }

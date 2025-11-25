@@ -105,6 +105,17 @@ public class DefaultMenusSeeder(
                 OnlyForAdmin = false,
                 Position = MenuPosition.LeftTop,
                 KeyWords = "titles, títulos, lançamentos, gostos, recebidos"
+            },
+            new()
+            {
+                Id = Guid.Parse("019aa9aa-55c4-72e5-931e-eb9a973670c8"),
+                FrontRoute = "/people",
+                Name = "finCore.features.person.title",
+                Color = "#fdc570",
+                Icon = "user",
+                OnlyForAdmin = false,
+                Position = MenuPosition.LeftTop,
+                KeyWords = "person, people, pessoas"
             }
         };
         var defaultMenusIds = defaultMenus.Select(x => x.Id).ToList();

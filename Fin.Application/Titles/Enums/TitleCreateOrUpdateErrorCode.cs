@@ -36,4 +36,14 @@ public enum TitleCreateOrUpdateErrorCode
     
     [ErrorMessage("Duplicated title in same date time until minute.")]
     DuplicateTitleInSameDateTimeMinute = 10,
+    
+    [ErrorMessage("Some people was not found")]
+    SomePeopleNotFound = 11,
+    
+    [ErrorMessage("Some people is inactive")]
+    SomePeopleInactive = 12,
+    
+    [ErrorMessage("Financial split between people must be greater than or equal to 0 and less than or equal to 100")]
+    PeopleSplitRange = 13,
+    
 }

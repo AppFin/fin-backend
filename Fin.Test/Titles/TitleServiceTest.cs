@@ -2,6 +2,7 @@ using Fin.Application.Titles.Dtos;
 using Fin.Application.Titles.Enums;
 using Fin.Application.Titles.Services;
 using Fin.Application.Wallets.Services;
+using Fin.Domain.People.Entities;
 using Fin.Domain.TitleCategories.Entities;
 using Fin.Domain.Titles.Dtos;
 using Fin.Domain.Titles.Entities;
@@ -445,7 +446,8 @@ public class TitleServiceTest : TestUtils.BaseTestWithContext
             PreviousWalletId: wallet.Id,
             PreviousDate: title.Date,
             PreviousBalance: title.PreviousBalance,
-            CategoriesToRemove: new List<TitleTitleCategory>()
+            CategoriesToRemove: new List<TitleTitleCategory>(),
+            PeopleToRemove: new List<TitlePerson>()
         );
 
         _updateHelpServiceMock
@@ -457,10 +459,9 @@ public class TitleServiceTest : TestUtils.BaseTestWithContext
             .ReturnsAsync(context);
 
         _updateHelpServiceMock
-            .Setup(u => u.UpdateTitleAndCategories(
+            .Setup(u => u.PerformUpdateTitle(
                 It.IsAny<Title>(),
-                updateInput,
-                It.IsAny<List<TitleTitleCategory>>(),
+                It.IsAny<UpdateTitleContext>(),
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 

@@ -4,4 +4,5 @@ public static class AppConstants
 {
     public const string AppName = "Fin App";
     public const string FrontUrlConfigKey = "ApiSettings:FrontendConfigs:Url";
+    public const string VersionConfigKey = "ApiSettings:Version";
 }

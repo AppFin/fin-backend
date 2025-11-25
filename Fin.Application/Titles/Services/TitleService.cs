@@ -43,8 +43,9 @@ public class TitleService(
 {
     public async Task<TitleOutput> Get(Guid id, CancellationToken cancellationToken = default)
     {
-        var entity = await titleRepository.Query(false)
+        var entity = await titleRepository
             .Include(title => title.TitleCategories)
+            .Include(title => title.TitlePeople)
             .FirstOrDefaultAsync(n => n.Id == id, cancellationToken);
         return entity != null ? new TitleOutput(entity) : null;
     }
@@ -52,14 +53,22 @@ public class TitleService(
     public async Task<PagedOutput<TitleOutput>> GetList(TitleGetListInput input,
         CancellationToken cancellationToken = default)
     {
-        return await titleRepository.Query(false)
+        return await titleRepository
             .Include(title => title.TitleCategories)
+            .Include(title => title.TitlePeople)
             .WhereIf(input.Type.HasValue, n => n.Type == input.Type)
             .WhereIf(input.WalletIds.Any(), title => input.WalletIds.Contains(title.WalletId))
+            
             .WhereIf(input.CategoryIds.Any() && input.CategoryOperator == MultiplyFilterOperator.And, title =>
                 input.CategoryIds.All(id => title.TitleCategories.Any(c => c.Id == id)))
             .WhereIf(input.CategoryIds.Any() && input.CategoryOperator == MultiplyFilterOperator.Or,
                 title => title.TitleCategories.Any(titleCategory => input.CategoryIds.Contains(titleCategory.Id)))
+            
+            .WhereIf(input.PersonIds.Any() && input.PersonOperator == MultiplyFilterOperator.And, title =>
+                input.PersonIds.All(id => title.People.Any(c => c.Id == id)))
+            .WhereIf(input.PersonIds.Any() && input.PersonOperator == MultiplyFilterOperator.Or,
+                title => title.People.Any(titleCategory => input.PersonIds.Contains(titleCategory.Id)))
+            
             .ApplyDefaultTitleOrder()
             .ApplyFilterAndSorter(input)
             .Select(n => new TitleOutput(n))
@@ -92,6 +101,7 @@ public class TitleService(
 
         var title = await titleRepository
             .Include(title => title.TitleTitleCategories)
+            .Include(title => title.TitlePeople)
             .FirstAsync(title => title.Id == id, cancellationToken);
         var mustReprocess = title.MustReprocess(input);
 
@@ -99,7 +109,7 @@ public class TitleService(
 
         await using (var scope = await unitOfWork.BeginTransactionAsync(cancellationToken))
         {
-            await updateHelpService.UpdateTitleAndCategories(title, input, context.CategoriesToRemove, cancellationToken);
+            await updateHelpService.PerformUpdateTitle(title, context, cancellationToken);
             if (mustReprocess) await updateHelpService.ReprocessAffectedWallets(title, context, autoSave: false, cancellationToken);
             if (autoSave) await scope.CompleteAsync(cancellationToken);
         }
