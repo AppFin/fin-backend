@@ -9,6 +9,7 @@ using Fin.Infrastructure.AutoServices.Interfaces;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.DateTimes;
 using Fin.Infrastructure.EmailSenders;
+using Fin.Infrastructure.EmailSenders.Dto;
 using Fin.Infrastructure.Firebases;
 using Fin.Infrastructure.Notifications.Hubs;
 using FirebaseAdmin.Messaging;
@@ -191,12 +192,21 @@ public class NotificationDeliveryService(
 
     private async Task SendEmail(NotifyUserDto notification)
     {
-        var userCredencial = await credencialRepository.Query(false)
+        var userCredencial = await credencialRepository
+            .AsNoTracking()
+            .Include(c => c.User)
             .FirstOrDefaultAsync(n => n.UserId == notification.UserId);
         if (userCredencial == null)
             throw new Exception("User not found to send email notification.");
 
         var email = _cryptoHelper.Decrypt(userCredencial.EncryptedEmail);
-        await emailSenderService.SendEmailAsync(email, notification.Title, notification.HtmlBody);
+        await emailSenderService.SendEmailAsync(new SendEmailDto
+        {
+            ToEmail = email,
+            Subject = notification.Title,
+            ToName = userCredencial.User.DisplayName,
+            HtmlBody = notification.HtmlBody,
+            PlainBody =  notification.TextBody,
+        });
     }
 }

@@ -15,6 +15,7 @@ using Fin.Infrastructure.AutoServices.Interfaces;
 using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.EmailSenders;
+using Fin.Infrastructure.EmailSenders.Dto;
 using Fin.Infrastructure.Redis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
@@ -68,7 +69,7 @@ public class AuthenticationService : IAuthenticationService, IAutoTransient
     public async Task SendResetPasswordEmail(SendResetPasswordEmailInput input)
     {
         var encryptedEmail = _cryptoHelper.Encrypt(input.Email);
-        var credential = _credentialRepository.Query()
+        var credential = _credentialRepository
             .Include(c => c.User)
             .FirstOrDefault(c => c.EncryptedEmail == encryptedEmail);
 
@@ -89,13 +90,28 @@ public class AuthenticationService : IAuthenticationService, IAutoTransient
         var logoIconUrl = $"{frontUrl}/icons/fin.png";
         var resetLink = $"{frontUrl}/authentication/reset-password?token={token}";
 
-        var body = AuthenticationTemplates.ResetPasswordEmailTempalte
+        var subject = AuthenticationTemplates.ResetPasswordEmailSubject
+            .Replace("{{appName}}", AppConstants.AppName);
+        
+        var plainBody = AuthenticationTemplates.ResetPasswordEmailPlainTemplate
+            .Replace("{{appName}}", AppConstants.AppName)
+            .Replace("{{linkLifeTime}}", tokenLifeTimeInHours.ToString())
+            .Replace("{{resetLink}}", resetLink);
+        
+        var htmlBody = AuthenticationTemplates.ResetPasswordEmailTemplate
             .Replace("{{appName}}", AppConstants.AppName)
             .Replace("{{logoIconUrl}}", logoIconUrl)
             .Replace("{{linkLifeTime}}", tokenLifeTimeInHours.ToString())
             .Replace("{{resetLink}}", resetLink);
 
-        await _emailSender.SendEmailAsync(input.Email, "Fin - Reset Password", body);
+        await _emailSender.SendEmailAsync(new SendEmailDto
+        {
+            Subject = subject,
+            ToEmail = input.Email,
+            PlainBody =  plainBody,
+            HtmlBody = htmlBody,
+            ToName = credential.User.DisplayName
+        });
     }
 
     public async Task<ValidationResultDto<bool, ResetPasswordErrorCode>> ResetPassword(ResetPasswordInput input)

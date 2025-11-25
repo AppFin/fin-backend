@@ -111,7 +111,18 @@ public static class AuthenticationTemplates
 </html>
 ";
 
-    public const string ResetPasswordEmailTempalte = @"
+    public const string ResetPasswordEmailSubject = "{{appName}} - Reset Your Password";
+
+    public const string ResetPasswordEmailPlainTemplate = @"
+{{appName}} - Password Reset
+We received a request to reset your password.
+To create a new password, please copy and paste the link below into your browser:
+{{resetLink}}
+This link expires in {{linkLifeTime}} hours.
+If you didn't request this, please ignore this email.
+";
+
+    public const string ResetPasswordEmailTemplate = @"
 <!DOCTYPE html>
 <html lang='en'>
 <head>

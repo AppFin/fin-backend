@@ -1,4 +1,7 @@
 ﻿using Fin.Infrastructure.AutoServices.Interfaces;
+using Fin.Infrastructure.EmailSenders.Constants;
+using Fin.Infrastructure.EmailSenders.Dto;
+using Fin.Infrastructure.EmailSenders.MailSender;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Configuration;
@@ -8,36 +11,49 @@ namespace Fin.Infrastructure.EmailSenders;
 
 public interface IEmailSenderService
 {
-    public Task SendEmailAsync(string toEmail, string subject, string body);
+    public Task<bool> SendEmailAsync(SendEmailDto dto, CancellationToken cancellationToken = default);
 }
 
-public class EmailSenderService: IEmailSenderService, IAutoTransient
+public class EmailSenderService(
+    IConfiguration configuration,
+    IMailSenderClient mailSenderClient
+    ) : IEmailSenderService, IAutoTransient
 {
-    private readonly IConfiguration _configuration;
-    
     private const string EmailConfigKey = "ApiSettings:EmailSender:EmailAddress";
     private const string PasswordConfigKey = "ApiSettings:EmailSender:Password";
 
-    public EmailSenderService(IConfiguration configuration)
+    public async Task<bool> SendEmailAsync(SendEmailDto dto, CancellationToken cancellationToken = default)
     {
-        _configuration = configuration;
+        return GetMailService() switch
+        {
+            MailServicesConst.MailSender => await mailSenderClient.SendEmailAsync(dto, cancellationToken),
+            _ => await SendEmailWithMailKit(dto, cancellationToken)
+        };
+    }
+    
+    private string GetMailService()
+    {
+        var mailService = configuration.GetSection(MailServicesConst.MailServiceConfigurationKey).Value;
+        return mailService ?? "";
     }
 
-    public async Task SendEmailAsync(string toEmail, string subject, string body)
+    private async Task<bool> SendEmailWithMailKit(SendEmailDto dto, CancellationToken cancellationToken)
     {
-        var emailAddress = _configuration.GetSection(EmailConfigKey).Value ?? "";
-        var emailPassword = _configuration.GetSection(PasswordConfigKey).Value ?? "";
+        var emailAddress = configuration.GetSection(EmailConfigKey).Value ?? "";
+        var emailPassword = configuration.GetSection(PasswordConfigKey).Value ?? "";
         
         var email = new MimeMessage();
         email.From.Add(MailboxAddress.Parse(emailAddress));
-        email.To.Add(MailboxAddress.Parse(toEmail));
-        email.Subject = subject;
-        email.Body = new TextPart("html") { Text = body };
+        email.To.Add(MailboxAddress.Parse(dto.ToEmail));
+        email.Subject = dto.Subject;
+        email.Body = new TextPart("html") { Text = dto.HtmlBody };
 
         using var smtp = new SmtpClient();
-        await smtp.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
-        await smtp.AuthenticateAsync(emailAddress, emailPassword);
-        await smtp.SendAsync(email);
-        await smtp.DisconnectAsync(true);
+        await smtp.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls, cancellationToken);
+        await smtp.AuthenticateAsync(emailAddress, emailPassword, cancellationToken);
+        await smtp.SendAsync(email, cancellationToken);
+        await smtp.DisconnectAsync(true, cancellationToken);
+
+        return true;
     }
 }

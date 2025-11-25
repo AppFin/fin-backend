@@ -17,6 +17,7 @@ using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.DateTimes;
 using Fin.Infrastructure.EmailSenders;
+using Fin.Infrastructure.EmailSenders.Dto;
 using Fin.Infrastructure.Redis;
 using Fin.Infrastructure.UnitOfWorks;
 using Microsoft.EntityFrameworkCore;
@@ -284,11 +285,24 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         var frontUrl = _configuration.GetSection(AppConstants.FrontUrlConfigKey).Get<string>();
         var logoIconUrl = $"{frontUrl}/icons/fin.png";
 
-        var body = CreateUserTemplates.SendConfirmationCodeTemplate
+        var htmlBody = CreateUserTemplates.SendConfirmationCodeTemplate
             .Replace("{{appName}}", AppConstants.AppName)
             .Replace("{{logoIconUrl}}", logoIconUrl)
             .Replace("{{confirmationCode}}", confirmationCode);
         
-        await _emailSender.SendEmailAsync(email, "Fin - Email Confirmation", body);
+        var plainBody = CreateUserTemplates.SendConfirmationCodePlainTemplate
+            .Replace("{{appName}}", AppConstants.AppName)
+            .Replace("{{confirmationCode}}", confirmationCode);
+        
+        var subject = CreateUserTemplates.SendConfirmationCodeSubject
+            .Replace("{{appName}}", AppConstants.AppName);
+        
+        await _emailSender.SendEmailAsync(new SendEmailDto
+        {
+            ToEmail = email,
+            Subject = subject,
+            HtmlBody = htmlBody,
+            PlainBody = plainBody
+        });
     }
 }
