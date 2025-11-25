@@ -457,8 +457,7 @@ public void SyncPeopleAndReturnToRemove_ShouldAddNewPeople()
     title.TitlePeople.Select(x => x.PersonId).Should().Contain(TestUtils.Guids[2]);
     title.TitlePeople.Select(x => x.PersonId).Should().Contain(TestUtils.Guids[3]);
     
-    result.Should().HaveCount(1);
-    result.Select(x => x.PersonId).Should().Contain(TestUtils.Guids[1]);
+    result.Should().HaveCount(0);
 }
 
 [Fact]
@@ -494,8 +493,7 @@ public void SyncPeopleAndReturnToRemove_ShouldRemovePeople()
     title.TitlePeople.Should().HaveCount(1);
     title.TitlePeople.Select(x => x.PersonId).Should().Contain(TestUtils.Guids[1]);
     
-    result.Should().HaveCount(3);
-    result.Select(x => x.PersonId).Should().Contain(TestUtils.Guids[1]);
+    result.Should().HaveCount(2);
     result.Select(x => x.PersonId).Should().Contain(TestUtils.Guids[2]);
     result.Select(x => x.PersonId).Should().Contain(TestUtils.Guids[3]);
 }
@@ -536,7 +534,7 @@ public void SyncPeopleAndReturnToRemove_ShouldUpdateExistingPersonPercentage()
     person1.Percentage.Should().Be(70m);
     person2.Percentage.Should().Be(30m);
     
-    result.Should().HaveCount(2);
+    result.Should().HaveCount(0);
 }
 
 [Fact]
@@ -608,8 +606,7 @@ public void SyncPeopleAndReturnToRemove_ShouldAddAndRemoveSimultaneously()
     title.TitlePeople.First(x => x.PersonId == TestUtils.Guids[1]).Percentage.Should().Be(60m);
     title.TitlePeople.First(x => x.PersonId == TestUtils.Guids[3]).Percentage.Should().Be(40m);
     
-    result.Should().HaveCount(2);
-    result.Select(x => x.PersonId).Should().Contain(TestUtils.Guids[1]);
+    result.Should().HaveCount(1);
     result.Select(x => x.PersonId).Should().Contain(TestUtils.Guids[2]);
 }
 
