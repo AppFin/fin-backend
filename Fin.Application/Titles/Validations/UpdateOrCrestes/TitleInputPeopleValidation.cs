@@ -19,6 +19,8 @@ public class TitleInputPeopleValidation(
     {
         var validation = new ValidationPipelineOutput<TitleCreateOrUpdateErrorCode, List<Guid>>();
         
+        if (!input.TitlePeople.Any()) return validation;
+        
         var people = await personRepository
             .Where(person  => input.TitlePeople.Select(tp => tp.PersonId).Contains(person.Id))
             .ToListAsync(cancellationToken);
@@ -76,7 +78,7 @@ public class TitleInputPeopleValidation(
         ValidationPipelineOutput<TitleCreateOrUpdateErrorCode, List<Guid>> validation)
     {
         var splitSum = people.Sum(p => p.Percentage);
-        if (splitSum > 100 && splitSum < 0)
+        if (splitSum is > 100 or < 0.01m)
             validation.AddError(TitleCreateOrUpdateErrorCode.PeopleSplitRange);
     }
 }

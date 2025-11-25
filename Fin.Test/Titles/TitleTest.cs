@@ -1,3 +1,4 @@
+using Fin.Domain.People.Dtos;
 using Fin.Domain.Titles.Dtos;
 using Fin.Domain.Titles.Entities;
 using Fin.Domain.Titles.Enums;
@@ -418,6 +419,232 @@ public class TitleTest
     }
 
     #endregion
+    
+    #region SyncPeopleAndReturnToRemove
+
+[Fact]
+public void SyncPeopleAndReturnToRemove_ShouldAddNewPeople()
+{
+    // Arrange
+    var initialInput = new TitleInput
+    {
+        Value = 100m,
+        Type = TitleType.Income,
+        Description = "Test",
+        Date = DateTime.Now,
+        WalletId = TestUtils.Guids[0],
+        TitleCategoriesIds = new List<Guid>(),
+        TitlePeople = new List<TitlePersonInput>
+        {
+            new() { PersonId = TestUtils.Guids[1], Percentage = 50m }
+        }
+    };
+    var title = new Title(initialInput, 0);
+
+    var updatePeople = new List<TitlePersonInput>
+    {
+        new() { PersonId = TestUtils.Guids[1], Percentage = 50m },
+        new() { PersonId = TestUtils.Guids[2], Percentage = 30m },
+        new() { PersonId = TestUtils.Guids[3], Percentage = 20m }
+    };
+
+    // Act
+    var result = title.SyncPeopleAndReturnToRemove(updatePeople);
+
+    // Assert
+    title.TitlePeople.Should().HaveCount(3);
+    title.TitlePeople.Select(x => x.PersonId).Should().Contain(TestUtils.Guids[1]);
+    title.TitlePeople.Select(x => x.PersonId).Should().Contain(TestUtils.Guids[2]);
+    title.TitlePeople.Select(x => x.PersonId).Should().Contain(TestUtils.Guids[3]);
+    
+    result.Should().HaveCount(1);
+    result.Select(x => x.PersonId).Should().Contain(TestUtils.Guids[1]);
+}
+
+[Fact]
+public void SyncPeopleAndReturnToRemove_ShouldRemovePeople()
+{
+    // Arrange
+    var initialInput = new TitleInput
+    {
+        Value = 100m,
+        Type = TitleType.Income,
+        Description = "Test",
+        Date = DateTime.Now,
+        WalletId = TestUtils.Guids[0],
+        TitleCategoriesIds = new List<Guid>(),
+        TitlePeople = new List<TitlePersonInput>
+        {
+            new() { PersonId = TestUtils.Guids[1], Percentage = 40m },
+            new() { PersonId = TestUtils.Guids[2], Percentage = 30m },
+            new() { PersonId = TestUtils.Guids[3], Percentage = 30m }
+        }
+    };
+    var title = new Title(initialInput, 0);
+
+    var updatePeople = new List<TitlePersonInput>
+    {
+        new() { PersonId = TestUtils.Guids[1], Percentage = 100m }
+    };
+
+    // Act
+    var result = title.SyncPeopleAndReturnToRemove(updatePeople);
+
+    // Assert
+    title.TitlePeople.Should().HaveCount(1);
+    title.TitlePeople.Select(x => x.PersonId).Should().Contain(TestUtils.Guids[1]);
+    
+    result.Should().HaveCount(3);
+    result.Select(x => x.PersonId).Should().Contain(TestUtils.Guids[1]);
+    result.Select(x => x.PersonId).Should().Contain(TestUtils.Guids[2]);
+    result.Select(x => x.PersonId).Should().Contain(TestUtils.Guids[3]);
+}
+
+[Fact]
+public void SyncPeopleAndReturnToRemove_ShouldUpdateExistingPersonPercentage()
+{
+    // Arrange
+    var initialInput = new TitleInput
+    {
+        Value = 100m,
+        Type = TitleType.Income,
+        Description = "Test",
+        Date = DateTime.Now,
+        WalletId = TestUtils.Guids[0],
+        TitleCategoriesIds = new List<Guid>(),
+        TitlePeople = new List<TitlePersonInput>
+        {
+            new() { PersonId = TestUtils.Guids[1], Percentage = 50m },
+            new() { PersonId = TestUtils.Guids[2], Percentage = 50m }
+        }
+    };
+    var title = new Title(initialInput, 0);
+
+    var updatePeople = new List<TitlePersonInput>
+    {
+        new() { PersonId = TestUtils.Guids[1], Percentage = 70m },
+        new() { PersonId = TestUtils.Guids[2], Percentage = 30m }
+    };
+
+    // Act
+    var result = title.SyncPeopleAndReturnToRemove(updatePeople);
+
+    // Assert
+    title.TitlePeople.Should().HaveCount(2);
+    var person1 = title.TitlePeople.First(x => x.PersonId == TestUtils.Guids[1]);
+    var person2 = title.TitlePeople.First(x => x.PersonId == TestUtils.Guids[2]);
+    person1.Percentage.Should().Be(70m);
+    person2.Percentage.Should().Be(30m);
+    
+    result.Should().HaveCount(2);
+}
+
+[Fact]
+public void SyncPeopleAndReturnToRemove_ShouldRemoveAllPeople()
+{
+    // Arrange
+    var initialInput = new TitleInput
+    {
+        Value = 100m,
+        Type = TitleType.Income,
+        Description = "Test",
+        Date = DateTime.Now,
+        WalletId = TestUtils.Guids[0],
+        TitleCategoriesIds = new List<Guid>(),
+        TitlePeople = new List<TitlePersonInput>
+        {
+            new() { PersonId = TestUtils.Guids[1], Percentage = 50m },
+            new() { PersonId = TestUtils.Guids[2], Percentage = 50m }
+        }
+    };
+    var title = new Title(initialInput, 0);
+
+    var updatePeople = new List<TitlePersonInput>();
+
+    // Act
+    var result = title.SyncPeopleAndReturnToRemove(updatePeople);
+
+    // Assert
+    title.TitlePeople.Should().BeEmpty();
+    result.Should().HaveCount(2);
+    result.Select(x => x.PersonId).Should().Contain(TestUtils.Guids[1]);
+    result.Select(x => x.PersonId).Should().Contain(TestUtils.Guids[2]);
+}
+
+[Fact]
+public void SyncPeopleAndReturnToRemove_ShouldAddAndRemoveSimultaneously()
+{
+    // Arrange
+    var initialInput = new TitleInput
+    {
+        Value = 100m,
+        Type = TitleType.Income,
+        Description = "Test",
+        Date = DateTime.Now,
+        WalletId = TestUtils.Guids[0],
+        TitleCategoriesIds = new List<Guid>(),
+        TitlePeople = new List<TitlePersonInput>
+        {
+            new() { PersonId = TestUtils.Guids[1], Percentage = 50m },
+            new() { PersonId = TestUtils.Guids[2], Percentage = 50m }
+        }
+    };
+    var title = new Title(initialInput, 0);
+
+    var updatePeople = new List<TitlePersonInput>
+    {
+        new() { PersonId = TestUtils.Guids[1], Percentage = 60m }, // Keep and update
+        new() { PersonId = TestUtils.Guids[3], Percentage = 40m }  // Add new
+        // Remove TestUtils.Guids[2]
+    };
+
+    // Act
+    var result = title.SyncPeopleAndReturnToRemove(updatePeople);
+
+    // Assert
+    title.TitlePeople.Should().HaveCount(2);
+    title.TitlePeople.Select(x => x.PersonId).Should().Contain(TestUtils.Guids[1]);
+    title.TitlePeople.Select(x => x.PersonId).Should().Contain(TestUtils.Guids[3]);
+    title.TitlePeople.First(x => x.PersonId == TestUtils.Guids[1]).Percentage.Should().Be(60m);
+    title.TitlePeople.First(x => x.PersonId == TestUtils.Guids[3]).Percentage.Should().Be(40m);
+    
+    result.Should().HaveCount(2);
+    result.Select(x => x.PersonId).Should().Contain(TestUtils.Guids[1]);
+    result.Select(x => x.PersonId).Should().Contain(TestUtils.Guids[2]);
+}
+
+[Fact]
+public void SyncPeopleAndReturnToRemove_ShouldHandleEmptyInitialList()
+{
+    // Arrange
+    var initialInput = new TitleInput
+    {
+        Value = 100m,
+        Type = TitleType.Income,
+        Description = "Test",
+        Date = DateTime.Now,
+        WalletId = TestUtils.Guids[0],
+        TitleCategoriesIds = new List<Guid>(),
+        TitlePeople = new List<TitlePersonInput>()
+    };
+    var title = new Title(initialInput, 0);
+
+    var updatePeople = new List<TitlePersonInput>
+    {
+        new() { PersonId = TestUtils.Guids[1], Percentage = 100m }
+    };
+
+    // Act
+    var result = title.SyncPeopleAndReturnToRemove(updatePeople);
+
+    // Assert
+    title.TitlePeople.Should().HaveCount(1);
+    title.TitlePeople.First().PersonId.Should().Be(TestUtils.Guids[1]);
+    title.TitlePeople.First().Percentage.Should().Be(100m);
+    result.Should().BeEmpty();
+}
+
+#endregion
 
     #region MustReprocess
 

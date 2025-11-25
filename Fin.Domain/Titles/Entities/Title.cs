@@ -124,6 +124,7 @@ public class Title: IAuditedTenantEntity
             if (index != -1)
             {
                 currentPerson.Update(updatedPeople[index].Percentage);
+                continue;
             }
             titlePeopleToDelete.Add(currentPerson);
         }

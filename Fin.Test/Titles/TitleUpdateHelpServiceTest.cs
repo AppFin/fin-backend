@@ -1,5 +1,6 @@
 using Fin.Application.Titles.Services;
 using Fin.Application.Wallets.Services;
+using Fin.Domain.People.Dtos;
 using Fin.Domain.People.Entities;
 using Fin.Domain.TitleCategories.Entities;
 using Fin.Domain.Titles.Dtos;
@@ -77,15 +78,15 @@ public class TitleUpdateHelpServiceTest : TestUtils.BaseTestWithContext
         title.SyncCategoriesAndReturnToRemove(updateInput.TitleCategoriesIds);
 
         var udpateContext = new UpdateTitleContext(
-            wallet.Id, 
+            wallet.Id,
             TestUtils.UtcDateTimes[0],
             previousBalance,
             categoriesToRemove,
             new List<TitlePerson>()
-            );
-        
+        );
+
         // Act
-        await service.PerformUpdateTitle(title, udpateContext,  CancellationToken.None);
+        await service.PerformUpdateTitle(title, udpateContext, CancellationToken.None);
         await Context.SaveChangesAsync();
 
         // Assert
@@ -202,7 +203,7 @@ public class TitleUpdateHelpServiceTest : TestUtils.BaseTestWithContext
         // Assert
         context.Should().NotBeNull();
         context.PreviousBalance.Should().Be(title.PreviousBalance);
-        
+
         // Verify GetBalanceAt was NOT called
         _balanceServiceMock.Verify(
             b => b.GetBalanceAt(It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()),
@@ -550,7 +551,7 @@ public class TitleUpdateHelpServiceTest : TestUtils.BaseTestWithContext
         wallet1.Titles.Add(title1);
         wallet1.Titles.Add(title2);
         wallet2.Titles.Add(title3);
-        
+
         await resources.WalletRepository.AddRangeAsync([wallet1, wallet2], autoSave: true);
 
         // Act
@@ -611,7 +612,7 @@ public class TitleUpdateHelpServiceTest : TestUtils.BaseTestWithContext
             PreviousDate: TestUtils.UtcDateTimes[0],
             PreviousBalance: 1000m,
             CategoriesToRemove: new List<TitleTitleCategory>(),
-            PeopleToRemove: new  List<TitlePerson>()
+            PeopleToRemove: new List<TitlePerson>()
         );
 
         _balanceServiceMock
@@ -669,7 +670,7 @@ public class TitleUpdateHelpServiceTest : TestUtils.BaseTestWithContext
             PreviousDate: TestUtils.UtcDateTimes[0],
             PreviousBalance: 1000m,
             CategoriesToRemove: new List<TitleTitleCategory>(),
-            PeopleToRemove: new  List<TitlePerson>()
+            PeopleToRemove: new List<TitlePerson>()
         );
 
         _balanceServiceMock
@@ -696,6 +697,527 @@ public class TitleUpdateHelpServiceTest : TestUtils.BaseTestWithContext
 
     #endregion
 
+    #region UpdateTitleAndPeople
+
+    [Fact]
+    public async Task UpdateTitleAndPeople_ShouldUpdateTitleAndRemovePeople()
+    {
+        // Arrange
+        await ConfigureLoggedAmbientAsync();
+        var resources = GetResources();
+        var service = GetService(resources);
+
+        var wallet = new Wallet(new WalletInput
+        {
+            Name = TestUtils.Strings[0],
+            Color = TestUtils.Strings[1],
+            Icon = TestUtils.Strings[2],
+            InitialBalance = 1000m
+        });
+        await resources.WalletRepository.AddAsync(wallet, autoSave: true);
+
+        var person1 = new Person(new PersonInput { Name = TestUtils.Strings[3] });
+        var person2 = new Person(new PersonInput { Name = TestUtils.Strings[4] });
+        await resources.PersonRepository.AddAsync(person1, autoSave: true);
+        await resources.PersonRepository.AddAsync(person2, autoSave: true);
+
+        var title = new Title(new TitleInput
+        {
+            Description = TestUtils.Strings[5],
+            Value = 500m,
+            Type = TitleType.Income,
+            Date = TestUtils.UtcDateTimes[0],
+            WalletId = wallet.Id,
+            TitleCategoriesIds = new List<Guid>(),
+            TitlePeople = new List<TitlePersonInput>
+            {
+                new() { PersonId = person1.Id, Percentage = 50m },
+                new() { PersonId = person2.Id, Percentage = 50m }
+            }
+        }, 1000m);
+        await resources.TitleRepository.AddAsync(title, autoSave: true);
+        var previousBalance = title.PreviousBalance;
+
+        // Create people to remove
+        var peopleToRemove = title.TitlePeople.Take(1).ToList();
+
+        var updateInput = new TitleInput
+        {
+            Description = "Updated Description",
+            Value = 600m,
+            Type = TitleType.Income,
+            Date = TestUtils.UtcDateTimes[1],
+            WalletId = wallet.Id,
+            TitleCategoriesIds = new List<Guid>(),
+            TitlePeople = new List<TitlePersonInput>
+            {
+                new() { PersonId = person2.Id, Percentage = 100m }
+            }
+        };
+
+        title.Update(updateInput, 1000m);
+        title.SyncPeopleAndReturnToRemove(updateInput.TitlePeople);
+
+        var updateContext = new UpdateTitleContext(
+            wallet.Id,
+            TestUtils.UtcDateTimes[0],
+            previousBalance,
+            new List<TitleTitleCategory>(),
+            peopleToRemove
+        );
+
+        // Act
+        await service.PerformUpdateTitle(title, updateContext, CancellationToken.None);
+        await Context.SaveChangesAsync();
+
+        // Assert
+        var updatedTitle = await resources.TitleRepository.AsNoTracking()
+            .Include(t => t.TitlePeople)
+            .FirstAsync(t => t.Id == title.Id);
+
+        updatedTitle.Description.Should().Be("Updated Description");
+        updatedTitle.Value.Should().Be(600m);
+        updatedTitle.TitlePeople.Should().HaveCount(1);
+        updatedTitle.TitlePeople.First().PersonId.Should().Be(person2.Id);
+        updatedTitle.TitlePeople.First().Percentage.Should().Be(100m);
+    }
+
+    [Fact]
+    public async Task UpdateTitleAndPeople_ShouldUpdateTitleAndAddPeople()
+    {
+        // Arrange
+        await ConfigureLoggedAmbientAsync();
+        var resources = GetResources();
+        var service = GetService(resources);
+
+        var wallet = new Wallet(new WalletInput
+        {
+            Name = TestUtils.Strings[0],
+            Color = TestUtils.Strings[1],
+            Icon = TestUtils.Strings[2],
+            InitialBalance = 1000m
+        });
+        await resources.WalletRepository.AddAsync(wallet, autoSave: true);
+
+        var person1 = new Person(new PersonInput { Name = TestUtils.Strings[3] });
+        var person2 = new Person(new PersonInput { Name = TestUtils.Strings[4] });
+        await resources.PersonRepository.AddAsync(person1, autoSave: true);
+        await resources.PersonRepository.AddAsync(person2, autoSave: true);
+
+        var title = new Title(new TitleInput
+        {
+            Description = TestUtils.Strings[5],
+            Value = 500m,
+            Type = TitleType.Income,
+            Date = TestUtils.UtcDateTimes[0],
+            WalletId = wallet.Id,
+            TitleCategoriesIds = new List<Guid>(),
+            TitlePeople = new List<TitlePersonInput>
+            {
+                new() { PersonId = person1.Id, Percentage = 100m }
+            }
+        }, 1000m);
+        await resources.TitleRepository.AddAsync(title, autoSave: true);
+        var previousBalance = title.PreviousBalance;
+
+        var updateInput = new TitleInput
+        {
+            Description = "Updated Description",
+            Value = 600m,
+            Type = TitleType.Income,
+            Date = TestUtils.UtcDateTimes[1],
+            WalletId = wallet.Id,
+            TitleCategoriesIds = new List<Guid>(),
+            TitlePeople = new List<TitlePersonInput>
+            {
+                new() { PersonId = person1.Id, Percentage = 50m },
+                new() { PersonId = person2.Id, Percentage = 50m }
+            }
+        };
+
+        title.Update(updateInput, 1000m);
+        var peopleToRemove = title.SyncPeopleAndReturnToRemove(updateInput.TitlePeople);
+
+        var updateContext = new UpdateTitleContext(
+            wallet.Id,
+            TestUtils.UtcDateTimes[0],
+            previousBalance,
+            new List<TitleTitleCategory>(),
+            peopleToRemove
+        );
+
+        // Act
+        await service.PerformUpdateTitle(title, updateContext, CancellationToken.None);
+        await Context.SaveChangesAsync();
+
+        // Assert
+        var updatedTitle = await resources.TitleRepository.AsNoTracking()
+            .Include(t => t.TitlePeople)
+            .FirstAsync(t => t.Id == title.Id);
+
+        updatedTitle.TitlePeople.Should().HaveCount(2);
+        updatedTitle.TitlePeople.Select(tp => tp.PersonId).Should().Contain(person1.Id);
+        updatedTitle.TitlePeople.Select(tp => tp.PersonId).Should().Contain(person2.Id);
+    }
+
+    [Fact]
+    public async Task UpdateTitleAndPeople_ShouldUpdatePersonPercentage()
+    {
+        // Arrange
+        await ConfigureLoggedAmbientAsync();
+        var resources = GetResources();
+        var service = GetService(resources);
+
+        var wallet = new Wallet(new WalletInput
+        {
+            Name = TestUtils.Strings[0],
+            Color = TestUtils.Strings[1],
+            Icon = TestUtils.Strings[2],
+            InitialBalance = 1000m
+        });
+        await resources.WalletRepository.AddAsync(wallet, autoSave: true);
+
+        var person1 = new Person(new PersonInput { Name = TestUtils.Strings[3] });
+        await resources.PersonRepository.AddAsync(person1, autoSave: true);
+
+        var title = new Title(new TitleInput
+        {
+            Description = TestUtils.Strings[5],
+            Value = 500m,
+            Type = TitleType.Income,
+            Date = TestUtils.UtcDateTimes[0],
+            WalletId = wallet.Id,
+            TitleCategoriesIds = new List<Guid>(),
+            TitlePeople = new List<TitlePersonInput>
+            {
+                new() { PersonId = person1.Id, Percentage = 50m }
+            }
+        }, 1000m);
+        await resources.TitleRepository.AddAsync(title, autoSave: true);
+
+        var updateInput = new TitleInput
+        {
+            Description = TestUtils.Strings[5],
+            Value = 500m,
+            Type = TitleType.Income,
+            Date = TestUtils.UtcDateTimes[0],
+            WalletId = wallet.Id,
+            TitleCategoriesIds = new List<Guid>(),
+            TitlePeople = new List<TitlePersonInput>
+            {
+                new() { PersonId = person1.Id, Percentage = 75m }
+            }
+        };
+
+        title.Update(updateInput, 1000m);
+        var peopleToRemove = title.SyncPeopleAndReturnToRemove(updateInput.TitlePeople);
+
+        var updateContext = new UpdateTitleContext(
+            wallet.Id,
+            TestUtils.UtcDateTimes[0],
+            1000m,
+            new List<TitleTitleCategory>(),
+            peopleToRemove
+        );
+
+        // Act
+        await service.PerformUpdateTitle(title, updateContext, CancellationToken.None);
+        await Context.SaveChangesAsync();
+
+        // Assert
+        var updatedTitle = await resources.TitleRepository.AsNoTracking()
+            .Include(t => t.TitlePeople)
+            .FirstAsync(t => t.Id == title.Id);
+
+        updatedTitle.TitlePeople.Should().HaveCount(1);
+        updatedTitle.TitlePeople.First().PersonId.Should().Be(person1.Id);
+        updatedTitle.TitlePeople.First().Percentage.Should().Be(75m);
+    }
+
+    [Fact]
+    public async Task UpdateTitleAndPeople_ShouldRemoveAllPeople()
+    {
+        // Arrange
+        await ConfigureLoggedAmbientAsync();
+        var resources = GetResources();
+        var service = GetService(resources);
+
+        var wallet = new Wallet(new WalletInput
+        {
+            Name = TestUtils.Strings[0],
+            Color = TestUtils.Strings[1],
+            Icon = TestUtils.Strings[2],
+            InitialBalance = 1000m
+        });
+        await resources.WalletRepository.AddAsync(wallet, autoSave: true);
+
+        var person1 = new Person(new PersonInput { Name = TestUtils.Strings[3] });
+        var person2 = new Person(new PersonInput { Name = TestUtils.Strings[4] });
+        await resources.PersonRepository.AddAsync(person1, autoSave: true);
+        await resources.PersonRepository.AddAsync(person2, autoSave: true);
+
+        var title = new Title(new TitleInput
+        {
+            Description = TestUtils.Strings[5],
+            Value = 500m,
+            Type = TitleType.Income,
+            Date = TestUtils.UtcDateTimes[0],
+            WalletId = wallet.Id,
+            TitleCategoriesIds = new List<Guid>(),
+            TitlePeople = new List<TitlePersonInput>
+            {
+                new() { PersonId = person1.Id, Percentage = 50m },
+                new() { PersonId = person2.Id, Percentage = 50m }
+            }
+        }, 1000m);
+        await resources.TitleRepository.AddAsync(title, autoSave: true);
+
+        var updateInput = new TitleInput
+        {
+            Description = TestUtils.Strings[5],
+            Value = 500m,
+            Type = TitleType.Income,
+            Date = TestUtils.UtcDateTimes[0],
+            WalletId = wallet.Id,
+            TitleCategoriesIds = new List<Guid>(),
+            TitlePeople = new List<TitlePersonInput>()
+        };
+
+        title.Update(updateInput, 1000m);
+        var peopleToRemove = title.SyncPeopleAndReturnToRemove(updateInput.TitlePeople);
+
+        var updateContext = new UpdateTitleContext(
+            wallet.Id,
+            TestUtils.UtcDateTimes[0],
+            1000m,
+            new List<TitleTitleCategory>(),
+            peopleToRemove
+        );
+
+        // Act
+        await service.PerformUpdateTitle(title, updateContext, CancellationToken.None);
+        await Context.SaveChangesAsync();
+
+        // Assert
+        var updatedTitle = await resources.TitleRepository.AsNoTracking()
+            .Include(t => t.TitlePeople)
+            .FirstAsync(t => t.Id == title.Id);
+
+        updatedTitle.TitlePeople.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task UpdateTitleAndPeople_ShouldHandleCategoriesAndPeopleSimultaneously()
+    {
+        // Arrange
+        await ConfigureLoggedAmbientAsync();
+        var resources = GetResources();
+        var service = GetService(resources);
+
+        var wallet = new Wallet(new WalletInput
+        {
+            Name = TestUtils.Strings[0],
+            Color = TestUtils.Strings[1],
+            Icon = TestUtils.Strings[2],
+            InitialBalance = 1000m
+        });
+        await resources.WalletRepository.AddAsync(wallet, autoSave: true);
+
+        var category1 = TestUtils.TitleCategories[0];
+        var category2 = TestUtils.TitleCategories[1];
+        await resources.TitleCategoryRepository.AddAsync(category1, autoSave: true);
+        await resources.TitleCategoryRepository.AddAsync(category2, autoSave: true);
+
+        var person1 = new Person(new PersonInput { Name = TestUtils.Strings[3] });
+        var person2 = new Person(new PersonInput { Name = TestUtils.Strings[4] });
+        await resources.PersonRepository.AddAsync(person1, autoSave: true);
+        await resources.PersonRepository.AddAsync(person2, autoSave: true);
+
+        var title = new Title(new TitleInput
+        {
+            Description = TestUtils.Strings[5],
+            Value = 500m,
+            Type = TitleType.Income,
+            Date = TestUtils.UtcDateTimes[0],
+            WalletId = wallet.Id,
+            TitleCategoriesIds = new List<Guid> { category1.Id, category2.Id },
+            TitlePeople = new List<TitlePersonInput>
+            {
+                new() { PersonId = person1.Id, Percentage = 50m },
+                new() { PersonId = person2.Id, Percentage = 50m }
+            }
+        }, 1000m);
+        await resources.TitleRepository.AddAsync(title, autoSave: true);
+
+        var updateInput = new TitleInput
+        {
+            Description = "Updated",
+            Value = 600m,
+            Type = TitleType.Income,
+            Date = TestUtils.UtcDateTimes[1],
+            WalletId = wallet.Id,
+            TitleCategoriesIds = new List<Guid> { category2.Id },
+            TitlePeople = new List<TitlePersonInput>
+            {
+                new() { PersonId = person1.Id, Percentage = 100m }
+            }
+        };
+
+        title.Update(updateInput, 1000m);
+        var categoriesToRemove = title.SyncCategoriesAndReturnToRemove(updateInput.TitleCategoriesIds);
+        var peopleToRemove = title.SyncPeopleAndReturnToRemove(updateInput.TitlePeople);
+
+        var updateContext = new UpdateTitleContext(
+            wallet.Id,
+            TestUtils.UtcDateTimes[0],
+            1000m,
+            categoriesToRemove,
+            peopleToRemove
+        );
+
+        // Act
+        await service.PerformUpdateTitle(title, updateContext, CancellationToken.None);
+        await Context.SaveChangesAsync();
+
+        // Assert
+        var updatedTitle = await resources.TitleRepository.AsNoTracking()
+            .Include(t => t.TitleTitleCategories)
+            .Include(t => t.TitlePeople)
+            .FirstAsync(t => t.Id == title.Id);
+
+        updatedTitle.Description.Should().Be("Updated");
+        updatedTitle.Value.Should().Be(600m);
+        updatedTitle.TitleTitleCategories.Should().HaveCount(1);
+        updatedTitle.TitleTitleCategories.First().TitleCategoryId.Should().Be(category2.Id);
+        updatedTitle.TitlePeople.Should().HaveCount(1);
+        updatedTitle.TitlePeople.First().PersonId.Should().Be(person1.Id);
+        updatedTitle.TitlePeople.First().Percentage.Should().Be(100m);
+    }
+
+    #endregion
+
+    #region PrepareUpdateContext - People
+
+    [Fact]
+    public async Task PrepareUpdateContext_ShouldIncludePeopleToRemove()
+    {
+        // Arrange
+        await ConfigureLoggedAmbientAsync();
+        var resources = GetResources();
+        var service = GetService(resources);
+
+        var wallet = new Wallet(new WalletInput
+        {
+            Name = TestUtils.Strings[0],
+            Color = TestUtils.Strings[1],
+            Icon = TestUtils.Strings[2],
+            InitialBalance = 1000m
+        });
+        await resources.WalletRepository.AddAsync(wallet, autoSave: true);
+
+        var person1 = new Person(new PersonInput { Name = TestUtils.Strings[3] });
+        var person2 = new Person(new PersonInput { Name = TestUtils.Strings[4] });
+        await resources.PersonRepository.AddAsync(person1, autoSave: true);
+        await resources.PersonRepository.AddAsync(person2, autoSave: true);
+
+        var title = new Title(new TitleInput
+        {
+            Description = TestUtils.Strings[5],
+            Value = 500m,
+            Type = TitleType.Income,
+            Date = TestUtils.UtcDateTimes[0],
+            WalletId = wallet.Id,
+            TitleCategoriesIds = new List<Guid>(),
+            TitlePeople = new List<TitlePersonInput>
+            {
+                new() { PersonId = person1.Id, Percentage = 50m },
+                new() { PersonId = person2.Id, Percentage = 50m }
+            }
+        }, 1000m);
+        await resources.TitleRepository.AddAsync(title, autoSave: true);
+
+        var input = new TitleInput
+        {
+            Description = "Updated",
+            Value = 500m,
+            Type = TitleType.Income,
+            Date = TestUtils.UtcDateTimes[0],
+            WalletId = wallet.Id,
+            TitleCategoriesIds = new List<Guid>(),
+            TitlePeople = new List<TitlePersonInput>
+            {
+                new() { PersonId = person1.Id, Percentage = 100m }
+            }
+        };
+
+        // Act
+        var context = await service.PrepareUpdateContext(title, input, mustReprocess: false, CancellationToken.None);
+
+        // Assert
+        context.Should().NotBeNull();
+        context.PeopleToRemove.Should().HaveCount(1);
+        context.CategoriesToRemove.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task PrepareUpdateContext_ShouldReturnEmptyPeopleList_WhenNoPeopleRemoved()
+    {
+        // Arrange
+        await ConfigureLoggedAmbientAsync();
+        var resources = GetResources();
+        var service = GetService(resources);
+
+        var wallet = new Wallet(new WalletInput
+        {
+            Name = TestUtils.Strings[0],
+            Color = TestUtils.Strings[1],
+            Icon = TestUtils.Strings[2],
+            InitialBalance = 1000m
+        });
+        await resources.WalletRepository.AddAsync(wallet, autoSave: true);
+
+        var person1 = new Person(new PersonInput { Name = TestUtils.Strings[3] });
+        await resources.PersonRepository.AddAsync(person1, autoSave: true);
+
+        var title = new Title(new TitleInput
+        {
+            Description = TestUtils.Strings[5],
+            Value = 500m,
+            Type = TitleType.Income,
+            Date = TestUtils.UtcDateTimes[0],
+            WalletId = wallet.Id,
+            TitleCategoriesIds = new List<Guid>(),
+            TitlePeople = new List<TitlePersonInput>
+            {
+                new() { PersonId = person1.Id, Percentage = 50m }
+            }
+        }, 1000m);
+        await resources.TitleRepository.AddAsync(title, autoSave: true);
+
+        var input = new TitleInput
+        {
+            Description = "Updated",
+            Value = 500m,
+            Type = TitleType.Income,
+            Date = TestUtils.UtcDateTimes[0],
+            WalletId = wallet.Id,
+            TitleCategoriesIds = new List<Guid>(),
+            TitlePeople = new List<TitlePersonInput>
+            {
+                new() { PersonId = person1.Id, Percentage = 75m } // Same person, different percentage
+            }
+        };
+
+        // Act
+        var context = await service.PrepareUpdateContext(title, input, mustReprocess: false, CancellationToken.None);
+
+        // Assert
+        context.Should().NotBeNull();
+        context.PeopleToRemove.Should().HaveCount(1);
+    }
+
+    #endregion
+
     private TitleUpdateHelpService GetService(Resources resources)
     {
         return new TitleUpdateHelpService(
@@ -714,7 +1236,8 @@ public class TitleUpdateHelpServiceTest : TestUtils.BaseTestWithContext
             TitleTitleCategoryRepository = GetRepository<TitleTitleCategory>(),
             TitleCategoryRepository = GetRepository<TitleCategory>(),
             WalletRepository = GetRepository<Wallet>(),
-            TitlePersonsRepository = GetRepository<TitlePerson>()
+            TitlePersonsRepository = GetRepository<TitlePerson>(),
+            PersonRepository = GetRepository<Person>() 
         };
     }
 
@@ -725,5 +1248,6 @@ public class TitleUpdateHelpServiceTest : TestUtils.BaseTestWithContext
         public IRepository<TitleCategory> TitleCategoryRepository { get; set; }
         public IRepository<TitlePerson> TitlePersonsRepository { get; set; }
         public IRepository<Wallet> WalletRepository { get; set; }
+        public IRepository<Person> PersonRepository { get; set; }
     }
 }
