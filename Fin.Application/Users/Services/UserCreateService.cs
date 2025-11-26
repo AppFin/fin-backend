@@ -303,6 +303,6 @@ public class UserCreateService : IUserCreateService, IAutoTransient
             Subject = subject,
             HtmlBody = htmlBody,
             PlainBody = plainBody
-        });
+        }, CancellationToken.None);
     }
 }

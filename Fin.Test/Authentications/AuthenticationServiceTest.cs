@@ -14,6 +14,7 @@ using Fin.Infrastructure.Authentications.Enums;
 using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.EmailSenders;
+using Fin.Infrastructure.EmailSenders.Dto;
 using Fin.Infrastructure.Redis;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -61,7 +62,7 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
             .Verify(c => c.SetAsync($"reset-token-{credential.ResetToken}", credential.UserId, It.IsAny<DistributedCacheEntryOptions>()), Times.Once);;
         
         resources.FakeEmailSender
-            .Verify(e => e.SendEmailAsync(email, It.IsAny<string>(), It.Is<string>(b => b.Contains(credential.ResetToken))), Times.Once);
+            .Verify(e => e.SendEmailAsync(It.Is<SendEmailDto>(dto => dto.ToEmail == email && dto.HtmlBody.Contains(credential.ResetToken)), It.IsAny<CancellationToken>()), Times.Once);
     }
     
     [Fact]
@@ -96,7 +97,7 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
             .Verify(c => c.SetAsync(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<DistributedCacheEntryOptions>()), Times.Never);;
         
         resources.FakeEmailSender
-            .Verify(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            .Verify(e => e.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
     
     [Fact]
@@ -119,7 +120,7 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
             .Verify(c => c.SetAsync(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<DistributedCacheEntryOptions>()), Times.Never);;
         
         resources.FakeEmailSender
-            .Verify(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            .Verify(e => e.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     #endregion

@@ -51,13 +51,13 @@ public class NotificationDeliveryService(
 
     public async Task SendNotification(NotifyUserDto notifyUser, bool autoSave = true)
     {
-        var notificationDelivery = await deliveryRepository.Query()
+        var notificationDelivery = await deliveryRepository
             .FirstOrDefaultAsync(n => n.NotificationId == notifyUser.NotificationId && n.UserId == notifyUser.UserId);
         if (notificationDelivery == null)
             throw new Exception(
                 $"Notification not found to send. NotificationId {notifyUser.NotificationId}, UserId {notifyUser.UserId}");
 
-        var userSettings = await userSettingsRepository.Query()
+        var userSettings = await userSettingsRepository
             .FirstOrDefaultAsync(u => u.UserId == notifyUser.UserId);
         if (userSettings == null)
             throw new Exception(
@@ -104,8 +104,8 @@ public class NotificationDeliveryService(
         if (!ambientData.IsLogged)
             throw new UnauthorizedAccessException("User not logged");
 
-        var userId = ambientData.UserId.Value;
-        var notification = await deliveryRepository.Query()
+        var userId = ambientData.UserId.GetValueOrDefault();
+        var notification = await deliveryRepository
             .FirstOrDefaultAsync(n => n.NotificationId == notificationId && n.UserId == userId);
         if (notification == null)
             return false;
@@ -120,7 +120,7 @@ public class NotificationDeliveryService(
         if (!ambientData.IsLogged)
             throw new UnauthorizedAccessException("User not logged");
 
-        var userId = ambientData.UserId.Value;
+        var userId = ambientData.UserId.GetValueOrDefault();
         var now = dateTimeProvider.UtcNow();
 
         var userNotification = await deliveryRepository.Query(tracking: false)
@@ -140,7 +140,7 @@ public class NotificationDeliveryService(
             .Select(u => u.NotificationId)
             .ToList();
 
-        await deliveryRepository.Query()
+        await deliveryRepository
             .Where(n => notificationToMarkAsDelivery.Contains(n.NotificationId))
             .ExecuteUpdateAsync(x => x
                 .SetProperty(a => a.Delivery, true));
@@ -207,6 +207,6 @@ public class NotificationDeliveryService(
             ToName = userCredencial.User.DisplayName,
             HtmlBody = notification.HtmlBody,
             PlainBody =  notification.TextBody,
-        });
+        }, CancellationToken.None);
     }
 }

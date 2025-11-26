@@ -8,6 +8,7 @@ using Fin.Domain.Users.Factories;
 using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.EmailSenders;
+using Fin.Infrastructure.EmailSenders.Dto;
 using Fin.Infrastructure.Firebases;
 using Fin.Infrastructure.Notifications.Hubs;
 using FirebaseAdmin.Messaging;
@@ -164,7 +165,7 @@ public class NotificationDeliveryServiceTest : TestUtils.BaseTestWithContext
         await service.SendNotification(notifyDto);
 
         // Assert
-        resources.FakeEmailSender.Verify(e => e.SendEmailAsync(email, notifyDto.Title, notifyDto.HtmlBody), Times.Once);
+        resources.FakeEmailSender.Verify(e => e.SendEmailAsync(It.Is<SendEmailDto>(dto => dto.ToEmail == email && dto.Subject == notifyDto.Title && dto.HtmlBody == notifyDto.HtmlBody), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion
