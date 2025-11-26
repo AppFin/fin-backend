@@ -97,7 +97,7 @@ public class NotificationServiceTest : TestUtils.BaseTestWithContext
 
         // Assert
         result.Should().NotBeNull();
-        var dbNotification = await resources.NotificationRepository.Query(false).FirstOrDefaultAsync(a => a.Id == result.Id);
+        var dbNotification = await resources.NotificationRepository.AsNoTracking().FirstOrDefaultAsync(a => a.Id == result.Id);
         dbNotification.Should().NotBeNull();
 
         resources.FakeSchedulerService
@@ -124,7 +124,7 @@ public class NotificationServiceTest : TestUtils.BaseTestWithContext
 
         // Assert
         result.Should().NotBeNull();
-        var dbNotification = await resources.NotificationRepository.Query(false).FirstOrDefaultAsync(a => a.Id == result.Id);
+        var dbNotification = await resources.NotificationRepository.AsNoTracking().FirstOrDefaultAsync(a => a.Id == result.Id);
         dbNotification.Should().NotBeNull();
 
         resources.FakeSchedulerService
@@ -274,7 +274,7 @@ public class NotificationServiceTest : TestUtils.BaseTestWithContext
 
         // Assert
         result.Should().BeTrue();
-        (await resources.NotificationRepository.Query(false).FirstOrDefaultAsync(a => a.Id == notification.Id)).Should().BeNull();
+        (await resources.NotificationRepository.AsNoTracking().FirstOrDefaultAsync(a => a.Id == notification.Id)).Should().BeNull();
         resources.FakeSchedulerService
             .Verify(s => s.UnscheduleNotification(notification.Id, It.IsAny<List<Guid>>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -295,7 +295,7 @@ public class NotificationServiceTest : TestUtils.BaseTestWithContext
 
         // Assert
         result.Should().BeTrue();
-        (await resources.NotificationRepository.Query(false).FirstOrDefaultAsync(a => a.Id == notification.Id)).Should().BeNull();
+        (await resources.NotificationRepository.AsNoTracking().FirstOrDefaultAsync(a => a.Id == notification.Id)).Should().BeNull();
         resources.FakeSchedulerService
             .Verify(s => s.UnscheduleNotification(It.IsAny<Guid>(), It.IsAny<List<Guid>>(), It.IsAny<CancellationToken>()), Times.Never);
     }

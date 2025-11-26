@@ -13,6 +13,7 @@ using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.EmailSenders;
+using Fin.Infrastructure.EmailSenders.Dto;
 using Fin.Infrastructure.Redis;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -53,7 +54,7 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
                 c => c.SetAsync(It.IsAny<string>(), It.IsAny<UserCreateProcessDto>(),
                     It.IsAny<DistributedCacheEntryOptions>()), Times.Never);
         resources.FakeEmailSender
-            .Verify(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            .Verify(e => e.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()), Times.Never);
 
         resources.FakeCodeGenerator
             .Verify(c => c.Generate(), Times.Never);
@@ -86,7 +87,7 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
                 c => c.SetAsync(It.IsAny<string>(), It.IsAny<UserCreateProcessDto>(),
                     It.IsAny<DistributedCacheEntryOptions>()), Times.Never);
         resources.FakeEmailSender
-            .Verify(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            .Verify(e => e.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()), Times.Never);
 
         resources.FakeCodeGenerator
             .Verify(c => c.Generate(), Times.Never);
@@ -128,7 +129,7 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
                 c => c.SetAsync(It.IsAny<string>(), It.IsAny<UserCreateProcessDto>(),
                     It.IsAny<DistributedCacheEntryOptions>()), Times.Never);
         resources.FakeEmailSender
-            .Verify(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            .Verify(e => e.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()), Times.Never);
 
         resources.FakeCodeGenerator
             .Verify(c => c.Generate(), Times.Never);
@@ -178,10 +179,9 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
                     u.Token == result.Data.CreationToken && u.EmailConfirmationCode == confirmationCode &&
                     u.EmailSentDateTime == sentDateTime && !u.ValidatedEmail),
                 It.IsAny<DistributedCacheEntryOptions>()), Times.Once);
+        
         resources.FakeEmailSender
-            .Verify(
-                e => e.SendEmailAsync(input.Email, It.IsAny<string>(),
-                    It.Is<string>(b => b.Contains(confirmationCode))), Times.Once);
+            .Verify(e => e.SendEmailAsync(It.Is<SendEmailDto>(dto => dto.ToEmail == input.Email), It.IsAny<CancellationToken>()), Times.Once);
 
         resources.FakeCodeGenerator
             .Verify(c => c.Generate(), Times.Once);
@@ -229,7 +229,7 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
                 c => c.SetAsync(It.IsAny<string>(), It.IsAny<UserCreateProcessDto>(),
                     It.IsAny<DistributedCacheEntryOptions>()), Times.Never);
         resources.FakeEmailSender
-            .Verify(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            .Verify(e => e.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()), Times.Never);
 
         resources.FakeCodeGenerator
             .Verify(c => c.Generate(), Times.Never);
@@ -268,7 +268,7 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
                 c => c.SetAsync(It.IsAny<string>(), It.IsAny<UserCreateProcessDto>(),
                     It.IsAny<DistributedCacheEntryOptions>()), Times.Never);
         resources.FakeEmailSender
-            .Verify(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            .Verify(e => e.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()), Times.Never);
 
         resources.FakeCodeGenerator
             .Verify(c => c.Generate(), Times.Never);
@@ -318,9 +318,7 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
                     u.EmailConfirmationCode == confirmationCode && u.EmailSentDateTime == now && !u.ValidatedEmail),
                 It.IsAny<DistributedCacheEntryOptions>()), Times.Once);
         resources.FakeEmailSender
-            .Verify(
-                e => e.SendEmailAsync(email, It.IsAny<string>(),
-                    It.Is<string>(b => b.Contains(confirmationCode))), Times.Once);
+            .Verify(e => e.SendEmailAsync(It.Is<SendEmailDto>(dto => dto.ToEmail == email), It.IsAny<CancellationToken>()), Times.Once);
 
         resources.FakeCodeGenerator
             .Verify(c => c.Generate(), Times.Once);
@@ -560,11 +558,11 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
         var result = await service.CreateUser(process.Token, input);
         
         // Assert
-        var tenant = await resources.TenantRepository.Query(false).Include(t => t.Users).FirstAsync();
-        var credential = await resources.CredentialRepository.Query(false).FirstAsync();
-        var user = await resources.UserRepository.Query(false).FirstAsync();
-        var notificationSettings = await resources.UserNotificationSettings.Query(false).FirstAsync();
-        var userRemember = await resources.UserRememberUseSettings.Query(false).FirstAsync();
+        var tenant = await resources.TenantRepository.AsNoTracking().Include(t => t.Users).FirstAsync();
+        var credential = await resources.CredentialRepository.AsNoTracking().FirstAsync();
+        var user = await resources.UserRepository.AsNoTracking().FirstAsync();
+        var notificationSettings = await resources.UserNotificationSettings.AsNoTracking().FirstAsync();
+        var userRemember = await resources.UserRememberUseSettings.AsNoTracking().FirstAsync();
 
         credential.EncryptedEmail.Should().Be(process.EncryptedEmail);
         credential.EncryptedPassword.Should().Be(process.EncryptedPassword);
@@ -638,11 +636,11 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
         var result = await service.CreateUser(googleId, email, input);
 
         // Assert
-        var tenant = await resources.TenantRepository.Query(false).Include(t => t.Users).FirstAsync();
-        var credential = await resources.CredentialRepository.Query(false).FirstAsync();
-        var user = await resources.UserRepository.Query(false).FirstAsync();
-        var notificationSettings = await resources.UserNotificationSettings.Query(false).FirstAsync();
-        var userRemember = await resources.UserRememberUseSettings.Query(false).FirstAsync();
+        var tenant = await resources.TenantRepository.AsNoTracking().Include(t => t.Users).FirstAsync();
+        var credential = await resources.CredentialRepository.AsNoTracking().FirstAsync();
+        var user = await resources.UserRepository.AsNoTracking().FirstAsync();
+        var notificationSettings = await resources.UserNotificationSettings.AsNoTracking().FirstAsync();
+        var userRemember = await resources.UserRememberUseSettings.AsNoTracking().FirstAsync();
 
         credential.EncryptedEmail.Should().Be(encryptedEmail);
         credential.EncryptedPassword.Should().BeNullOrEmpty();

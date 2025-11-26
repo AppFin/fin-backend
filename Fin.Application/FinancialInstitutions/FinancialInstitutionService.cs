@@ -27,14 +27,14 @@ public class FinancialInstitutionService(
 {
     public async Task<FinancialInstitutionOutput> Get(Guid id)
     {
-        var entity = await repository.Query(false)
+        var entity = await repository.AsNoTracking()
             .FirstOrDefaultAsync(f => f.Id == id);
         return entity != null ? new FinancialInstitutionOutput(entity) : null;
     }
 
     public async Task<PagedOutput<FinancialInstitutionOutput>> GetList(FinancialInstitutionGetListInput input)
     {
-        return await repository.Query(false)
+        return await repository.AsNoTracking()
             .WhereIf(input.Inactive.HasValue, f => f.Inactive == input.Inactive.Value)
             .WhereIf(input.Type.HasValue, f => f.Type == input.Type.Value)
             .OrderBy(f => f.Inactive)
@@ -56,7 +56,7 @@ public class FinancialInstitutionService(
     public async Task<bool> Update(Guid id, FinancialInstitutionInput input, bool autoSave = false)
     {
         await ValidateInput(input, id);
-        var institution = await repository.Query()
+        var institution = await repository
             .FirstOrDefaultAsync(f => f.Id == id);
         if (institution == null) return false;
 
@@ -70,7 +70,7 @@ public class FinancialInstitutionService(
 
     public async Task<bool> Delete(Guid id, bool autoSave = false)
     {
-        var institution = await repository.Query()
+        var institution = await repository
             .Include(f => f.Wallets)
             .FirstOrDefaultAsync(f => f.Id == id);
         if (institution == null || institution.Wallets.Any()) return false;
@@ -81,7 +81,7 @@ public class FinancialInstitutionService(
 
     public async Task<bool> ToggleInactive(Guid id, bool autoSave = false)
     {
-        var institution = await repository.Query()
+        var institution = await repository
             .Include(f => f.Wallets)
             .FirstOrDefaultAsync(f => f.Id == id);
         if (institution == null || (!institution.Inactive && institution.Wallets.Any(w => !w.Inactivated))) return false;
@@ -112,7 +112,7 @@ public class FinancialInstitutionService(
         if(!string.IsNullOrWhiteSpace(input.Code) && input.Code.Count() > 15)
             throw new BadHttpRequestException("Code must be at most 15 characters long");
 
-        var existingName = await repository.Query()
+        var existingName = await repository
             .Where(f => f.Name == input.Name)
             .WhereIf(editingId.HasValue, f => f.Id != editingId.Value)
             .AnyAsync();

@@ -14,7 +14,7 @@ public class TitleInputDuplicatedValidation(IRepository<Title> titleRepository):
     {
         var validation = new ValidationPipelineOutput<TitleCreateOrUpdateErrorCode>();
         
-        var duplicateExists = await titleRepository.Query(tracking: false)
+        var duplicateExists = await titleRepository.AsNoTracking()
             .Where(t => t.Description == input.Description.Trim()
                         && t.WalletId == input.WalletId
                         && t.Date.Year == input.Date.Year

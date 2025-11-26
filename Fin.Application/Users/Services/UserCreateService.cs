@@ -17,6 +17,7 @@ using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.DateTimes;
 using Fin.Infrastructure.EmailSenders;
+using Fin.Infrastructure.EmailSenders.Dto;
 using Fin.Infrastructure.Redis;
 using Fin.Infrastructure.UnitOfWorks;
 using Microsoft.EntityFrameworkCore;
@@ -94,7 +95,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
             return GetResultWithError(UserStartCreateErrorCode.NotSamePassword, "Password confirmation do not match");
 
         var encryptedEmail = _cryptoHelper.Encrypt(input.Email);
-        var emailAlreadyInUse = await _credentialRepository.Query().AnyAsync(c => c.EncryptedEmail == encryptedEmail);
+        var emailAlreadyInUse = await _credentialRepository.AnyAsync(c => c.EncryptedEmail == encryptedEmail);
         if (emailAlreadyInUse)
             return GetResultWithError(UserStartCreateErrorCode.EmailAlreadyInUse, "Email already in use");
 
@@ -210,7 +211,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
     public async Task<ValidationResultDto<UserDto>> CreateUser(string googleId, string email, UserUpdateOrCreateInput input)
     {
         var encryptedEmail = _cryptoHelper.Encrypt(email);
-        if (await _credentialRepository.Query().AnyAsync(c => c.EncryptedEmail == encryptedEmail))
+        if (await _credentialRepository.AnyAsync(c => c.EncryptedEmail == encryptedEmail))
             return new ValidationResultDto<UserDto>
             {
                 Success = false,
@@ -284,11 +285,24 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         var frontUrl = _configuration.GetSection(AppConstants.FrontUrlConfigKey).Get<string>();
         var logoIconUrl = $"{frontUrl}/icons/fin.png";
 
-        var body = CreateUserTemplates.SendConfirmationCodeTemplate
+        var htmlBody = CreateUserTemplates.SendConfirmationCodeTemplate
             .Replace("{{appName}}", AppConstants.AppName)
             .Replace("{{logoIconUrl}}", logoIconUrl)
             .Replace("{{confirmationCode}}", confirmationCode);
         
-        await _emailSender.SendEmailAsync(email, "Fin - Email Confirmation", body);
+        var plainBody = CreateUserTemplates.SendConfirmationCodePlainTemplate
+            .Replace("{{appName}}", AppConstants.AppName)
+            .Replace("{{confirmationCode}}", confirmationCode);
+        
+        var subject = CreateUserTemplates.SendConfirmationCodeSubject
+            .Replace("{{appName}}", AppConstants.AppName);
+        
+        await _emailSender.SendEmailAsync(new SendEmailDto
+        {
+            ToEmail = email,
+            Subject = subject,
+            HtmlBody = htmlBody,
+            PlainBody = plainBody
+        }, CancellationToken.None);
     }
 }

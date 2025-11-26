@@ -9,6 +9,7 @@ using Fin.Infrastructure.AutoServices.Interfaces;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.DateTimes;
 using Fin.Infrastructure.EmailSenders;
+using Fin.Infrastructure.EmailSenders.Dto;
 using Fin.Infrastructure.Firebases;
 using Fin.Infrastructure.Notifications.Hubs;
 using FirebaseAdmin.Messaging;
@@ -50,13 +51,13 @@ public class NotificationDeliveryService(
 
     public async Task SendNotification(NotifyUserDto notifyUser, bool autoSave = true)
     {
-        var notificationDelivery = await deliveryRepository.Query()
+        var notificationDelivery = await deliveryRepository
             .FirstOrDefaultAsync(n => n.NotificationId == notifyUser.NotificationId && n.UserId == notifyUser.UserId);
         if (notificationDelivery == null)
             throw new Exception(
                 $"Notification not found to send. NotificationId {notifyUser.NotificationId}, UserId {notifyUser.UserId}");
 
-        var userSettings = await userSettingsRepository.Query()
+        var userSettings = await userSettingsRepository
             .FirstOrDefaultAsync(u => u.UserId == notifyUser.UserId);
         if (userSettings == null)
             throw new Exception(
@@ -103,8 +104,8 @@ public class NotificationDeliveryService(
         if (!ambientData.IsLogged)
             throw new UnauthorizedAccessException("User not logged");
 
-        var userId = ambientData.UserId.Value;
-        var notification = await deliveryRepository.Query()
+        var userId = ambientData.UserId.GetValueOrDefault();
+        var notification = await deliveryRepository
             .FirstOrDefaultAsync(n => n.NotificationId == notificationId && n.UserId == userId);
         if (notification == null)
             return false;
@@ -119,10 +120,10 @@ public class NotificationDeliveryService(
         if (!ambientData.IsLogged)
             throw new UnauthorizedAccessException("User not logged");
 
-        var userId = ambientData.UserId.Value;
+        var userId = ambientData.UserId.GetValueOrDefault();
         var now = dateTimeProvider.UtcNow();
 
-        var userNotification = await deliveryRepository.Query(tracking: false)
+        var userNotification = await deliveryRepository.AsNoTracking()
             .Include(u => u.Notification)
             .Where(n => !n.Visualized && n.UserId == userId)
             .Where(n => n.Notification.StartToDelivery <= now.AddMinutes(1))
@@ -139,7 +140,7 @@ public class NotificationDeliveryService(
             .Select(u => u.NotificationId)
             .ToList();
 
-        await deliveryRepository.Query()
+        await deliveryRepository
             .Where(n => notificationToMarkAsDelivery.Contains(n.NotificationId))
             .ExecuteUpdateAsync(x => x
                 .SetProperty(a => a.Delivery, true));
@@ -191,12 +192,21 @@ public class NotificationDeliveryService(
 
     private async Task SendEmail(NotifyUserDto notification)
     {
-        var userCredencial = await credencialRepository.Query(false)
+        var userCredencial = await credencialRepository
+            .AsNoTracking()
+            .Include(c => c.User)
             .FirstOrDefaultAsync(n => n.UserId == notification.UserId);
         if (userCredencial == null)
             throw new Exception("User not found to send email notification.");
 
         var email = _cryptoHelper.Decrypt(userCredencial.EncryptedEmail);
-        await emailSenderService.SendEmailAsync(email, notification.Title, notification.HtmlBody);
+        await emailSenderService.SendEmailAsync(new SendEmailDto
+        {
+            ToEmail = email,
+            Subject = notification.Title,
+            ToName = userCredencial.User.DisplayName,
+            HtmlBody = notification.HtmlBody,
+            PlainBody =  notification.TextBody,
+        }, CancellationToken.None);
     }
 }

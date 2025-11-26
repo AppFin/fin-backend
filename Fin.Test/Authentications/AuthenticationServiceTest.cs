@@ -14,6 +14,7 @@ using Fin.Infrastructure.Authentications.Enums;
 using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.EmailSenders;
+using Fin.Infrastructure.EmailSenders.Dto;
 using Fin.Infrastructure.Redis;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -54,14 +55,14 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
         await service.SendResetPasswordEmail(intput);
 
         // Assert
-        credential = await resources.CredentialRepository.Query(false).FirstAsync(); 
+        credential = await resources.CredentialRepository.AsNoTracking().FirstAsync(); 
         credential.ResetToken.Should().NotBeNullOrEmpty();
         
         resources.FakeCache
             .Verify(c => c.SetAsync($"reset-token-{credential.ResetToken}", credential.UserId, It.IsAny<DistributedCacheEntryOptions>()), Times.Once);;
         
         resources.FakeEmailSender
-            .Verify(e => e.SendEmailAsync(email, It.IsAny<string>(), It.Is<string>(b => b.Contains(credential.ResetToken))), Times.Once);
+            .Verify(e => e.SendEmailAsync(It.Is<SendEmailDto>(dto => dto.ToEmail == email && dto.HtmlBody.Contains(credential.ResetToken)), It.IsAny<CancellationToken>()), Times.Once);
     }
     
     [Fact]
@@ -89,14 +90,14 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
         await service.SendResetPasswordEmail(intput);
 
         // Assert
-        credential = await resources.CredentialRepository.Query(false).FirstAsync(); 
+        credential = await resources.CredentialRepository.AsNoTracking().FirstAsync(); 
         credential.ResetToken.Should().BeNullOrEmpty();
         
         resources.FakeCache
             .Verify(c => c.SetAsync(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<DistributedCacheEntryOptions>()), Times.Never);;
         
         resources.FakeEmailSender
-            .Verify(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            .Verify(e => e.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
     
     [Fact]
@@ -119,7 +120,7 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
             .Verify(c => c.SetAsync(It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<DistributedCacheEntryOptions>()), Times.Never);;
         
         resources.FakeEmailSender
-            .Verify(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            .Verify(e => e.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     #endregion
@@ -325,7 +326,7 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
             .Verify(c => c.GetAsync<Guid>(It.Is<string>(f => f.Contains(input.ResetToken))), Times.Once);;
         
         var encryptedPassword = resources.CryptoHelper.Encrypt(input.Password);
-        var dbCredential = await resources.CredentialRepository.Query(false).FirstAsync();
+        var dbCredential = await resources.CredentialRepository.AsNoTracking().FirstAsync();
         dbCredential.ResetToken.Should().BeNullOrEmpty();
         dbCredential.EncryptedPassword.Should().Be(encryptedPassword);
     }
@@ -584,7 +585,7 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
         resources.FakeTokenService
             .Verify(u => u.GenerateTokenAsync(It.Is<UserDto>(u =>  u.Id == user.Id)), Times.Once);
         
-        var dbCredential = await resources.CredentialRepository.Query(false).FirstAsync();
+        var dbCredential = await resources.CredentialRepository.AsNoTracking().FirstAsync();
         dbCredential.GoogleId.Should().Be(input.GoogleId);
     }
     
@@ -642,7 +643,7 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
         resources.FakeTokenService
             .Verify(u => u.GenerateTokenAsync(It.Is<UserDto>(u =>  u.Id == user.Id)), Times.Once);
         
-        var dbCredential = await resources.CredentialRepository.Query(false).FirstAsync();
+        var dbCredential = await resources.CredentialRepository.AsNoTracking().FirstAsync();
         dbCredential.GoogleId.Should().Be(input.GoogleId);
     }
     

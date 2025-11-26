@@ -12,7 +12,7 @@ public class TitleDeleteMustExistValidation(IRepository<Title> titleRepository):
     public async Task<ValidationPipelineOutput<TitleDeleteErrorCode>> ValidateAsync(Guid titleId, Guid? _, CancellationToken cancellationToken = default)
     {
         var validation = new ValidationPipelineOutput<TitleDeleteErrorCode>();
-        var title = await titleRepository.Query(tracking: false).FirstOrDefaultAsync(t => t.Id == titleId, cancellationToken);
+        var title = await titleRepository.AsNoTracking().FirstOrDefaultAsync(t => t.Id == titleId, cancellationToken);
         return title == null ? validation.AddError(TitleDeleteErrorCode.TitleNotFound) : validation;
     }
 }

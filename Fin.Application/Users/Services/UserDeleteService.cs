@@ -1,4 +1,5 @@
 ﻿using System.Security;
+using Fin.Application.Users.Utils;
 using Fin.Domain.Global;
 using Fin.Domain.Global.Classes;
 using Fin.Domain.Notifications.Dtos;
@@ -9,10 +10,12 @@ using Fin.Domain.Users.Entities;
 using Fin.Infrastructure.AmbientDatas;
 using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.AutoServices.Interfaces;
+using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Database.Extensions;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.DateTimes;
 using Fin.Infrastructure.EmailSenders;
+using Fin.Infrastructure.EmailSenders.Dto;
 using Fin.Infrastructure.UnitOfWorks;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -53,11 +56,11 @@ public class UserDeleteService(
     {
         var userId = ambientData.UserId;
 
-        var alreadyRequest = await userDeleteRequestRepo.Query(false)
+        var alreadyRequest = await userDeleteRequestRepo.AsNoTracking()
             .FirstOrDefaultAsync(u => u.UserId == userId && !u.Aborted, cancellationToken);
         if (alreadyRequest != null) return false;
 
-        var user = userRepo.Query().Include(u => u.Credential).FirstOrDefault(u => u.Id == userId);
+        var user = userRepo.Include(u => u.Credential).FirstOrDefault(u => u.Id == userId);
         if (user == null) return false;
 
         var userEmail = _cryptoHelper.Decrypt(user.Credential.EncryptedEmail);
@@ -65,14 +68,14 @@ public class UserDeleteService(
         user.RequestDelete(dateTimeProvider.UtcNow());
         await userRepo.UpdateAsync(user, true, cancellationToken);
 
-        await emailSender.SendEmailAsync(userEmail, "Solicitação de deleção", "Recebemos sua solicitação de deleção de conta. Sua conta foi inativada e será deletada em 30 dias. Caso você se arrependa entre em contato com nosso suporte para abortar a deleção.");
+        await SendDeleteAccountEmailAsync(cancellationToken, userEmail);
         return true;
     }
 
     public async Task<bool> EffectiveDeleteUsers(CancellationToken cancellationToken = default)
     {
         var today = DateOnly.FromDateTime(dateTimeProvider.UtcNow());
-        var userIds = await userDeleteRequestRepo.Query()
+        var userIds = await userDeleteRequestRepo
             .Where(u => !u.Aborted && u.DeleteEffectivatedAt == today)
             .Select(u => u.UserId)
             .ToListAsync(cancellationToken);
@@ -89,7 +92,7 @@ public class UserDeleteService(
             throw new SecurityException("You are not admin");
 
         var now = dateTimeProvider.UtcNow();
-        var deleteRequest = await userDeleteRequestRepo.Query()
+        var deleteRequest = await userDeleteRequestRepo
             .Include(u => u.User)
             .ThenInclude(u => u.Credential)
             .FirstOrDefaultAsync(u => u.UserId == userId && !u.Aborted, cancellationToken);
@@ -98,15 +101,13 @@ public class UserDeleteService(
         deleteRequest.Abort(ambientData.UserId.Value, now);
         await userDeleteRequestRepo.UpdateAsync(deleteRequest, true, cancellationToken);
 
-        var userEmail = _cryptoHelper.Decrypt(deleteRequest.User.Credential.EncryptedEmail);
-        await emailSender.SendEmailAsync(userEmail, "Solicitação de deleção abortada", "Sua solicitação de deleção do FinApp foi abortada e sua conta não será mais deletada.");
-
+        await SendAbortDeleteEmailAsync(cancellationToken, deleteRequest);
         return true;
     }
 
     public async Task<PagedOutput<UserDeleteRequestDto>> GetList(PagedFilteredAndSortedInput input, CancellationToken cancellationToken = default)
     {
-        return await userDeleteRequestRepo.Query(false)
+        return await userDeleteRequestRepo.AsNoTracking()
             .Include(u => u.User)
             .Include(u => u.UserAborted)
             .ApplyFilterAndSorter(input)
@@ -118,35 +119,35 @@ public class UserDeleteService(
     {
         var today = DateOnly.FromDateTime(dateTimeProvider.UtcNow());
 
-        var deleteRequest = await userDeleteRequestRepo.Query()
+        var deleteRequest = await userDeleteRequestRepo
             .FirstOrDefaultAsync(u => u.UserId == userId && !u.Aborted && u.DeleteEffectivatedAt <= today,
                 cancellationToken);
         if (deleteRequest == null) return;
 
         // TODO here need to add all related tables;
 
-        var user = await userRepo.Query().FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
-        var credential = await credentialRepo.Query().FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
-        var tenantsUser = await tenantUserRepo.Query()
+        var user = await userRepo.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        var credential = await credentialRepo.FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
+        var tenantsUser = await tenantUserRepo
             .Where(u => u.UserId == userId)
             .ToListAsync(cancellationToken);
         var tenantIds = tenantsUser.Select(t => t.TenantId).ToList();
-        var tenants = await tenantRepo.Query()
+        var tenants = await tenantRepo
             .Where(t => tenantIds.Contains(t.Id))
             .ToListAsync(cancellationToken);
         var userEmail = _cryptoHelper.Decrypt(credential.EncryptedEmail);
 
 
-        var otherDeleteRequests = await userDeleteRequestRepo.Query()
+        var otherDeleteRequests = await userDeleteRequestRepo
             .Where(u => u.UserId == userId && u.Id != deleteRequest.Id)
             .ToListAsync(cancellationToken);
 
-        var notificationSetting = await notificationSettingsRepo.Query()
+        var notificationSetting = await notificationSettingsRepo
             .FirstOrDefaultAsync(n => n.UserId == userId, cancellationToken);
         var rememberSetting =
-            await rememberRepo.Query().FirstOrDefaultAsync(n => n.UserId == userId, cancellationToken);
+            await rememberRepo.FirstOrDefaultAsync(n => n.UserId == userId, cancellationToken);
 
-        var notificationDeliveries = await notificationDeliveryRepo.Query()
+        var notificationDeliveries = await notificationDeliveryRepo
             .Include(n => n.Notification)
             .ThenInclude(n => n.UserDeliveries)
             .Where(n => n.UserId == userId).ToListAsync(cancellationToken);
@@ -177,10 +178,83 @@ public class UserDeleteService(
             await userDeleteRequestRepo.DeleteAsync(deleteRequest, cancellationToken);
             await userRepo.DeleteAsync(user, cancellationToken);
 
-            await emailSender.SendEmailAsync(userEmail, "Conta deletada",
-                "Sua conta no FinApp foi deletada. Agora você não poderá mais acessar seus dados e eles foram removidos da plataforma.");
+            await SendAccountDeletedEmailAsync(cancellationToken, userEmail);
 
             await scope.CompleteAsync(cancellationToken);
         }
+    }
+    
+     private async Task<bool> SendAbortDeleteEmailAsync(CancellationToken cancellationToken, UserDeleteRequest deleteRequest)
+    {
+        var userEmail = _cryptoHelper.Decrypt(deleteRequest.User.Credential.EncryptedEmail);
+        
+        var frontUrl = configuration.GetSection(AppConstants.FrontUrlConfigKey).Get<string>();
+        var logoIconUrl = $"{frontUrl}/icons/fin.png";
+
+        var htmlBody = AbortDeleteUserTemplates.AbortDeletionTemplate
+            .Replace("{{appName}}", AppConstants.AppName)
+            .Replace("{{logoIconUrl}}", logoIconUrl);
+        
+        var plainBody = AbortDeleteUserTemplates.AbortDeletionPlainTemplate
+            .Replace("{{appName}}", AppConstants.AppName);
+        
+        var subject = AbortDeleteUserTemplates.AbortDeletionSubject
+            .Replace("{{appName}}", AppConstants.AppName);
+        
+        return await emailSender.SendEmailAsync(new SendEmailDto
+        {
+            ToEmail = userEmail,
+            Subject = subject,
+            HtmlBody = htmlBody,
+            PlainBody = plainBody
+        }, cancellationToken);
+    }
+    
+    private async Task<bool> SendDeleteAccountEmailAsync(CancellationToken cancellationToken, string userEmail)
+    {
+        var frontUrl = configuration.GetSection(AppConstants.FrontUrlConfigKey).Get<string>();
+        var logoIconUrl = $"{frontUrl}/icons/fin.png";
+
+        var htmlBody = DeleteUserTemplates.AccountDeletionTemplate
+            .Replace("{{appName}}", AppConstants.AppName)
+            .Replace("{{logoIconUrl}}", logoIconUrl);
+        
+        var plainBody = DeleteUserTemplates.AccountDeletionPlainTemplate
+            .Replace("{{appName}}", AppConstants.AppName);
+        
+        var subject = DeleteUserTemplates.AccountDeletionSubject
+            .Replace("{{appName}}", AppConstants.AppName);
+        
+        return await emailSender.SendEmailAsync(new SendEmailDto
+        {
+            ToEmail = userEmail,
+            Subject = subject,
+            HtmlBody = htmlBody,
+            PlainBody = plainBody
+        }, cancellationToken);
+    }
+    
+    private async Task<bool> SendAccountDeletedEmailAsync(CancellationToken cancellationToken, string userEmail)
+    {
+        var frontUrl = configuration.GetSection(AppConstants.FrontUrlConfigKey).Get<string>();
+        var logoIconUrl = $"{frontUrl}/icons/fin.png";
+
+        var htmlBody = AccountDeletedTemplates.AccountDeletedTemplate
+            .Replace("{{appName}}", AppConstants.AppName)
+            .Replace("{{logoIconUrl}}", logoIconUrl);
+        
+        var plainBody = AccountDeletedTemplates.AccountDeletedPlainTemplate
+            .Replace("{{appName}}", AppConstants.AppName);
+        
+        var subject = AccountDeletedTemplates.AccountDeletedSubject
+            .Replace("{{appName}}", AppConstants.AppName);
+        
+        return await emailSender.SendEmailAsync(new SendEmailDto
+        {
+            ToEmail = userEmail,
+            Subject = subject,
+            HtmlBody = htmlBody,
+            PlainBody = plainBody
+        }, cancellationToken);
     }
 }

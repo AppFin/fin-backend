@@ -15,7 +15,7 @@ public class TitleInputMustExistValidation(IRepository<Title> titleRepository): 
         var validation = new ValidationPipelineOutput<TitleCreateOrUpdateErrorCode>();
         if (!editingId.HasValue) return validation;
         
-        var title = await titleRepository.Query(tracking: false).FirstOrDefaultAsync(t => t.Id == editingId, cancellationToken);
+        var title = await titleRepository.AsNoTracking().FirstOrDefaultAsync(t => t.Id == editingId, cancellationToken);
         return title == null ? validation.AddError(TitleCreateOrUpdateErrorCode.TitleNotFound) : validation;
     }
 }

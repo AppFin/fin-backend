@@ -28,13 +28,13 @@ public class CreditCardService(
 {
     public async Task<CreditCardOutput> Get(Guid id)
     {
-        var entity = await repository.Query(false).FirstOrDefaultAsync(n => n.Id == id);
+        var entity = await repository.AsNoTracking().FirstOrDefaultAsync(n => n.Id == id);
         return entity != null ? new CreditCardOutput(entity) : null;
     }
 
     public async Task<PagedOutput<CreditCardOutput>> GetList(CreditCardGetListInput input)
     {
-        return await repository.Query(false)
+        return await repository.AsNoTracking()
             .WhereIf(input.Inactivated.HasValue, n => n.Inactivated == input.Inactivated.Value)
             .WhereIf(input.CardBrandIds.Any(), creditCard => input.CardBrandIds.Contains(creditCard.CardBrandId))
             .WhereIf(input.DebitWalletIds.Any(), creditCard => input.DebitWalletIds.Contains(creditCard.DebitWalletId))
@@ -62,7 +62,7 @@ public class CreditCardService(
         var validation = await validationService.ValidateInput<bool>(input, id);
         if (!validation.Success) return validation;
         
-        var creditCard = await repository.Query().FirstAsync(u => u.Id == id);
+        var creditCard = await repository.FirstAsync(u => u.Id == id);
         creditCard.Update(input);
         await repository.UpdateAsync(creditCard, autoSave);
 
@@ -75,7 +75,7 @@ public class CreditCardService(
         var validation = await validationService.ValidateDelete(id);
         if (!validation.Success) return validation;
         
-        var creditCard = await repository.Query().FirstAsync(u => u.Id == id);
+        var creditCard = await repository.FirstAsync(u => u.Id == id);
         await repository.DeleteAsync(creditCard, autoSave);
 
         validation.Success = true;
@@ -87,7 +87,7 @@ public class CreditCardService(
         var validation = await validationService.ValidateToggleInactive(id);
         if (!validation.Success) return validation;
         
-        var creditCard = await repository.Query().FirstAsync(u => u.Id == id);
+        var creditCard = await repository.FirstAsync(u => u.Id == id);
         creditCard.ToggleInactivated();
         await repository.UpdateAsync(creditCard, autoSave);
 

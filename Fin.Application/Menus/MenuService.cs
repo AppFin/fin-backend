@@ -28,14 +28,14 @@ public class MenuService(
 {
     public async Task<MenuOutput> Get(Guid id)
     {
-        var entity = await repository.Query()
+        var entity = await repository
             .FirstOrDefaultAsync(n => n.Id == id);
         return entity != null ? new MenuOutput(entity) : null;
     }
 
     public async Task<PagedOutput<MenuOutput>> GetList(PagedFilteredAndSortedInput input)
     {
-        return await repository.Query(false)
+        return await repository.AsNoTracking()
             .WhereIf(!ambientData.IsAdmin, m => !m.OnlyForAdmin)
             .OrderBy(m => m.Name)
             .ApplyFilterAndSorter(input)
@@ -45,7 +45,7 @@ public class MenuService(
 
     public async Task<List<MenuOutput>> GetListForSideNav()
     {
-        return await repository.Query(false)
+        return await repository.AsNoTracking()
             .OrderBy(m => m.Name)
             .Where(m => m.Position != MenuPosition.Hide)
             .WhereIf(!ambientData.IsAdmin, m => !m.OnlyForAdmin)
@@ -64,7 +64,7 @@ public class MenuService(
     public async Task<bool> Update(Guid id, MenuInput input, bool autoSave = false)
     {
         ValidateInput(input);
-        var menu = await repository.Query()
+        var menu = await repository
             .FirstOrDefaultAsync(u => u.Id == id);
         if (menu == null) return false;
 
@@ -76,7 +76,7 @@ public class MenuService(
 
     public async Task<bool> Delete(Guid id, bool autoSave = false)
     {
-        var menu = await repository.Query()
+        var menu = await repository
             .FirstOrDefaultAsync(u => u.Id == id);
         if (menu == null) return false;
 

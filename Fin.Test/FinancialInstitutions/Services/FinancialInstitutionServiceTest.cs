@@ -160,7 +160,7 @@ public class FinancialInstitutionServiceTest : TestUtils.BaseTestWithContext
         // Assert
         result.Should().NotBeNull();
         result.Name.Should().Be(input.Name);
-        var dbInstitution = await resources.FinancialInstitutionRepository.Query(false).FirstOrDefaultAsync(a => a.Id == result.Id);
+        var dbInstitution = await resources.FinancialInstitutionRepository.AsNoTracking().FirstOrDefaultAsync(a => a.Id == result.Id);
         dbInstitution.Should().NotBeNull();
         dbInstitution.Name.Should().Be(input.Name);
     }
@@ -238,7 +238,7 @@ public class FinancialInstitutionServiceTest : TestUtils.BaseTestWithContext
 
         // Assert
         result.Should().BeTrue();
-        var dbInstitution = await resources.FinancialInstitutionRepository.Query(false).FirstAsync(f => f.Id == institution.Id);
+        var dbInstitution = await resources.FinancialInstitutionRepository.AsNoTracking().FirstAsync(f => f.Id == institution.Id);
         dbInstitution.Name.Should().Be(input.Name);
         dbInstitution.Code.Should().Be("999");
     }
@@ -300,7 +300,7 @@ public class FinancialInstitutionServiceTest : TestUtils.BaseTestWithContext
 
         // Assert
         result.Should().BeTrue();
-        var dbInstitution = await resources.FinancialInstitutionRepository.Query(false).FirstAsync(f => f.Id == institution.Id);
+        var dbInstitution = await resources.FinancialInstitutionRepository.AsNoTracking().FirstAsync(f => f.Id == institution.Id);
         dbInstitution.Color.Should().Be("#AAAAAA");
     }
 
@@ -322,7 +322,7 @@ public class FinancialInstitutionServiceTest : TestUtils.BaseTestWithContext
 
         // Assert
         result.Should().BeTrue();
-        (await resources.FinancialInstitutionRepository.Query(false).FirstOrDefaultAsync(f => f.Id == institution.Id)).Should().BeNull();
+        (await resources.FinancialInstitutionRepository.AsNoTracking().FirstOrDefaultAsync(f => f.Id == institution.Id)).Should().BeNull();
     }
 
     [Fact]
@@ -356,7 +356,7 @@ public class FinancialInstitutionServiceTest : TestUtils.BaseTestWithContext
 
         // Assert
         result.Should().BeFalse();
-        (await resources.FinancialInstitutionRepository.Query(false).FirstOrDefaultAsync(f => f.Id == institution.Id)).Should().NotBeNull();
+        (await resources.FinancialInstitutionRepository.AsNoTracking().FirstOrDefaultAsync(f => f.Id == institution.Id)).Should().NotBeNull();
     }
 
     #endregion
@@ -378,7 +378,7 @@ public class FinancialInstitutionServiceTest : TestUtils.BaseTestWithContext
 
         // Assert
         result.Should().BeTrue();
-        var dbInstitution = await resources.FinancialInstitutionRepository.Query(false).FirstAsync(f => f.Id == institution.Id);
+        var dbInstitution = await resources.FinancialInstitutionRepository.AsNoTracking().FirstAsync(f => f.Id == institution.Id);
         dbInstitution.Inactive.Should().BeTrue();
     }
     
@@ -398,7 +398,7 @@ public class FinancialInstitutionServiceTest : TestUtils.BaseTestWithContext
 
         // Assert
         result.Should().BeTrue();
-        var dbInstitution = await resources.FinancialInstitutionRepository.Query(false).FirstAsync(f => f.Id == institution.Id);
+        var dbInstitution = await resources.FinancialInstitutionRepository.AsNoTracking().FirstAsync(f => f.Id == institution.Id);
         dbInstitution.Inactive.Should().BeFalse();
     }
 
@@ -434,7 +434,7 @@ public class FinancialInstitutionServiceTest : TestUtils.BaseTestWithContext
         // Assert
         result.Should().BeFalse();
         // Verify institution status did not change
-        var dbInstitution = await resources.FinancialInstitutionRepository.Query(false).FirstAsync(f => f.Id == institution.Id);
+        var dbInstitution = await resources.FinancialInstitutionRepository.AsNoTracking().FirstAsync(f => f.Id == institution.Id);
         dbInstitution.Inactive.Should().BeFalse();
     }
 
@@ -458,7 +458,7 @@ public class FinancialInstitutionServiceTest : TestUtils.BaseTestWithContext
         // Assert
         result.Should().BeTrue();
         // Verify institution status changed
-        var dbInstitution = await resources.FinancialInstitutionRepository.Query(false).FirstAsync(f => f.Id == institution.Id);
+        var dbInstitution = await resources.FinancialInstitutionRepository.AsNoTracking().FirstAsync(f => f.Id == institution.Id);
         dbInstitution.Inactive.Should().BeTrue();
     }
 

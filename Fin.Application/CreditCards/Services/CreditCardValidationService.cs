@@ -31,7 +31,7 @@ public class CreditCardValidationService(
     {
         var validationResult = new ValidationResultDto<bool, CreditCardToggleInactiveErrorCode>();
 
-        var creditCard = await repository.Query(tracking: false).FirstOrDefaultAsync(n => n.Id == creditCardId);
+        var creditCard = await repository.AsNoTracking().FirstOrDefaultAsync(n => n.Id == creditCardId);
         if (creditCard is null)
         {
             validationResult.ErrorCode = CreditCardToggleInactiveErrorCode.CreditCardNotFound;
@@ -47,7 +47,7 @@ public class CreditCardValidationService(
     {
         var validationResult = new ValidationResultDto<bool, CreditCardDeleteErrorCode>();
 
-        var creditCardExists = await repository.Query().AnyAsync(n => n.Id == creditCardId);
+        var creditCardExists = await repository.AnyAsync(n => n.Id == creditCardId);
         if (!creditCardExists)
         {
             validationResult.ErrorCode = CreditCardDeleteErrorCode.CreditCardNotFound;
@@ -68,7 +68,7 @@ public class CreditCardValidationService(
 
         if (editingId.HasValue)
         {
-            var creditCardExists = await repository.Query()
+            var creditCardExists = await repository
                 .AnyAsync(n => n.Id == editingId.Value);
             if (!creditCardExists)
             {
@@ -120,7 +120,7 @@ public class CreditCardValidationService(
             return validationResult;
         }
 
-        var nameAlredInUse = await repository.Query()
+        var nameAlredInUse = await repository
             .AnyAsync(n => n.Name.ToLower() == input.Name.ToLower()  && (!editingId.HasValue || n.Id != editingId));
         if (nameAlredInUse)
         {

@@ -96,7 +96,7 @@ public class MenuServiceTest : TestUtils.BaseTestWithContext
 
         // Assert
         result.Should().NotBeNull();
-        var dbMenu = await resources.MenuRepository.Query(false).FirstOrDefaultAsync(a => a.Id == result.Id);
+        var dbMenu = await resources.MenuRepository.AsNoTracking().FirstOrDefaultAsync(a => a.Id == result.Id);
         dbMenu.Should().NotBeNull();
         dbMenu.Name.Should().Be(input.Name);
         dbMenu.FrontRoute.Should().Be(input.FrontRoute);
@@ -200,7 +200,7 @@ public class MenuServiceTest : TestUtils.BaseTestWithContext
         // Assert
         result.Should().BeTrue();
 
-        var dbMenu = await resources.MenuRepository.Query(false).FirstOrDefaultAsync(a => a.Id == menu.Id);
+        var dbMenu = await resources.MenuRepository.AsNoTracking().FirstOrDefaultAsync(a => a.Id == menu.Id);
         dbMenu.Should().NotBeNull();
         dbMenu.Name.Should().Be(input.Name);
         dbMenu.FrontRoute.Should().Be(input.FrontRoute);
@@ -298,7 +298,7 @@ public class MenuServiceTest : TestUtils.BaseTestWithContext
 
         // Assert
         result.Should().BeTrue();
-        (await resources.MenuRepository.Query(false).FirstOrDefaultAsync(a => a.Id == menu.Id)).Should().BeNull();
+        (await resources.MenuRepository.AsNoTracking().FirstOrDefaultAsync(a => a.Id == menu.Id)).Should().BeNull();
     }
 
     #endregion

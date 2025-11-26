@@ -34,7 +34,7 @@ public class UserSchedulerService(
         var startOfDay = dateTimeProvider.UtcNow().Date;
         var endOfDay = startOfDay.AddDays(1).AddTicks(-1);
 
-        var notifications = await notificationRepository.Query()
+        var notifications = await notificationRepository
             .Include(n => n.UserDeliveries)
             .Where(n => startOfDay <= n.StartToDelivery && n.StartToDelivery <= endOfDay)
             .Where(n => n.UserDeliveries.Any(n => !n.Delivery))
@@ -53,7 +53,7 @@ public class UserSchedulerService(
 
     public async Task ScheduleNotification(Guid notificationId, bool autosave = true, CancellationToken cancellationToken = default)
     {
-        var notification = await notificationRepository.Query(true)
+        var notification = await notificationRepository
             .Include(n => n.UserDeliveries).FirstOrDefaultAsync(n => n.Id == notificationId, cancellationToken);
         await ScheduleNotification(notification, autosave, cancellationToken);
     }
@@ -78,7 +78,7 @@ public class UserSchedulerService(
 
     public async Task UnscheduleNotification(Guid notificationId, List<Guid> userIds, CancellationToken cancellationToken = default)
     {
-        var jobsIds = await notificationUserRepository.Query(false)
+        var jobsIds = await notificationUserRepository.AsNoTracking()
             .Where(n => n.NotificationId == notificationId &&
                         userIds.Contains(n.UserId) &&
                         !string.IsNullOrWhiteSpace(n.BackgroundJobId))

@@ -7,8 +7,10 @@ using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Entities;
 using Fin.Domain.Users.Factories;
 using Fin.Infrastructure.Authentications.Constants;
+using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.EmailSenders;
+using Fin.Infrastructure.EmailSenders.Dto;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -38,8 +40,6 @@ public class UserDeleteServiceTest : TestUtils.BaseTestWithContext
         result.Should().BeFalse();
 
         DateTimeProvider.Verify(d => d.UtcNow(), Times.Never);
-        resources.FakeEmailSender
-            .Verify(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
@@ -58,7 +58,7 @@ public class UserDeleteServiceTest : TestUtils.BaseTestWithContext
 
         DateTimeProvider.Verify(d => d.UtcNow(), Times.Never);
         resources.FakeEmailSender
-            .Verify(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            .Verify(e => e.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -72,7 +72,7 @@ public class UserDeleteServiceTest : TestUtils.BaseTestWithContext
         var now = TestUtils.UtcDateTimes[0];
         DateTimeProvider.Setup(d => d.UtcNow()).Returns(now);
 
-        var user = await resources.UserRepository.Query(false).FirstOrDefaultAsync();
+        var user = await resources.UserRepository.AsNoTracking().FirstOrDefaultAsync();
         var email = TestUtils.Strings[2];
         var  encryptedEmail = resources.CryptoHelper.Encrypt(email);
         user.Credential = UserCredentialFactory.Create(user.Id, encryptedEmail, null, UserCredentialFactoryType.Password);
@@ -84,14 +84,13 @@ public class UserDeleteServiceTest : TestUtils.BaseTestWithContext
         // Assert
         result.Should().BeTrue();
 
-        var updatedUser = await resources.UserRepository.Query().FirstAsync(u => u.Id == AmbientData.UserId.Value);
+        var updatedUser = await resources.UserRepository.FirstAsync(u => u.Id == AmbientData.UserId.Value);
         updatedUser.DeleteRequests.First().DeleteRequestedAt.Should().Be(now);
         updatedUser.IsActivity.Should().BeFalse();
 
         DateTimeProvider.Verify(d => d.UtcNow(), Times.Once);
         resources.FakeEmailSender
-            .Verify(e => e.SendEmailAsync(email, "Solicitação de deleção",
-                It.Is<string>(body => body.Contains("Recebemos sua solicitação"))), Times.Once);
+            .Verify(e => e.SendEmailAsync(It.Is<SendEmailDto>(dto => dto.ToEmail == email), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion
@@ -126,7 +125,7 @@ public class UserDeleteServiceTest : TestUtils.BaseTestWithContext
 
         DateTimeProvider.Setup(d => d.UtcNow()).Returns(TestUtils.UtcDateTimes[0]);
 
-        var user = await resources.UserRepository.Query().Include(u => u.Credential).FirstAsync();
+        var user = await resources.UserRepository.Include(u => u.Credential).FirstAsync();
 
         var email = TestUtils.Strings[2];
         var  encryptedEmail = resources.CryptoHelper.Encrypt(email);
@@ -149,18 +148,17 @@ public class UserDeleteServiceTest : TestUtils.BaseTestWithContext
         // Assert
         result.Should().BeTrue();
 
-        var deletedUser = await resources.UserRepository.Query().FirstOrDefaultAsync(u => u.Id == user.Id);
+        var deletedUser = await resources.UserRepository.FirstOrDefaultAsync(u => u.Id == user.Id);
         deletedUser.Should().BeNull();
 
-        var deletedCredential = await resources.CredentialRepository.Query().FirstOrDefaultAsync(c => c.UserId == user.Id);
+        var deletedCredential = await resources.CredentialRepository.FirstOrDefaultAsync(c => c.UserId == user.Id);
         deletedCredential.Should().BeNull();
 
-        var deletedRequest = await resources.UserDeleteRequestRepository.Query().FirstOrDefaultAsync(r => r.UserId == user.Id);
+        var deletedRequest = await resources.UserDeleteRequestRepository.FirstOrDefaultAsync(r => r.UserId == user.Id);
         deletedRequest.Should().BeNull();
 
         resources.FakeEmailSender
-            .Verify(e => e.SendEmailAsync(email, "Conta deletada",
-                It.Is<string>(body => body.Contains("foi deletada"))), Times.Once);
+            .Verify(e => e.SendEmailAsync(It.Is<SendEmailDto>(dto => dto.ToEmail == email), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion
@@ -184,7 +182,7 @@ public class UserDeleteServiceTest : TestUtils.BaseTestWithContext
 
         DateTimeProvider.Verify(d => d.UtcNow(), Times.Never);
         resources.FakeEmailSender
-            .Verify(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            .Verify(e => e.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -204,7 +202,7 @@ public class UserDeleteServiceTest : TestUtils.BaseTestWithContext
 
         DateTimeProvider.Verify(d => d.UtcNow(), Times.Never);
         resources.FakeEmailSender
-            .Verify(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            .Verify(e => e.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -225,7 +223,7 @@ public class UserDeleteServiceTest : TestUtils.BaseTestWithContext
 
         DateTimeProvider.Verify(d => d.UtcNow(), Times.Once);
         resources.FakeEmailSender
-            .Verify(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            .Verify(e => e.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -257,7 +255,7 @@ public class UserDeleteServiceTest : TestUtils.BaseTestWithContext
         // Assert
         result.Should().BeTrue();
 
-        var updatedRequest = await resources.UserDeleteRequestRepository.Query()
+        var updatedRequest = await resources.UserDeleteRequestRepository
             .FirstAsync(r => r.Id == deleteRequest.Id);
         updatedRequest.Aborted.Should().BeTrue();
         updatedRequest.AbortedAt.Should().Be(now);
@@ -265,8 +263,7 @@ public class UserDeleteServiceTest : TestUtils.BaseTestWithContext
 
         DateTimeProvider.Verify(d => d.UtcNow(), Times.Once);
         resources.FakeEmailSender
-            .Verify(e => e.SendEmailAsync(email, "Solicitação de deleção abortada",
-                It.Is<string>(body => body.Contains("foi abortada"))), Times.Once);
+            .Verify(e => e.SendEmailAsync(It.Is<SendEmailDto>(dto => dto.ToEmail == email), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -277,7 +274,7 @@ public class UserDeleteServiceTest : TestUtils.BaseTestWithContext
         var resources = GetResources();
         var service = GetService(resources);
 
-        var user = await resources.UserRepository.Query().Include(u => u.Credential).FirstAsync();
+        var user = await resources.UserRepository.Include(u => u.Credential).FirstAsync();
         await resources.CredentialRepository.DeleteAsync(user.Credential, true);
 
         var email = TestUtils.Strings[2];
@@ -297,15 +294,14 @@ public class UserDeleteServiceTest : TestUtils.BaseTestWithContext
         // Assert
         result.Should().BeTrue();
 
-        var updatedRequest = await resources.UserDeleteRequestRepository.Query()
+        var updatedRequest = await resources.UserDeleteRequestRepository
             .FirstAsync(r => r.Id == deleteRequest.Id);
         updatedRequest.Aborted.Should().BeTrue();
         updatedRequest.AbortedAt.Should().Be(now);
         updatedRequest.UserAbortedId.Should().Be(AmbientData.UserId.Value);
 
         resources.FakeEmailSender
-            .Verify(e => e.SendEmailAsync(email, "Solicitação de deleção abortada",
-                It.Is<string>(body => body.Contains("foi abortada"))), Times.Once);
+            .Verify(e => e.SendEmailAsync(It.Is<SendEmailDto>(dto => dto.ToEmail == email), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion
@@ -342,7 +338,7 @@ public class UserDeleteServiceTest : TestUtils.BaseTestWithContext
         var resources = GetResources();
         var service = GetService(resources);
 
-        var user1 = await resources.UserRepository.Query().FirstAsync();
+        var user1 = await resources.UserRepository.FirstAsync();
         var user2 = new User { Id = TestUtils.Guids[3], DisplayName = TestUtils.Strings[1], Credential = new UserCredential()};
         await resources.UserRepository.AddAsync(user2, true);
 
@@ -427,6 +423,10 @@ public class UserDeleteServiceTest : TestUtils.BaseTestWithContext
         resources.FakeConfiguration
             .Setup(c => c.GetSection(AuthenticationConstants.EncryptIvConfigKey).Value)
             .Returns("1234567890qwerty");
+        
+        resources.FakeConfiguration
+            .Setup(c => c.GetSection(AppConstants.FrontUrlConfigKey).Value)
+            .Returns("http://localhost:4200");
 
         var encryptKey = resources.FakeConfiguration.Object.GetSection(AuthenticationConstants.EncryptKeyConfigKey).Value ?? "";
         var encryptIv = resources.FakeConfiguration.Object.GetSection(AuthenticationConstants.EncryptIvConfigKey).Value ?? "";

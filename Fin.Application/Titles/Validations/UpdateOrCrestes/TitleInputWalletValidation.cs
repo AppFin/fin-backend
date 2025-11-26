@@ -15,7 +15,7 @@ public class TitleInputWalletValidation(IRepository<Wallet> walletRepository): I
     {
         var validation = new ValidationPipelineOutput<TitleCreateOrUpdateErrorCode, List<Guid>>();
         
-        var wallet = await walletRepository.Query(tracking: false)
+        var wallet = await walletRepository.AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == input.WalletId, cancellationToken);
 
         if (wallet == null)

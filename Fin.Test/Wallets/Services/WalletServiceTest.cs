@@ -134,7 +134,7 @@ public class WalletServiceTest : TestUtils.BaseTestWithContext
         result.Success.Should().BeTrue();
         result.Data.Should().NotBeNull();
         
-        var dbWallet = await resources.WalletRepository.Query(false).FirstOrDefaultAsync(a => a.Id == result.Data.Id);
+        var dbWallet = await resources.WalletRepository.AsNoTracking().FirstOrDefaultAsync(a => a.Id == result.Data.Id);
         dbWallet.Should().NotBeNull();
         dbWallet.Name.Should().Be(input.Name);
         dbWallet.InitialBalance.Should().Be(input.InitialBalance);
@@ -165,7 +165,7 @@ public class WalletServiceTest : TestUtils.BaseTestWithContext
         result.ErrorCode.Should().Be(WalletCreateOrUpdateErrorCode.NameIsRequired);
         result.Data.Should().BeNull();
         
-        (await resources.WalletRepository.Query(false).CountAsync()).Should().Be(0); // Ensure no addition to DB
+        (await resources.WalletRepository.AsNoTracking().CountAsync()).Should().Be(0); // Ensure no addition to DB
     }
 
     #endregion
@@ -194,7 +194,7 @@ public class WalletServiceTest : TestUtils.BaseTestWithContext
         result.Success.Should().BeTrue();
         result.Data.Should().BeTrue();
 
-        var dbWallet = await resources.WalletRepository.Query(false).FirstAsync(a => a.Id == wallet.Id);
+        var dbWallet = await resources.WalletRepository.AsNoTracking().FirstAsync(a => a.Id == wallet.Id);
         dbWallet.Name.Should().Be(input.Name);
         dbWallet.InitialBalance.Should().Be(input.InitialBalance);
     }
@@ -227,7 +227,7 @@ public class WalletServiceTest : TestUtils.BaseTestWithContext
         result.ErrorCode.Should().Be(WalletCreateOrUpdateErrorCode.WalletNotFound);
         result.Data.Should().BeFalse();
 
-        var dbWallet = await resources.WalletRepository.Query(false).FirstAsync(a => a.Id == wallet.Id);
+        var dbWallet = await resources.WalletRepository.AsNoTracking().FirstAsync(a => a.Id == wallet.Id);
         dbWallet.Name.Should().Be(TestUtils.Strings[0]); // Ensure no update happened
     }
 
@@ -253,7 +253,7 @@ public class WalletServiceTest : TestUtils.BaseTestWithContext
         // Assert
         result.Should().NotBeNull();
         result.Success.Should().BeTrue();
-        (await resources.WalletRepository.Query(false).FirstOrDefaultAsync(a => a.Id == wallet.Id)).Should().BeNull();
+        (await resources.WalletRepository.AsNoTracking().FirstOrDefaultAsync(a => a.Id == wallet.Id)).Should().BeNull();
     }
 
     [Fact]
@@ -280,7 +280,7 @@ public class WalletServiceTest : TestUtils.BaseTestWithContext
         result.Should().NotBeNull();
         result.Success.Should().BeFalse();
         result.ErrorCode.Should().Be(WalletDeleteErrorCode.WalletInUseByCreditCardsAndTitle);
-        (await resources.WalletRepository.Query(false).FirstOrDefaultAsync(a => a.Id == wallet.Id)).Should().NotBeNull(); // Ensure no deletion
+        (await resources.WalletRepository.AsNoTracking().FirstOrDefaultAsync(a => a.Id == wallet.Id)).Should().NotBeNull(); // Ensure no deletion
     }
 
     #endregion
@@ -307,7 +307,7 @@ public class WalletServiceTest : TestUtils.BaseTestWithContext
         result.Should().NotBeNull();
         result.Success.Should().BeTrue();
         result.Data.Should().BeTrue();
-        var dbWallet = await resources.WalletRepository.Query(false).FirstAsync(a => a.Id == wallet.Id);
+        var dbWallet = await resources.WalletRepository.AsNoTracking().FirstAsync(a => a.Id == wallet.Id);
         dbWallet.Inactivated.Should().BeTrue();
     }
 
@@ -332,7 +332,7 @@ public class WalletServiceTest : TestUtils.BaseTestWithContext
         result.Should().NotBeNull();
         result.Success.Should().BeTrue();
         result.Data.Should().BeTrue();
-        var dbWallet = await resources.WalletRepository.Query(false).FirstAsync(a => a.Id == wallet.Id);
+        var dbWallet = await resources.WalletRepository.AsNoTracking().FirstAsync(a => a.Id == wallet.Id);
         dbWallet.Inactivated.Should().BeFalse();
     }
 
@@ -361,7 +361,7 @@ public class WalletServiceTest : TestUtils.BaseTestWithContext
         result.Should().NotBeNull();
         result.Success.Should().BeFalse();
         result.ErrorCode.Should().Be(WalletToggleInactiveErrorCode.WalletNotFound);
-        var dbWallet = await resources.WalletRepository.Query(false).FirstAsync(a => a.Id == wallet.Id);
+        var dbWallet = await resources.WalletRepository.AsNoTracking().FirstAsync(a => a.Id == wallet.Id);
         dbWallet.Inactivated.Should().BeFalse(); // Ensure no status change
     }
 

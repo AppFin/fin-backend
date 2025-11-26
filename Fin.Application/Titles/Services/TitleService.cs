@@ -124,7 +124,7 @@ public class TitleService(
         var validationResultDto = validationResult.ToValidationResult<bool, TitleDeleteErrorCode>();
         if (!validationResultDto.Success) return validationResultDto;
         
-        var title = await titleRepository.Query(tracking: true).FirstAsync(title => title.Id == id, cancellationToken);
+        var title = await titleRepository.FirstAsync(title => title.Id == id, cancellationToken);
         var titlesToReprocess = await updateHelpService.GetTitlesForReprocessing(title.WalletId, title.Date, title.Id, cancellationToken);
 
         await using (var scope = await unitOfWork.BeginTransactionAsync(cancellationToken))

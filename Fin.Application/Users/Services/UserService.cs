@@ -23,14 +23,14 @@ public class UserService(IRepository<User> repository, IAmbientData ambientData)
         if (!ambientData.IsAdmin && id != ambientData.UserId)
             throw new SecurityException("You are not authorized to access this resource");
         
-        var entity = await repository.Query()
+        var entity = await repository
             .FirstOrDefaultAsync(user => user.Id == id);
         return entity != null ? new UserDto(entity) : null;
     }
 
     public async Task<PagedOutput<UserDto>> GetList(PagedFilteredAndSortedInput input)
     {
-        return await repository.Query(false)
+        return await repository.AsNoTracking()
             .WhereIf(!ambientData.IsAdmin, user => user.Id == ambientData.UserId)
             .ApplyFilterAndSorter(input)
             .Select(user => new UserDto(user))

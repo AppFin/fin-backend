@@ -30,14 +30,14 @@ public class WalletService(
 {
     public async Task<WalletOutput> Get(Guid id)
     {
-        var entity = await repository.Query(false).Include(wallet => wallet.Titles).FirstOrDefaultAsync(n => n.Id == id);
+        var entity = await repository.AsNoTracking().Include(wallet => wallet.Titles).FirstOrDefaultAsync(n => n.Id == id);
         return entity != null ? new WalletOutput(entity, dateTimeProvider.UtcNow()) : null;
     }
 
     public async Task<PagedOutput<WalletOutput>> GetList(WalletGetListInput input)
     {
         var now = dateTimeProvider.UtcNow();
-        return await repository.Query(false)
+        return await repository.AsNoTracking()
             .Include(wallet => wallet.Titles)
             .WhereIf(input.Inactivated.HasValue, n => n.Inactivated == input.Inactivated.Value)
             .OrderBy(m => m.Inactivated)
@@ -63,7 +63,7 @@ public class WalletService(
         var validation = await validationService.ValidateInput<bool>(input, id);
         if (!validation.Success) return validation;
         
-        var wallet = await repository.Query().FirstAsync(u => u.Id == id);
+        var wallet = await repository.FirstAsync(u => u.Id == id);
         wallet.Update(input);
         // TODO reprocesses CurrentBalance 
         await repository.UpdateAsync(wallet, autoSave);
@@ -77,7 +77,7 @@ public class WalletService(
         var validation = await validationService.ValidateDelete(id);
         if (!validation.Success) return validation;
         
-        var wallet = await repository.Query().FirstAsync(u => u.Id == id);
+        var wallet = await repository.FirstAsync(u => u.Id == id);
         await repository.DeleteAsync(wallet, autoSave);
 
         validation.Success = true;
@@ -89,7 +89,7 @@ public class WalletService(
         var validation = await validationService.ValidateToggleInactive(id);
         if (!validation.Success) return validation;
         
-        var wallet = await repository.Query().FirstAsync(u => u.Id == id);
+        var wallet = await repository.FirstAsync(u => u.Id == id);
         wallet.ToggleInactivated();
         await repository.UpdateAsync(wallet, autoSave);
 

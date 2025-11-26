@@ -1,28 +1,26 @@
 ﻿namespace Fin.Application.Users.Utils;
 
-public static class CreateUserTemplates
+public static class DeleteUserTemplates
 {
-    public const string SendConfirmationCodeSubject = "{{appName}} - Email Confirmation";
+    public const string AccountDeletionSubject = "{{appName}} - Solicitação de Deleção";
 
-    public const string SendConfirmationCodePlainTemplate = @"
-{{appName}} - Confirm Your Email
-To complete your registration, please use the confirmation code below:
-Confirmation Code: {{confirmationCode}}
-How to use:
-1. Return to the app or website.
-2. Enter the code above to activate your account.
-Important: This code expires in 10 minutes. If you didn't request this code, please ignore this email.
+    public const string AccountDeletionPlainTemplate = @"
+{{appName}} - Solicitação de Deleção
 
-If you're unable to confirm your email, please contact our support team.
+Recebemos sua solicitação de deleção de conta.
+
+Sua conta foi inativada e será deletada em 30 dias.
+
+Caso você se arrependa, entre em contato com nosso suporte para abortar a deleção.
 ";
 
-    public const string SendConfirmationCodeTemplate = @"
+    public const string AccountDeletionTemplate = @"
 <!DOCTYPE html>
-<html lang='en'>
+<html lang='pt-BR'>
 <head>
     <meta charset='UTF-8'>
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-    <title>Confirm Your Email</title>
+    <title>Solicitação de Deleção</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -87,44 +85,23 @@ If you're unable to confirm your email, please contact our support team.
             line-height: 1.5;
         }
 
-        .confirmation-code {
-            display: inline-block;
-            background: linear-gradient(135deg, #f87b07 0%, #fdc570 100%);
-            color: white;
-            padding: 20px 40px;
-            border-radius: 8px;
-            font-size: 32px;
-            font-weight: bold;
-            letter-spacing: 4px;
-            margin: 20px 0;
-            font-family: 'Courier New', monospace;
-            box-shadow: 0 4px 15px rgba(248, 123, 7, 0.3);
-        }
-
-        .code-info {
-            background: #f8f9fa;
+        /* Estilo de alerta para a inativação */
+        .alert-box {
+            background: #fff3cd;
+            border-left: 4px solid #f87b07;
             padding: 20px;
             border-radius: 6px;
             margin: 20px 0;
-            border-left: 4px solid #f87b07;
-        }
-
-        .code-info p {
-            margin: 0;
-            color: #6c757d;
-            font-size: 14px;
             text-align: left;
         }
 
-        .security-note {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 6px;
-            padding: 15px;
-            margin: 20px 0;
+        .alert-box h3 {
+            margin: 0 0 10px 0;
+            color: #856404;
+            font-size: 18px;
         }
 
-        .security-note p {
+        .alert-box p {
             margin: 0;
             color: #856404;
             font-size: 14px;
@@ -150,31 +127,24 @@ If you're unable to confirm your email, please contact our support team.
         </div>
 
         <div class='content'>
-            <h2 class='title'>Confirm Your Email</h2>
+            <h2 class='title'>Solicitação de Deleção</h2>
             
             <p class='message'>
-                To complete your registration, please use the confirmation code below:
+                Recebemos sua solicitação de deleção de conta.
             </p>
 
-            <div class='confirmation-code'>
-                {{confirmationCode}}
+            <div class='alert-box'>
+                <h3>Conta Inativada</h3>
+                <p>Sua conta está programada para ser <strong>excluída permanentemente em 30 dias</strong>.</p>
             </div>
 
-            <div class='code-info'>
-                <p><strong>How to use:</strong></p>
-                <p>1. Return to the app or website</p>
-                <p>2. Enter the 6-digit code in the requested field</p>
-                <p>3. Click ""Confirm"" to activate your account</p>
-            </div>
-
-            <div class='security-note'>
-                <p><strong>Important:</strong> This code expires in 10 minutes for security reasons. If you didn't request this code, please ignore this email.</p>
-            </div>
+            <p class='message'>
+                Caso você se arrependa ou tenha feito isso por engano, entre em contato com nosso suporte imediatamente para abortar a deleção.
+            </p>
         </div>
 
         <div class='footer'>
-            <p>If you're unable to confirm your email, please contact our support team.</p>
-            <p>This is an automated email, please do not reply to this message.</p>
+            <p>Este é um email automático de segurança.</p>
         </div>
     </div>
 </body>

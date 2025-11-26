@@ -27,13 +27,13 @@ public class TitleCategoryService(
 {
     public async Task<TitleCategoryOutput> Get(Guid id)
     {
-        var entity = await repository.Query(false).FirstOrDefaultAsync(n => n.Id == id);
+        var entity = await repository.AsNoTracking().FirstOrDefaultAsync(n => n.Id == id);
         return entity != null ? new TitleCategoryOutput(entity) : null;
     }
 
     public async Task<PagedOutput<TitleCategoryOutput>> GetList(TitleCategoryGetListInput input)
     {
-        return await repository.Query(false)
+        return await repository.AsNoTracking()
             .WhereIf(input.Inactivated.HasValue, n => n.Inactivated == input.Inactivated.Value)
             .WhereIf(input.Type.HasValue, n => n.Type == input.Type.Value)
             .OrderBy(m => m.Inactivated)
@@ -59,7 +59,7 @@ public class TitleCategoryService(
         var validation = await ValidateInput<bool>(input, id);
         if (!validation.Success) return validation;
         
-        var titleCategory = await repository.Query().FirstAsync(u => u.Id == id);
+        var titleCategory = await repository.FirstAsync(u => u.Id == id);
         titleCategory.Update(input);
         await repository.UpdateAsync(titleCategory, autoSave);
 
@@ -69,7 +69,7 @@ public class TitleCategoryService(
 
     public async Task<bool> Delete(Guid id, bool autoSave = false)
     {
-        var titleCategory = await repository.Query()
+        var titleCategory = await repository
             .FirstOrDefaultAsync(u => u.Id == id);
         if (titleCategory == null) return false;
 
@@ -79,7 +79,7 @@ public class TitleCategoryService(
 
     public async Task<bool> ToggleInactive(Guid id, bool autoSave = false)
     {
-        var titleCategory = await repository.Query()
+        var titleCategory = await repository
             .FirstOrDefaultAsync(u => u.Id == id);
         if (titleCategory == null) return false;
 
@@ -95,7 +95,7 @@ public class TitleCategoryService(
 
         if (editingId.HasValue)
         {
-            var titleExists = await repository.Query()
+            var titleExists = await repository
                 .AnyAsync(n => n.Id == editingId.Value);
             if (!titleExists)
             {
@@ -143,7 +143,7 @@ public class TitleCategoryService(
             validationResult.Message = "Name is too long. Max 100 characters.";
             return validationResult;
         }
-        var nameAlredInUse = await repository.Query()
+        var nameAlredInUse = await repository
             .AnyAsync(n => n.Name == input.Name && (!editingId.HasValue || n.Id != editingId));
         if (nameAlredInUse)
         {
