@@ -95,7 +95,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
             return GetResultWithError(UserStartCreateErrorCode.NotSamePassword, "Password confirmation do not match");
 
         var encryptedEmail = _cryptoHelper.Encrypt(input.Email);
-        var emailAlreadyInUse = await _credentialRepository.Query().AnyAsync(c => c.EncryptedEmail == encryptedEmail);
+        var emailAlreadyInUse = await _credentialRepository.AnyAsync(c => c.EncryptedEmail == encryptedEmail);
         if (emailAlreadyInUse)
             return GetResultWithError(UserStartCreateErrorCode.EmailAlreadyInUse, "Email already in use");
 
@@ -211,7 +211,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
     public async Task<ValidationResultDto<UserDto>> CreateUser(string googleId, string email, UserUpdateOrCreateInput input)
     {
         var encryptedEmail = _cryptoHelper.Encrypt(email);
-        if (await _credentialRepository.Query().AnyAsync(c => c.EncryptedEmail == encryptedEmail))
+        if (await _credentialRepository.AnyAsync(c => c.EncryptedEmail == encryptedEmail))
             return new ValidationResultDto<UserDto>
             {
                 Success = false,

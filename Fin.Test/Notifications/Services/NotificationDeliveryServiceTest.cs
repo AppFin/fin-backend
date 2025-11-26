@@ -89,7 +89,7 @@ public class NotificationDeliveryServiceTest : TestUtils.BaseTestWithContext
         // Assert
         resources.FakeClientProxy.Verify(c => c.SendCoreAsync("ReceiveNotification", It.Is<object[]>(o => o[0] == notifyDto), default), Times.Once);
     
-        var dbDelivery = await resources.DeliveryRepository.Query(false).FirstOrDefaultAsync(a => a.NotificationId == delivery.NotificationId);
+        var dbDelivery = await resources.DeliveryRepository.AsNoTracking().FirstOrDefaultAsync(a => a.NotificationId == delivery.NotificationId);
         dbDelivery.Delivery.Should().BeTrue();
     }
 
@@ -130,7 +130,7 @@ public class NotificationDeliveryServiceTest : TestUtils.BaseTestWithContext
         // Assert
         resources.FakeFirebaseNotification.Verify(f => f.SendPushNotificationAsync(It.Is<List<Message>>(l => l.Count == 2)), Times.Once);
 
-        var dbSettings = await resources.UserSettingsRepository.Query(false).FirstAsync(s => s.UserId == userId);
+        var dbSettings = await resources.UserSettingsRepository.AsNoTracking().FirstAsync(s => s.UserId == userId);
         dbSettings.FirebaseTokens.Should().HaveCount(1);
         dbSettings.FirebaseTokens.Should().Contain(token1);
         dbSettings.FirebaseTokens.Should().NotContain(token2);
@@ -222,7 +222,7 @@ public class NotificationDeliveryServiceTest : TestUtils.BaseTestWithContext
 
         // Assert
         result.Should().BeTrue();
-        var dbDelivery = await resources.DeliveryRepository.Query(false).FirstAsync(s => s.NotificationId == delivery.NotificationId);
+        var dbDelivery = await resources.DeliveryRepository.AsNoTracking().FirstAsync(s => s.NotificationId == delivery.NotificationId);
         dbDelivery.Visualized.Should().BeTrue();
     }
 
@@ -264,7 +264,7 @@ public class NotificationDeliveryServiceTest : TestUtils.BaseTestWithContext
         result.Should().HaveCount(1);
         result[0].NotificationId.Should().Be(activeNotification.Id);
 
-        var dbDelivery = await resources.DeliveryRepository.Query(false).FirstAsync(d => d.NotificationId == activeDelivery.NotificationId);
+        var dbDelivery = await resources.DeliveryRepository.AsNoTracking().FirstAsync(d => d.NotificationId == activeDelivery.NotificationId);
         dbDelivery.Delivery.Should().BeTrue();
     }
 

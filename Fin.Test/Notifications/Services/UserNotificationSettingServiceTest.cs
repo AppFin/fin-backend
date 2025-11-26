@@ -91,7 +91,7 @@ public class UserNotificationSettingServiceTest : TestUtils.BaseTestWithContext
         // Assert
         result.Should().BeTrue();
 
-        var dbSettings = await resources.Repository.Query(false).FirstAsync(s => s.UserId == userId);
+        var dbSettings = await resources.Repository.AsNoTracking().FirstAsync(s => s.UserId == userId);
         dbSettings.Enabled.Should().Be(true);
         dbSettings.AllowedWays.Should().BeEquivalentTo(input.AllowedWays);
     }
@@ -136,7 +136,7 @@ public class UserNotificationSettingServiceTest : TestUtils.BaseTestWithContext
 
         // Assert
         result.Should().BeTrue();
-        var dbSettings = await resources.Repository.Query(false).FirstAsync(s => s.UserId == userId);
+        var dbSettings = await resources.Repository.AsNoTracking().FirstAsync(s => s.UserId == userId);
         dbSettings.FirebaseTokens.Should().Contain(newToken);
         dbSettings.FirebaseTokens.Should().HaveCount(1);
     }
@@ -163,7 +163,7 @@ public class UserNotificationSettingServiceTest : TestUtils.BaseTestWithContext
 
         // Assert
         result.Should().BeTrue();
-        var dbSettings = await resources.Repository.Query(false).FirstAsync(s => s.UserId == userId);
+        var dbSettings = await resources.Repository.AsNoTracking().FirstAsync(s => s.UserId == userId);
         dbSettings.FirebaseTokens.Should().Contain(existingToken);
         dbSettings.FirebaseTokens.Should().HaveCount(1);
     }

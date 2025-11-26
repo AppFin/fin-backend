@@ -133,7 +133,7 @@ public class AuthenticationService : IAuthenticationService, IAutoTransient
                 ErrorCode = ResetPasswordErrorCode.NotSamePassword
             };
 
-        var credential = await _credentialRepository.Query().FirstOrDefaultAsync(c => c.ResetToken == input.ResetToken);
+        var credential = await _credentialRepository.FirstOrDefaultAsync(c => c.ResetToken == input.ResetToken);
         if (credential == null)
             return new ValidationResultDto<bool, ResetPasswordErrorCode>
             {
@@ -172,7 +172,7 @@ public class AuthenticationService : IAuthenticationService, IAutoTransient
     {
         var encryptedEmail = _cryptoHelper.Encrypt(input.Email);
 
-        var credential = _credentialRepository.Query()
+        var credential = _credentialRepository
             .Include(c => c.User)
             .ThenInclude(c => c.Tenants)
             .FirstOrDefault(c => c.EncryptedEmail == encryptedEmail);

@@ -142,7 +142,7 @@ public class AuthenticationTokenServiceTest : TestUtils.BaseTestWithContext
         result.Token.Should().BeNull();
         result.RefreshToken.Should().BeNull();
 
-        var credentialFromDb = await resources.CredentialRepository.Query().FirstOrDefaultAsync();
+        var credentialFromDb = await resources.CredentialRepository.FirstOrDefaultAsync();
         if (code == LoginErrorCode.InvalidPassword)
             credentialFromDb.FailLoginAttempts.Should().Be(previusesAttempts + 1);
     }

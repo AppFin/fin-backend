@@ -91,7 +91,7 @@ public class UserRememberUseSettingsServiceTest : TestUtils.BaseTestWithContext
         // Assert
         result.Should().BeTrue();
 
-        var dbSettings = await resources.Repository.Query(false).FirstAsync(s => s.UserId == currentUserId);
+        var dbSettings = await resources.Repository.AsNoTracking().FirstAsync(s => s.UserId == currentUserId);
         dbSettings.NotifyOn.Should().Be(input.NotifyOn);
     }
 

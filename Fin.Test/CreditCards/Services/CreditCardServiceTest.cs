@@ -309,7 +309,7 @@ public class CreditCardServiceTest : TestUtils.BaseTestWithContext
         result.Success.Should().BeTrue();
         result.Data.Should().NotBeNull();
 
-        var dbCreditCard = await resources.CreditCardRepository.Query(false)
+        var dbCreditCard = await resources.CreditCardRepository.AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == result.Data.Id);
         dbCreditCard.Should().NotBeNull();
         dbCreditCard.Name.Should().Be(input.Name);
@@ -341,7 +341,7 @@ public class CreditCardServiceTest : TestUtils.BaseTestWithContext
         result.ErrorCode.Should().Be(CreditCardCreateOrUpdateErrorCode.NameIsRequired);
         result.Data.Should().BeNull();
 
-        (await resources.CreditCardRepository.Query(false).CountAsync()).Should().Be(0);
+        (await resources.CreditCardRepository.AsNoTracking().CountAsync()).Should().Be(0);
     }
 
     #endregion
@@ -384,7 +384,7 @@ public class CreditCardServiceTest : TestUtils.BaseTestWithContext
         result.Success.Should().BeTrue();
         result.Data.Should().BeTrue();
 
-        var dbCreditCard = await resources.CreditCardRepository.Query(false).FirstAsync(a => a.Id == creditCard.Id);
+        var dbCreditCard = await resources.CreditCardRepository.AsNoTracking().FirstAsync(a => a.Id == creditCard.Id);
         dbCreditCard.Name.Should().Be(updatedInput.Name);
         dbCreditCard.Limit.Should().Be(updatedInput.Limit);
         dbCreditCard.DueDay.Should().Be(updatedInput.DueDay);
@@ -424,7 +424,7 @@ public class CreditCardServiceTest : TestUtils.BaseTestWithContext
         result.ErrorCode.Should().Be(CreditCardCreateOrUpdateErrorCode.CardBrandNotFound);
         result.Data.Should().BeFalse();
 
-        var dbCreditCard = await resources.CreditCardRepository.Query(false).FirstAsync(a => a.Id == creditCard.Id);
+        var dbCreditCard = await resources.CreditCardRepository.AsNoTracking().FirstAsync(a => a.Id == creditCard.Id);
         dbCreditCard.Name.Should().Be(originalInput.Name);
     }
 
@@ -450,7 +450,7 @@ public class CreditCardServiceTest : TestUtils.BaseTestWithContext
 
         result.Should().NotBeNull();
         result.Success.Should().BeTrue();
-        (await resources.CreditCardRepository.Query(false).FirstOrDefaultAsync(a => a.Id == creditCard.Id)).Should()
+        (await resources.CreditCardRepository.AsNoTracking().FirstOrDefaultAsync(a => a.Id == creditCard.Id)).Should()
             .BeNull();
     }
 
@@ -478,7 +478,7 @@ public class CreditCardServiceTest : TestUtils.BaseTestWithContext
         result.Should().NotBeNull();
         result.Success.Should().BeFalse();
         result.ErrorCode.Should().Be(CreditCardDeleteErrorCode.CreditCardInUse);
-        (await resources.CreditCardRepository.Query(false).FirstOrDefaultAsync(a => a.Id == creditCard.Id)).Should()
+        (await resources.CreditCardRepository.AsNoTracking().FirstOrDefaultAsync(a => a.Id == creditCard.Id)).Should()
             .NotBeNull();
     }
 
@@ -507,7 +507,7 @@ public class CreditCardServiceTest : TestUtils.BaseTestWithContext
         result.Should().NotBeNull();
         result.Success.Should().BeTrue();
         result.Data.Should().BeTrue();
-        var dbCreditCard = await resources.CreditCardRepository.Query(false).FirstAsync(a => a.Id == creditCard.Id);
+        var dbCreditCard = await resources.CreditCardRepository.AsNoTracking().FirstAsync(a => a.Id == creditCard.Id);
         dbCreditCard.Inactivated.Should().BeTrue();
     }
 
@@ -537,7 +537,7 @@ public class CreditCardServiceTest : TestUtils.BaseTestWithContext
         result.Should().NotBeNull();
         result.Success.Should().BeFalse();
         result.ErrorCode.Should().Be(CreditCardToggleInactiveErrorCode.CreditCardNotFound);
-        var dbCreditCard = await resources.CreditCardRepository.Query(false).FirstAsync(a => a.Id == creditCard.Id);
+        var dbCreditCard = await resources.CreditCardRepository.AsNoTracking().FirstAsync(a => a.Id == creditCard.Id);
         dbCreditCard.Inactivated.Should().BeFalse();
     }
 

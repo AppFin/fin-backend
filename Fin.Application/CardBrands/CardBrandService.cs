@@ -28,14 +28,14 @@ public class CardBrandService(
 {
     public async Task<CardBrandOutput> Get(Guid id)
     {
-        var entity = await repository.Query()
+        var entity = await repository
             .FirstOrDefaultAsync(n => n.Id == id);
         return entity != null ? new CardBrandOutput(entity) : null;
     }
 
     public async Task<PagedOutput<CardBrandOutput>> GetList(PagedFilteredAndSortedInput input)
     {
-        return await repository.Query(false)
+        return await repository.AsNoTracking()
             .OrderBy(m => m.Name)
             .ApplyFilterAndSorter(input)
             .Select(n => new CardBrandOutput(n))
@@ -44,7 +44,7 @@ public class CardBrandService(
 
     public async Task<List<CardBrandOutput>> GetListForSideNav()
     {
-        return await repository.Query(false)
+        return await repository.AsNoTracking()
             .OrderBy(m => m.Name)
             .Select(m => new CardBrandOutput(m))
             .ToListAsync();
@@ -61,7 +61,7 @@ public class CardBrandService(
     public async Task<bool> Update(Guid id, CardBrandInput input, bool autoSave = false)
     {
         ValidarInput(input);
-        var cardBrand = await repository.Query()
+        var cardBrand = await repository
             .FirstOrDefaultAsync(u => u.Id == id);
         if (cardBrand == null) return false;
 
@@ -73,7 +73,7 @@ public class CardBrandService(
 
     public async Task<bool> Delete(Guid id, bool autoSave = false)
     {
-        var cardBrand = await repository.Query()
+        var cardBrand = await repository
             .FirstOrDefaultAsync(u => u.Id == id);
         if (cardBrand == null) return false;
 

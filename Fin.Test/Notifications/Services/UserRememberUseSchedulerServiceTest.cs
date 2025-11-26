@@ -62,7 +62,7 @@ public class UserRememberUseSchedulerServiceTest : TestUtils.BaseTestWithContext
         await service.ScheduleTodayNotification(true);
 
         // Assert
-        var createdNotifications = await resources.NotificationRepository.Query(false).Include(e => e.UserDeliveries).ToListAsync();
+        var createdNotifications = await resources.NotificationRepository.AsNoTracking().Include(e => e.UserDeliveries).ToListAsync();
 
         // Only settings for User 1 and User 3 should have resulted in a new notification.
         createdNotifications.Should().HaveCount(2);

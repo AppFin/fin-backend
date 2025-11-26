@@ -31,7 +31,7 @@ public class WalletValidationService(
     {
         var validationResult = new ValidationResultDto<bool, WalletToggleInactiveErrorCode>();
 
-        var wallet = await walletRepository.Query(tracking: false).FirstOrDefaultAsync(n => n.Id == walletId);
+        var wallet = await walletRepository.AsNoTracking().FirstOrDefaultAsync(n => n.Id == walletId);
         if (wallet is null)
         {
             validationResult.ErrorCode = WalletToggleInactiveErrorCode.WalletNotFound;
@@ -39,7 +39,7 @@ public class WalletValidationService(
             return validationResult;
         }
 
-        var walletInUseByActivatedCreditCard = await creditCardRepository.Query().AnyAsync(n => n.DebitWalletId == walletId && !n.Inactivated);
+        var walletInUseByActivatedCreditCard = await creditCardRepository.AnyAsync(n => n.DebitWalletId == walletId && !n.Inactivated);
         if (walletInUseByActivatedCreditCard)
         {
             validationResult.ErrorCode = WalletToggleInactiveErrorCode.WalletInUseByActivatedCreditCards;
@@ -55,15 +55,15 @@ public class WalletValidationService(
     {
         var validationResult = new ValidationResultDto<bool, WalletDeleteErrorCode>();
 
-        var walletExists = await walletRepository.Query().AnyAsync(n => n.Id == walletId);
+        var walletExists = await walletRepository.AnyAsync(n => n.Id == walletId);
         if (!walletExists)
         {
             validationResult.ErrorCode = WalletDeleteErrorCode.WalletNotFound;
             return validationResult;
         }
 
-        var walletInUseByCreditCard = await creditCardRepository.Query().AnyAsync(n => n.DebitWalletId == walletId);
-        var walletInUseByTitle = await titleRepository.Query().AnyAsync(n => n.WalletId == walletId);
+        var walletInUseByCreditCard = await creditCardRepository.AnyAsync(n => n.DebitWalletId == walletId);
+        var walletInUseByTitle = await titleRepository.AnyAsync(n => n.WalletId == walletId);
 
         return walletInUseByTitle switch
         {
@@ -83,7 +83,7 @@ public class WalletValidationService(
 
         if (editingId.HasValue)
         {
-            var walletExists = await walletRepository.Query()
+            var walletExists = await walletRepository
                 .AnyAsync(n => n.Id == editingId.Value);
             if (!walletExists)
             {
@@ -135,7 +135,7 @@ public class WalletValidationService(
             return validationResult;
         }
 
-        var nameAlredInUse = await walletRepository.Query()
+        var nameAlredInUse = await walletRepository
             .AnyAsync(n => n.Name.ToLower() == input.Name.ToLower()  && (!editingId.HasValue || n.Id != editingId));
         if (nameAlredInUse)
         {

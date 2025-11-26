@@ -32,11 +32,6 @@ public class Repository<T> : IRepository<T> where T : class
     public async Task<T?> FindAsync(object[] keyValues, CancellationToken cancellationToken = default) =>
         await _dbSet.FindAsync(keyValues, cancellationToken);
 
-    public IQueryable<T> Query(bool tracking = true)
-    {
-        return tracking ? _dbSet : _dbSet.AsNoTracking();
-    }
-
     public async Task AddAsync(T entity, bool autoSave = false, CancellationToken cancellationToken = default)
     {
         await _dbSet.AddAsync(entity, cancellationToken);

@@ -2,8 +2,6 @@
 
 public interface IRepository<T>: IQueryable<T> where T : class
 {
-    [Obsolete("Unnecessary, now you can query direct on repository")]
-    IQueryable<T> Query(bool tracking = true);
     Task AddAsync(T entity, bool autoSave = false, CancellationToken cancellationToken = default);
     Task AddAsync(T entity, CancellationToken cancellationToken);
     Task AddRangeAsync(IEnumerable<T> entities, bool autoSave = false, CancellationToken cancellationToken = default);

@@ -123,7 +123,7 @@ public class NotificationDeliveryService(
         var userId = ambientData.UserId.GetValueOrDefault();
         var now = dateTimeProvider.UtcNow();
 
-        var userNotification = await deliveryRepository.Query(tracking: false)
+        var userNotification = await deliveryRepository.AsNoTracking()
             .Include(u => u.Notification)
             .Where(n => !n.Visualized && n.UserId == userId)
             .Where(n => n.Notification.StartToDelivery <= now.AddMinutes(1))

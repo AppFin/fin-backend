@@ -55,7 +55,7 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
         await service.SendResetPasswordEmail(intput);
 
         // Assert
-        credential = await resources.CredentialRepository.Query(false).FirstAsync(); 
+        credential = await resources.CredentialRepository.AsNoTracking().FirstAsync(); 
         credential.ResetToken.Should().NotBeNullOrEmpty();
         
         resources.FakeCache
@@ -90,7 +90,7 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
         await service.SendResetPasswordEmail(intput);
 
         // Assert
-        credential = await resources.CredentialRepository.Query(false).FirstAsync(); 
+        credential = await resources.CredentialRepository.AsNoTracking().FirstAsync(); 
         credential.ResetToken.Should().BeNullOrEmpty();
         
         resources.FakeCache
@@ -326,7 +326,7 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
             .Verify(c => c.GetAsync<Guid>(It.Is<string>(f => f.Contains(input.ResetToken))), Times.Once);;
         
         var encryptedPassword = resources.CryptoHelper.Encrypt(input.Password);
-        var dbCredential = await resources.CredentialRepository.Query(false).FirstAsync();
+        var dbCredential = await resources.CredentialRepository.AsNoTracking().FirstAsync();
         dbCredential.ResetToken.Should().BeNullOrEmpty();
         dbCredential.EncryptedPassword.Should().Be(encryptedPassword);
     }
@@ -585,7 +585,7 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
         resources.FakeTokenService
             .Verify(u => u.GenerateTokenAsync(It.Is<UserDto>(u =>  u.Id == user.Id)), Times.Once);
         
-        var dbCredential = await resources.CredentialRepository.Query(false).FirstAsync();
+        var dbCredential = await resources.CredentialRepository.AsNoTracking().FirstAsync();
         dbCredential.GoogleId.Should().Be(input.GoogleId);
     }
     
@@ -643,7 +643,7 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
         resources.FakeTokenService
             .Verify(u => u.GenerateTokenAsync(It.Is<UserDto>(u =>  u.Id == user.Id)), Times.Once);
         
-        var dbCredential = await resources.CredentialRepository.Query(false).FirstAsync();
+        var dbCredential = await resources.CredentialRepository.AsNoTracking().FirstAsync();
         dbCredential.GoogleId.Should().Be(input.GoogleId);
     }
     

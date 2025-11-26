@@ -27,7 +27,7 @@ public class NotificationService(
 {
     public async Task<NotificationOutput> Get(Guid id)
     {
-        var entity = await repository.Query()
+        var entity = await repository
             .Include(n => n.UserDeliveries)
             .FirstOrDefaultAsync(n => n.Id == id);
         return entity != null ? new NotificationOutput(entity) : null;
@@ -35,7 +35,7 @@ public class NotificationService(
 
     public async Task<PagedOutput<NotificationOutput>> GetList(PagedFilteredAndSortedInput input)
     {
-        return await repository.Query(false)
+        return await repository.AsNoTracking()
             .Include(n => n.UserDeliveries)
             .ApplyFilterAndSorter(input)
             .Select(n => new NotificationOutput(n))
@@ -56,7 +56,7 @@ public class NotificationService(
 
     public async Task<bool> Update(Guid id, NotificationInput input, bool autoSave = false)
     {
-        var notification = await repository.Query()
+        var notification = await repository
             .Include(u => u.UserDeliveries)
             .FirstOrDefaultAsync(u => u.Id == id);
         if (notification == null) return false;
@@ -84,7 +84,7 @@ public class NotificationService(
 
     public async Task<bool> Delete(Guid id, bool autoSave = false)
     {
-        var notification = await repository.Query()
+        var notification = await repository
             .Include(n => n.UserDeliveries)
             .FirstOrDefaultAsync(u => u.Id == id);
         if (notification == null) return false;

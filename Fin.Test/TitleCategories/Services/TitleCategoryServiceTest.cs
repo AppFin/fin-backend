@@ -154,7 +154,7 @@ public class TitleCategoryServiceTest : TestUtils.BaseTestWithContext
         result.Success.Should().BeTrue();
         result.Data.Should().NotBeNull();
 
-        var dbTitleCategory = await resources.TitleCategoryRepository.Query(false).FirstOrDefaultAsync(a => a.Id == result.Data.Id);
+        var dbTitleCategory = await resources.TitleCategoryRepository.AsNoTracking().FirstOrDefaultAsync(a => a.Id == result.Data.Id);
         dbTitleCategory.Should().NotBeNull();
         dbTitleCategory.Name.Should().Be(input.Name);
         dbTitleCategory.Color.Should().Be(input.Color);
@@ -302,7 +302,7 @@ public class TitleCategoryServiceTest : TestUtils.BaseTestWithContext
         result.Success.Should().BeTrue();
         result.Data.Should().BeTrue();
 
-        var dbTitleCategory = await resources.TitleCategoryRepository.Query(false).FirstAsync(a => a.Id == titleCategory.Id);
+        var dbTitleCategory = await resources.TitleCategoryRepository.AsNoTracking().FirstAsync(a => a.Id == titleCategory.Id);
         dbTitleCategory.Name.Should().Be(input.Name);
         dbTitleCategory.Color.Should().Be(input.Color);
         dbTitleCategory.Icon.Should().Be(input.Icon);
@@ -437,7 +437,7 @@ public class TitleCategoryServiceTest : TestUtils.BaseTestWithContext
 
         // Assert
         result.Should().BeTrue();
-        (await resources.TitleCategoryRepository.Query(false).FirstOrDefaultAsync(a => a.Id == titleCategory.Id)).Should().BeNull();
+        (await resources.TitleCategoryRepository.AsNoTracking().FirstOrDefaultAsync(a => a.Id == titleCategory.Id)).Should().BeNull();
     }
 
     #endregion
@@ -474,7 +474,7 @@ public class TitleCategoryServiceTest : TestUtils.BaseTestWithContext
 
         // Assert
         result.Should().BeTrue();
-        var dbTitleCategory = await resources.TitleCategoryRepository.Query(false).FirstOrDefaultAsync(a => a.Id == titleCategory.Id);
+        var dbTitleCategory = await resources.TitleCategoryRepository.AsNoTracking().FirstOrDefaultAsync(a => a.Id == titleCategory.Id);
         dbTitleCategory.Should().NotBeNull();
         dbTitleCategory.Inactivated.Should().BeTrue();
     }
@@ -496,7 +496,7 @@ public class TitleCategoryServiceTest : TestUtils.BaseTestWithContext
 
         // Assert
         result.Should().BeTrue();
-        var dbTitleCategory = await resources.TitleCategoryRepository.Query(false).FirstOrDefaultAsync(a => a.Id == titleCategory.Id);
+        var dbTitleCategory = await resources.TitleCategoryRepository.AsNoTracking().FirstOrDefaultAsync(a => a.Id == titleCategory.Id);
         dbTitleCategory.Should().NotBeNull();
         dbTitleCategory.Inactivated.Should().BeFalse();
     }

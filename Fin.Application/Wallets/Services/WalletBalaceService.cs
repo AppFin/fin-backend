@@ -30,7 +30,7 @@ public class WalletBalanceService(
 {
     public async Task<decimal> GetBalanceAt(Guid walletId, DateTime dateTime, CancellationToken cancellationToken = default)
     {
-        var wallet = await walletRepository.Query(tracking: false)
+        var wallet = await walletRepository.AsNoTracking()
             .Include(wallet => wallet.Titles)
             .FirstAsync(wallet => wallet.Id == walletId, cancellationToken);
         return wallet.CalculateBalanceAt(dateTime);
@@ -44,7 +44,7 @@ public class WalletBalanceService(
 
     public async Task ReprocessBalance(Guid walletId, decimal newInitialBalance, bool autoSave = false, CancellationToken cancellationToken = default)
     {
-        var wallet = await walletRepository.Query()
+        var wallet = await walletRepository
             .Include(wallet => wallet.Titles)
             .FirstAsync(wallet => wallet.Id == walletId, cancellationToken);
         await ReprocessBalance(wallet.Titles.ToList(), newInitialBalance, autoSave, cancellationToken);
@@ -73,7 +73,7 @@ public class WalletBalanceService(
 
     public async Task ReprocessBalanceFrom(Title fromTitle, bool autoSave = false, CancellationToken cancellationToken = default)
     {
-        var titles = await titleRepository.Query(tracking: true)
+        var titles = await titleRepository
             .Where(title => title.WalletId == fromTitle.WalletId)
             .Where(title => title.Date >= fromTitle.Date)
             .Where(title => title.Id > fromTitle.Id)
@@ -83,7 +83,7 @@ public class WalletBalanceService(
 
     public async Task ReprocessBalanceFrom(Guid titleId, bool autoSave = false, CancellationToken cancellationToken = default)
     {
-        var title = await titleRepository.Query(tracking: false)
+        var title = await titleRepository.AsNoTracking()
             .FirstAsync(title => title.Id == titleId, cancellationToken);
         await ReprocessBalanceFrom(title,  autoSave, cancellationToken);
     }

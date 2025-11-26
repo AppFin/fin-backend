@@ -56,11 +56,11 @@ public class UserDeleteService(
     {
         var userId = ambientData.UserId;
 
-        var alreadyRequest = await userDeleteRequestRepo.Query(false)
+        var alreadyRequest = await userDeleteRequestRepo.AsNoTracking()
             .FirstOrDefaultAsync(u => u.UserId == userId && !u.Aborted, cancellationToken);
         if (alreadyRequest != null) return false;
 
-        var user = userRepo.Query().Include(u => u.Credential).FirstOrDefault(u => u.Id == userId);
+        var user = userRepo.Include(u => u.Credential).FirstOrDefault(u => u.Id == userId);
         if (user == null) return false;
 
         var userEmail = _cryptoHelper.Decrypt(user.Credential.EncryptedEmail);
@@ -75,7 +75,7 @@ public class UserDeleteService(
     public async Task<bool> EffectiveDeleteUsers(CancellationToken cancellationToken = default)
     {
         var today = DateOnly.FromDateTime(dateTimeProvider.UtcNow());
-        var userIds = await userDeleteRequestRepo.Query()
+        var userIds = await userDeleteRequestRepo
             .Where(u => !u.Aborted && u.DeleteEffectivatedAt == today)
             .Select(u => u.UserId)
             .ToListAsync(cancellationToken);
@@ -92,7 +92,7 @@ public class UserDeleteService(
             throw new SecurityException("You are not admin");
 
         var now = dateTimeProvider.UtcNow();
-        var deleteRequest = await userDeleteRequestRepo.Query()
+        var deleteRequest = await userDeleteRequestRepo
             .Include(u => u.User)
             .ThenInclude(u => u.Credential)
             .FirstOrDefaultAsync(u => u.UserId == userId && !u.Aborted, cancellationToken);
@@ -107,7 +107,7 @@ public class UserDeleteService(
 
     public async Task<PagedOutput<UserDeleteRequestDto>> GetList(PagedFilteredAndSortedInput input, CancellationToken cancellationToken = default)
     {
-        return await userDeleteRequestRepo.Query(false)
+        return await userDeleteRequestRepo.AsNoTracking()
             .Include(u => u.User)
             .Include(u => u.UserAborted)
             .ApplyFilterAndSorter(input)

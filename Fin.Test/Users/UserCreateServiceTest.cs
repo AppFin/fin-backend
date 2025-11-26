@@ -558,11 +558,11 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
         var result = await service.CreateUser(process.Token, input);
         
         // Assert
-        var tenant = await resources.TenantRepository.Query(false).Include(t => t.Users).FirstAsync();
-        var credential = await resources.CredentialRepository.Query(false).FirstAsync();
-        var user = await resources.UserRepository.Query(false).FirstAsync();
-        var notificationSettings = await resources.UserNotificationSettings.Query(false).FirstAsync();
-        var userRemember = await resources.UserRememberUseSettings.Query(false).FirstAsync();
+        var tenant = await resources.TenantRepository.AsNoTracking().Include(t => t.Users).FirstAsync();
+        var credential = await resources.CredentialRepository.AsNoTracking().FirstAsync();
+        var user = await resources.UserRepository.AsNoTracking().FirstAsync();
+        var notificationSettings = await resources.UserNotificationSettings.AsNoTracking().FirstAsync();
+        var userRemember = await resources.UserRememberUseSettings.AsNoTracking().FirstAsync();
 
         credential.EncryptedEmail.Should().Be(process.EncryptedEmail);
         credential.EncryptedPassword.Should().Be(process.EncryptedPassword);
@@ -636,11 +636,11 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
         var result = await service.CreateUser(googleId, email, input);
 
         // Assert
-        var tenant = await resources.TenantRepository.Query(false).Include(t => t.Users).FirstAsync();
-        var credential = await resources.CredentialRepository.Query(false).FirstAsync();
-        var user = await resources.UserRepository.Query(false).FirstAsync();
-        var notificationSettings = await resources.UserNotificationSettings.Query(false).FirstAsync();
-        var userRemember = await resources.UserRememberUseSettings.Query(false).FirstAsync();
+        var tenant = await resources.TenantRepository.AsNoTracking().Include(t => t.Users).FirstAsync();
+        var credential = await resources.CredentialRepository.AsNoTracking().FirstAsync();
+        var user = await resources.UserRepository.AsNoTracking().FirstAsync();
+        var notificationSettings = await resources.UserNotificationSettings.AsNoTracking().FirstAsync();
+        var userRemember = await resources.UserRememberUseSettings.AsNoTracking().FirstAsync();
 
         credential.EncryptedEmail.Should().Be(encryptedEmail);
         credential.EncryptedPassword.Should().BeNullOrEmpty();

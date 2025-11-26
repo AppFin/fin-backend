@@ -119,7 +119,7 @@ public class DefaultMenusSeeder(
             }
         };
         var defaultMenusIds = defaultMenus.Select(x => x.Id).ToList();
-        var menusIdsAlreadyCreated = await menusRepository.Query(false)
+        var menusIdsAlreadyCreated = await menusRepository.AsNoTracking()
             .Where(x => defaultMenusIds.Contains(x.Id))
             .Select(x => x.Id).ToListAsync();
         var menusToCreate = defaultMenus.Where(x => !menusIdsAlreadyCreated.Contains(x.Id)).ToList();

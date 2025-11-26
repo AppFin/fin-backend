@@ -13,7 +13,7 @@ public class ActivatedMiddleware(IAmbientData ambientData, IRepository<User> use
     {
         if (ambientData.IsLogged)
         {
-            var userExistAndActivated = await userRepo.Query(false).AnyAsync(u => u.IsActivity && u.Id == ambientData.UserId);
+            var userExistAndActivated = await userRepo.AsNoTracking().AnyAsync(u => u.IsActivity && u.Id == ambientData.UserId);
 
             if (!userExistAndActivated)
             {

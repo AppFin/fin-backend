@@ -61,7 +61,7 @@ public class AuthenticationTokenService: IAuthenticationTokenService, IAutoTrans
         var encryptedEmail = _cryptoHelper.Encrypt(input.Email);
         var encryptedPassword = _cryptoHelper.Encrypt(input.Password);
         
-        var credential = await _credentialRepository.Query()
+        var credential = await _credentialRepository
             .Include(c => c.User)
             .ThenInclude(c => c.Tenants)
             .FirstOrDefaultAsync(c => c.EncryptedEmail == encryptedEmail);
@@ -89,7 +89,7 @@ public class AuthenticationTokenService: IAuthenticationTokenService, IAutoTrans
         if (userId == Guid.Empty)
             return new LoginOutput { ErrorCode = LoginErrorCode.InvalidRefreshToken };
         
-        var user = await _userRepository.Query(false)
+        var user = await _userRepository.AsNoTracking()
             .Include(c => c.Tenants)
             .FirstOrDefaultAsync(c => c.Id == userId);
         if (user == null)
