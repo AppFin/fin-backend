@@ -12,7 +12,7 @@ public class TenantConfiguration: IEntityTypeConfiguration<Tenant>
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Locale).HasMaxLength(5);
-        builder.Property(x => x.Timezone).HasMaxLength(30);
+        builder.Property(x => x.Timezone).HasMaxLength(40);
 
         builder
             .HasMany(e => e.Users)
