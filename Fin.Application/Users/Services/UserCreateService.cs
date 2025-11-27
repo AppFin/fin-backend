@@ -205,7 +205,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         var user = new User(input, now);
         var credential = UserCredentialFactory.Create(user.Id, process.EncryptedEmail, process.EncryptedPassword, UserCredentialFactoryType.Password);
 
-        return await ExecuteCreateUser(creationToken, user, credential);
+        return await ExecuteCreateUser(creationToken, user, credential, input.Timezone, input.Locale);
     }
 
     public async Task<ValidationResultDto<UserDto>> CreateUser(string googleId, string email, UserUpdateOrCreateInput input)
@@ -223,12 +223,12 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         var user = new User(input, now);
         var credential = UserCredentialFactory.Create(user.Id, encryptedEmail, googleId, UserCredentialFactoryType.Google);
 
-        return await ExecuteCreateUser(null, user, credential);
+        return await ExecuteCreateUser(null, user, credential, input.Timezone, input.Locale);
     }
     
-    private async Task<ValidationResultDto<UserDto>> ExecuteCreateUser(string creationToken, User user, UserCredential credential)
+    private async Task<ValidationResultDto<UserDto>> ExecuteCreateUser(string creationToken, User user, UserCredential credential, string timezone, string locale)
     {
-        var tenant = new Tenant(user.CreatedAt);
+        var tenant = new Tenant(user.CreatedAt, timezone, locale);
         user.Tenants.Add(tenant);
         
         var notificationSetting = new UserNotificationSettings(user.Id, tenant.Id);

@@ -1,6 +1,7 @@
 ﻿using Fin.Infrastructure.AmbientDatas;
 using Fin.Infrastructure.Authentications;
 using Fin.Infrastructure.Errors;
+using Fin.Infrastructure.Localizations;
 using Microsoft.AspNetCore.Builder;
 
 namespace Fin.Infrastructure.Extensions;
@@ -13,6 +14,7 @@ public static class UserMiddlewaresExtension
         app.UseMiddleware<TokenBlacklistMiddleware>();
         app.UseMiddleware<AmbientDataMiddleware>();
         app.UseMiddleware<ActivatedMiddleware>();
+        app.UseMiddleware<LocalizationMiddleware>();
 
         return app;
     }

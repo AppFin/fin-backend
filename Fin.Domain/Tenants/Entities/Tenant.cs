@@ -18,12 +18,12 @@ public class Tenant: IEntity
     {
     }
     
-    public Tenant(DateTime now)
+    public Tenant(DateTime now, string timezone, string locale)
     {
         Id = Guid.NewGuid();
         CreatedAt = now;
         UpdatedAt = now;
-        Locale = "pt-Br";
-        Timezone = "America/Sao_Paulo";
+        Locale = locale ?? "pt-BR";
+        Timezone = timezone ?? "America/Sao_Paulo";
     } 
 }
