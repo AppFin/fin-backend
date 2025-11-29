@@ -23,4 +23,12 @@
       <Folder Include="Notifications\Services\" />
     </ItemGroup>
     
+    <ItemGroup>
+      <Compile Update="Resources\EmailTemplates\EmailTemplates.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>EmailTemplates.resx</DependentUpon>
+      </Compile>
+    </ItemGroup>
+    
 </Project>
