@@ -4,18 +4,11 @@ using Microsoft.AspNetCore.Http;
 
 namespace Fin.Infrastructure.AmbientDatas;
 
-public class AmbientDataMiddleware: IMiddleware
+public class AmbientDataMiddleware(IAmbientData ambientData) : IMiddleware
 {
-    private readonly IAmbientData _ambientData;
-
-    public AmbientDataMiddleware(IAmbientData ambientData)
-    {
-        _ambientData = ambientData;
-    }
-
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
-        var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+        var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
 
         if (!string.IsNullOrWhiteSpace(authHeader) && authHeader.StartsWith("Bearer "))
         {
@@ -32,12 +25,12 @@ public class AmbientDataMiddleware: IMiddleware
                 var isAdmin = jwt.Claims.FirstOrDefault(c => c.Type == "role")?.Value == AuthenticationRoles.Admin;
                 var tenantId = jwt.Claims.FirstOrDefault(c => c.Type == "tenantId")?.Value ?? "";
 
-                _ambientData.SetData(Guid.Parse(tenantId), Guid.Parse(userId), displayName, isAdmin);           
+                ambientData.SetData(Guid.Parse(tenantId), Guid.Parse(userId), displayName, isAdmin);           
             }
         }
         else
         {
-            _ambientData.SetNotLogged();
+            ambientData.SetNotLogged();
         }
 
         await next(context);
