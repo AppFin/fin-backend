@@ -1,3 +1,4 @@
+using Fin.Application.Emails;
 using Fin.Infrastructure.EmailSenders;
 using Fin.Infrastructure.EmailSenders.Constants;
 using Fin.Infrastructure.EmailSenders.Dto;

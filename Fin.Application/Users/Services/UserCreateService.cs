@@ -1,4 +1,5 @@
-﻿using Fin.Application.Globals.Dtos;
+﻿using Fin.Application.Emails;
+using Fin.Application.Globals.Dtos;
 using Fin.Application.Globals.Services;
 using Fin.Application.Users.Dtos;
 using Fin.Application.Users.Enums;
@@ -50,6 +51,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
     private readonly IConfirmationCodeGenerator _codeGenerator;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IConfiguration _configuration;
+    private readonly IEmailTemplateService _emailTemplateService;
 
     private readonly CryptoHelper _cryptoHelper;
 
@@ -63,7 +65,10 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         IEmailSenderService emailSender,
         IConfirmationCodeGenerator codeGenerator,
         IRepository<UserNotificationSettings> notificationSettingsRepository,
-        IRepository<UserRememberUseSetting> userRememberUseSettingRepository, IUnitOfWork unitOfWork, IRepository<Wallet> walletRepository)
+        IRepository<UserRememberUseSetting> userRememberUseSettingRepository, 
+        IUnitOfWork unitOfWork, 
+        IRepository<Wallet> walletRepository, 
+        IEmailTemplateService emailTemplateService)
     {
         _credentialRepository = credentialRepository;
         _dateTimeProvider = dateTimeProvider;
@@ -75,6 +80,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         _userRememberUseSettingRepository = userRememberUseSettingRepository;
         _unitOfWork = unitOfWork;
         _walletRepository = walletRepository;
+        _emailTemplateService = emailTemplateService;
         _tenantRepository = tenantRepository;
         _userRepository = userRepository;
 
@@ -285,17 +291,14 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         var frontUrl = _configuration.GetSection(AppConstants.FrontUrlConfigKey).Get<string>();
         var logoIconUrl = $"{frontUrl}/icons/fin.png";
 
-        var htmlBody = CreateUserTemplates.SendConfirmationCodeTemplate
-            .Replace("{{appName}}", AppConstants.AppName)
-            .Replace("{{logoIconUrl}}", logoIconUrl)
-            .Replace("{{confirmationCode}}", confirmationCode);
-        
-        var plainBody = CreateUserTemplates.SendConfirmationCodePlainTemplate
-            .Replace("{{appName}}", AppConstants.AppName)
-            .Replace("{{confirmationCode}}", confirmationCode);
-        
-        var subject = CreateUserTemplates.SendConfirmationCodeSubject
-            .Replace("{{appName}}", AppConstants.AppName);
+        var properties = new Dictionary<string, string>();
+        properties.Add("appName", AppConstants.AppName);
+        properties.Add("logoIconUrl", logoIconUrl);
+        properties.Add("confirmationCode", confirmationCode);
+
+        var htmlBody = _emailTemplateService.Get("CreateUser_ConfirmarionCode_HTML", properties);
+        var plainBody = _emailTemplateService.Get("CreateUser_ConfirmarionCode_Plain", properties);
+        var subject = _emailTemplateService.Get("CreateUser_ConfirmarionCode_Subject", properties);
         
         await _emailSender.SendEmailAsync(new SendEmailDto
         {

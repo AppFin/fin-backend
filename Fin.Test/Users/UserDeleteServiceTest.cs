@@ -1,4 +1,5 @@
 ﻿using System.Security;
+using Fin.Application.Emails;
 using Fin.Application.Users.Services;
 using Fin.Domain.Global;
 using Fin.Domain.Global.Classes;

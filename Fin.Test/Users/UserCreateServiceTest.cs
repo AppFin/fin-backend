@@ -1,4 +1,5 @@
-﻿using Fin.Application.Globals.Services;
+﻿using Fin.Application.Emails;
+using Fin.Application.Globals.Services;
 using Fin.Application.Users.Dtos;
 using Fin.Application.Users.Enums;
 using Fin.Application.Users.Services;

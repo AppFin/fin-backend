@@ -1,4 +1,5 @@
 ﻿using System.Security;
+using Fin.Application.Emails;
 using Fin.Application.Users.Utils;
 using Fin.Domain.Global;
 using Fin.Domain.Global.Classes;
@@ -187,26 +188,10 @@ public class UserDeleteService(
      private async Task<bool> SendAbortDeleteEmailAsync(CancellationToken cancellationToken, UserDeleteRequest deleteRequest)
     {
         var userEmail = _cryptoHelper.Decrypt(deleteRequest.User.Credential.EncryptedEmail);
-        
-        var frontUrl = configuration.GetSection(AppConstants.FrontUrlConfigKey).Get<string>();
-        var logoIconUrl = $"{frontUrl}/icons/fin.png";
-
-        var htmlBody = AbortDeleteUserTemplates.AbortDeletionTemplate
-            .Replace("{{appName}}", AppConstants.AppName)
-            .Replace("{{logoIconUrl}}", logoIconUrl);
-        
-        var plainBody = AbortDeleteUserTemplates.AbortDeletionPlainTemplate
-            .Replace("{{appName}}", AppConstants.AppName);
-        
-        var subject = AbortDeleteUserTemplates.AbortDeletionSubject
-            .Replace("{{appName}}", AppConstants.AppName);
-        
         return await emailSender.SendEmailAsync(new SendEmailDto
         {
             ToEmail = userEmail,
-            Subject = subject,
-            HtmlBody = htmlBody,
-            PlainBody = plainBody
+            BaseTemplatesName = "DeleteUser_AbortDelete_"
         }, cancellationToken);
     }
     

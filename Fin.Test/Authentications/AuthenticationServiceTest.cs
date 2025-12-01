@@ -1,6 +1,7 @@
 ﻿using Fin.Application.Authentications.Dtos;
 using Fin.Application.Authentications.Enums;
 using Fin.Application.Authentications.Services;
+using Fin.Application.Emails;
 using Fin.Application.Globals.Dtos;
 using Fin.Application.Users.Services;
 using Fin.Domain.Global;

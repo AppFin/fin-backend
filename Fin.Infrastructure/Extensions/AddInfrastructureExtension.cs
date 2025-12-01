@@ -4,6 +4,7 @@ using Fin.Infrastructure.AutoServices.Extensions;
 using Fin.Infrastructure.BackgroundJobs;
 using Fin.Infrastructure.Database.Extensions;
 using Fin.Infrastructure.EmailSenders.MailSender;
+using Fin.Infrastructure.EmailSenders.MailKit;
 using Fin.Infrastructure.Firebases;
 using Fin.Infrastructure.Notifications.Hubs;
 using Fin.Infrastructure.Redis;
@@ -29,7 +30,8 @@ public static class AddInfrastructureExtension
             .AddFirebase(configuration)
             .AddSeeders()
             .AddNotifications()
-            .AddMailSenderClient();
+            .AddMailSenderClient()
+            .AddMailKitClient();
 
         return services;
     }
