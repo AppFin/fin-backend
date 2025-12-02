@@ -553,6 +553,8 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
             FirstName = TestUtils.Strings[5],
             BirthDate = DateOnly.FromDateTime(TestUtils.UtcDateTimes[1]),
             ImagePublicUrl = TestUtils.Strings[6],
+            Locale = "pt-Br",
+            Timezone = "America/Sao_Paulo"
         };
 
         // Act
@@ -623,6 +625,8 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
             FirstName = TestUtils.Strings[5],
             BirthDate = DateOnly.FromDateTime(TestUtils.UtcDateTimes[1]),
             ImagePublicUrl = TestUtils.Strings[6],
+            Locale = "pt-Br",
+            Timezone = "America/Sao_Paulo"
         };
 
         var googleId = TestUtils.Strings[1];

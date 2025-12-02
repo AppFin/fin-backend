@@ -1,5 +1,4 @@
 using Fin.Application.Emails;
-using Fin.Infrastructure.EmailSenders;
 using Fin.Infrastructure.EmailSenders.Constants;
 using Fin.Infrastructure.EmailSenders.Dto;
 using Fin.Infrastructure.EmailSenders.MailKit;
@@ -190,7 +189,7 @@ public class EmailSenderServiceTest
         {
             ToEmail = "user@test.com",
             ToName = "Usuário Tëst",
-            Subject = "Assunto com Ã§Ã£Ã£o",
+            Subject = "Assunto com ção",
             PlainBody = "Corpo com ãéíóú",
             HtmlBody = "<p>HTML com émojis 😀🎉</p>"
         };
@@ -204,6 +203,393 @@ public class EmailSenderServiceTest
 
         // Assert
         result.Should().BeTrue();
+    }
+
+    #endregion
+
+    #region SendEmailAsync - Template Integration
+
+    [Fact]
+    public async Task SendEmailAsync_ShouldNotUseTemplate_WhenBaseTemplatesNameIsNull()
+    {
+        // Arrange
+        SetupMailService(MailServicesConst.MailSender);
+        var service = GetService();
+        var dto = GetValidSendEmailDto();
+        dto.BaseTemplatesName = null;
+
+        _mailSenderClientMock
+            .Setup(m => m.SendEmailAsync(dto, default))
+            .ReturnsAsync(true);
+
+        // Act
+        await service.SendEmailAsync(dto);
+
+        // Assert
+        _emailTemplateServiceMock.Verify(
+            e => e.Get(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>()),
+            Times.Never
+        );
+    }
+
+    [Fact]
+    public async Task SendEmailAsync_ShouldNotUseTemplate_WhenBaseTemplatesNameIsEmpty()
+    {
+        // Arrange
+        SetupMailService(MailServicesConst.MailSender);
+        var service = GetService();
+        var dto = GetValidSendEmailDto();
+        dto.BaseTemplatesName = "";
+
+        _mailSenderClientMock
+            .Setup(m => m.SendEmailAsync(dto, default))
+            .ReturnsAsync(true);
+
+        // Act
+        await service.SendEmailAsync(dto);
+
+        // Assert
+        _emailTemplateServiceMock.Verify(
+            e => e.Get(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>()),
+            Times.Never
+        );
+    }
+
+    [Fact]
+    public async Task SendEmailAsync_ShouldPopulateHtmlBody_WhenUsingTemplate()
+    {
+        // Arrange
+        SetupMailService(MailServicesConst.MailSender);
+        var service = GetService();
+        var dto = new SendEmailDto
+        {
+            ToEmail = "user@test.com",
+            ToName = "Test User",
+            BaseTemplatesName = "Welcome",
+            TemplateProperties = new Dictionary<string, string>
+            {
+                { "userName", "John" }
+            }
+        };
+
+        var expectedHtml = "<html><body>Welcome, John!</body></html>";
+        _emailTemplateServiceMock
+            .Setup(e => e.Get("WelcomeHTML", dto.TemplateProperties))
+            .Returns(expectedHtml);
+
+        _mailSenderClientMock
+            .Setup(m => m.SendEmailAsync(It.IsAny<SendEmailDto>(), default))
+            .ReturnsAsync(true);
+
+        // Act
+        await service.SendEmailAsync(dto);
+
+        // Assert
+        dto.HtmlBody.Should().Be(expectedHtml);
+        _emailTemplateServiceMock.Verify(
+            e => e.Get("WelcomeHTML", dto.TemplateProperties),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task SendEmailAsync_ShouldPopulatePlainBody_WhenUsingTemplate()
+    {
+        // Arrange
+        SetupMailService(MailServicesConst.MailSender);
+        var service = GetService();
+        var dto = new SendEmailDto
+        {
+            ToEmail = "user@test.com",
+            ToName = "Test User",
+            BaseTemplatesName = "Welcome",
+            TemplateProperties = new Dictionary<string, string>
+            {
+                { "userName", "John" }
+            }
+        };
+
+        var expectedPlain = "Welcome, John!";
+        _emailTemplateServiceMock
+            .Setup(e => e.Get("WelcomePlain", dto.TemplateProperties))
+            .Returns(expectedPlain);
+
+        _mailSenderClientMock
+            .Setup(m => m.SendEmailAsync(It.IsAny<SendEmailDto>(), default))
+            .ReturnsAsync(true);
+
+        // Act
+        await service.SendEmailAsync(dto);
+
+        // Assert
+        dto.PlainBody.Should().Be(expectedPlain);
+        _emailTemplateServiceMock.Verify(
+            e => e.Get("WelcomePlain", dto.TemplateProperties),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task SendEmailAsync_ShouldPopulateSubject_WhenUsingTemplate()
+    {
+        // Arrange
+        SetupMailService(MailServicesConst.MailSender);
+        var service = GetService();
+        var dto = new SendEmailDto
+        {
+            ToEmail = "user@test.com",
+            ToName = "Test User",
+            BaseTemplatesName = "Welcome",
+            TemplateProperties = new Dictionary<string, string>
+            {
+                { "userName", "John" }
+            }
+        };
+
+        var expectedSubject = "Welcome to Our Service, John!";
+        _emailTemplateServiceMock
+            .Setup(e => e.Get("WelcomeSubject", dto.TemplateProperties))
+            .Returns(expectedSubject);
+
+        _mailSenderClientMock
+            .Setup(m => m.SendEmailAsync(It.IsAny<SendEmailDto>(), default))
+            .ReturnsAsync(true);
+
+        // Act
+        await service.SendEmailAsync(dto);
+
+        // Assert
+        dto.Subject.Should().Be(expectedSubject);
+        _emailTemplateServiceMock.Verify(
+            e => e.Get("WelcomeSubject", dto.TemplateProperties),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task SendEmailAsync_ShouldPopulateAllFields_WhenUsingTemplate()
+    {
+        // Arrange
+        SetupMailService(MailServicesConst.MailSender);
+        var service = GetService();
+        var dto = new SendEmailDto
+        {
+            ToEmail = "user@test.com",
+            ToName = "Test User",
+            BaseTemplatesName = "Welcome",
+            TemplateProperties = new Dictionary<string, string>
+            {
+                { "userName", "John" },
+                { "companyName", "Fin" }
+            }
+        };
+
+        var expectedHtml = "<html><body>Welcome, John from Fin!</body></html>";
+        var expectedPlain = "Welcome, John from Fin!";
+        var expectedSubject = "Welcome to Fin, John!";
+
+        _emailTemplateServiceMock
+            .Setup(e => e.Get("WelcomeHTML", dto.TemplateProperties))
+            .Returns(expectedHtml);
+        _emailTemplateServiceMock
+            .Setup(e => e.Get("WelcomePlain", dto.TemplateProperties))
+            .Returns(expectedPlain);
+        _emailTemplateServiceMock
+            .Setup(e => e.Get("WelcomeSubject", dto.TemplateProperties))
+            .Returns(expectedSubject);
+
+        _mailSenderClientMock
+            .Setup(m => m.SendEmailAsync(It.IsAny<SendEmailDto>(), default))
+            .ReturnsAsync(true);
+
+        // Act
+        await service.SendEmailAsync(dto);
+
+        // Assert
+        dto.HtmlBody.Should().Be(expectedHtml);
+        dto.PlainBody.Should().Be(expectedPlain);
+        dto.Subject.Should().Be(expectedSubject);
+        
+        _emailTemplateServiceMock.Verify(
+            e => e.Get("WelcomeHTML", dto.TemplateProperties),
+            Times.Once
+        );
+        _emailTemplateServiceMock.Verify(
+            e => e.Get("WelcomePlain", dto.TemplateProperties),
+            Times.Once
+        );
+        _emailTemplateServiceMock.Verify(
+            e => e.Get("WelcomeSubject", dto.TemplateProperties),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task SendEmailAsync_ShouldNotOverrideHtmlBody_WhenAlreadyProvided()
+    {
+        // Arrange
+        SetupMailService(MailServicesConst.MailSender);
+        var service = GetService();
+        var existingHtml = "<html><body>Existing HTML</body></html>";
+        var dto = new SendEmailDto
+        {
+            ToEmail = "user@test.com",
+            ToName = "Test User",
+            BaseTemplatesName = "Welcome",
+            HtmlBody = existingHtml,
+            TemplateProperties = new Dictionary<string, string>()
+        };
+
+        _emailTemplateServiceMock
+            .Setup(e => e.Get("WelcomeHTML", dto.TemplateProperties))
+            .Returns("<html><body>Template HTML</body></html>");
+
+        _mailSenderClientMock
+            .Setup(m => m.SendEmailAsync(It.IsAny<SendEmailDto>(), default))
+            .ReturnsAsync(true);
+
+        // Act
+        await service.SendEmailAsync(dto);
+
+        // Assert
+        dto.HtmlBody.Should().Be(existingHtml);
+        _emailTemplateServiceMock.Verify(
+            e => e.Get("WelcomeHTML", It.IsAny<Dictionary<string, string>>()),
+            Times.Never
+        );
+    }
+
+    [Fact]
+    public async Task SendEmailAsync_ShouldNotOverridePlainBody_WhenAlreadyProvided()
+    {
+        // Arrange
+        SetupMailService(MailServicesConst.MailSender);
+        var service = GetService();
+        var existingPlain = "Existing Plain Text";
+        var dto = new SendEmailDto
+        {
+            ToEmail = "user@test.com",
+            ToName = "Test User",
+            BaseTemplatesName = "Welcome",
+            PlainBody = existingPlain,
+            TemplateProperties = new Dictionary<string, string>()
+        };
+
+        _emailTemplateServiceMock
+            .Setup(e => e.Get("WelcomePlain", dto.TemplateProperties))
+            .Returns("Template Plain Text");
+
+        _mailSenderClientMock
+            .Setup(m => m.SendEmailAsync(It.IsAny<SendEmailDto>(), default))
+            .ReturnsAsync(true);
+
+        // Act
+        await service.SendEmailAsync(dto);
+
+        // Assert
+        dto.PlainBody.Should().Be(existingPlain);
+        _emailTemplateServiceMock.Verify(
+            e => e.Get("WelcomePlain", It.IsAny<Dictionary<string, string>>()),
+            Times.Never
+        );
+    }
+
+    [Fact]
+    public async Task SendEmailAsync_ShouldNotOverrideSubject_WhenAlreadyProvided()
+    {
+        // Arrange
+        SetupMailService(MailServicesConst.MailSender);
+        var service = GetService();
+        var existingSubject = "Existing Subject";
+        var dto = new SendEmailDto
+        {
+            ToEmail = "user@test.com",
+            ToName = "Test User",
+            BaseTemplatesName = "Welcome",
+            Subject = existingSubject,
+            TemplateProperties = new Dictionary<string, string>()
+        };
+
+        _emailTemplateServiceMock
+            .Setup(e => e.Get("WelcomeSubject", dto.TemplateProperties))
+            .Returns("Template Subject");
+
+        _mailSenderClientMock
+            .Setup(m => m.SendEmailAsync(It.IsAny<SendEmailDto>(), default))
+            .ReturnsAsync(true);
+
+        // Act
+        await service.SendEmailAsync(dto);
+
+        // Assert
+        dto.Subject.Should().Be(existingSubject);
+        _emailTemplateServiceMock.Verify(
+            e => e.Get("WelcomeSubject", It.IsAny<Dictionary<string, string>>()),
+            Times.Never
+        );
+    }
+
+    [Fact]
+    public async Task SendEmailAsync_ShouldInitializeTemplateProperties_WhenNull()
+    {
+        // Arrange
+        SetupMailService(MailServicesConst.MailSender);
+        var service = GetService();
+        var dto = new SendEmailDto
+        {
+            ToEmail = "user@test.com",
+            ToName = "Test User",
+            BaseTemplatesName = "Welcome",
+            TemplateProperties = null
+        };
+
+        _emailTemplateServiceMock
+            .Setup(e => e.Get(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>()))
+            .Returns("Template Content");
+
+        _mailSenderClientMock
+            .Setup(m => m.SendEmailAsync(It.IsAny<SendEmailDto>(), default))
+            .ReturnsAsync(true);
+
+        // Act
+        await service.SendEmailAsync(dto);
+
+        // Assert
+        dto.TemplateProperties.Should().NotBeNull();
+        dto.TemplateProperties.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task SendEmailAsync_ShouldUseEmptyDictionary_WhenTemplatePropertiesNotProvided()
+    {
+        // Arrange
+        SetupMailService(MailServicesConst.MailSender);
+        var service = GetService();
+        var dto = new SendEmailDto
+        {
+            ToEmail = "user@test.com",
+            ToName = "Test User",
+            BaseTemplatesName = "Welcome"
+        };
+
+        var expectedHtml = "<html><body>Welcome!</body></html>";
+        _emailTemplateServiceMock
+            .Setup(e => e.Get("WelcomeHTML", It.IsAny<Dictionary<string, string>>()))
+            .Returns(expectedHtml);
+
+        _mailSenderClientMock
+            .Setup(m => m.SendEmailAsync(It.IsAny<SendEmailDto>(), default))
+            .ReturnsAsync(true);
+
+        // Act
+        await service.SendEmailAsync(dto);
+
+        // Assert
+        dto.HtmlBody.Should().Be(expectedHtml);
+        _emailTemplateServiceMock.Verify(
+            e => e.Get("WelcomeHTML", It.Is<Dictionary<string, string>>(d => d != null && d.Count == 0)),
+            Times.Once
+        );
     }
 
     #endregion
@@ -228,6 +614,32 @@ public class EmailSenderServiceTest
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("Test exception");
+    }
+
+    [Fact]
+    public async Task SendEmailAsync_ShouldPropagateException_WhenTemplateServiceThrows()
+    {
+        // Arrange
+        SetupMailService(MailServicesConst.MailSender);
+        var service = GetService();
+        var dto = new SendEmailDto
+        {
+            ToEmail = "user@test.com",
+            ToName = "Test User",
+            BaseTemplatesName = "Welcome",
+            TemplateProperties = new Dictionary<string, string>()
+        };
+
+        _emailTemplateServiceMock
+            .Setup(e => e.Get("WelcomeHTML", It.IsAny<Dictionary<string, string>>()))
+            .Throws(new InvalidOperationException("Template not found"));
+
+        // Act
+        Func<Task> act = async () => await service.SendEmailAsync(dto);
+
+        // Assert
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Template not found");
     }
 
     #endregion

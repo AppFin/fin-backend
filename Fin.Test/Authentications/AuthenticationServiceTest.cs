@@ -63,7 +63,8 @@ public class AuthenticationServiceTest: TestUtils.BaseTestWithContext
             .Verify(c => c.SetAsync($"reset-token-{credential.ResetToken}", credential.UserId, It.IsAny<DistributedCacheEntryOptions>()), Times.Once);;
         
         resources.FakeEmailSender
-            .Verify(e => e.SendEmailAsync(It.Is<SendEmailDto>(dto => dto.ToEmail == email && dto.HtmlBody.Contains(credential.ResetToken)), It.IsAny<CancellationToken>()), Times.Once);
+            .Verify(e => e.SendEmailAsync(It.Is<SendEmailDto>(dto => dto.ToEmail == email),
+                It.IsAny<CancellationToken>()), Times.Once);
     }
     
     [Fact]
