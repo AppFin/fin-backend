@@ -2,6 +2,7 @@ using Fin.Application.Emails;
 using Fin.Infrastructure.EmailSenders;
 using Fin.Infrastructure.EmailSenders.Constants;
 using Fin.Infrastructure.EmailSenders.Dto;
+using Fin.Infrastructure.EmailSenders.MailKit;
 using Fin.Infrastructure.EmailSenders.MailSender;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
@@ -13,7 +14,9 @@ public class EmailSenderServiceTest
 {
     private readonly Mock<IConfiguration> _configurationMock = new();
     private readonly Mock<IMailSenderClient> _mailSenderClientMock = new();
+    private readonly Mock<IMailKitClient> _mailKitClientMock = new();
     private readonly Mock<IConfigurationSection> _mailServiceSectionMock = new();
+    private readonly Mock<IEmailTemplateService> _emailTemplateServiceMock = new();
 
     #region SendEmailAsync - MailSender
 
@@ -233,7 +236,7 @@ public class EmailSenderServiceTest
 
     private EmailSenderService GetService()
     {
-        return new EmailSenderService(_configurationMock.Object, _mailSenderClientMock.Object);
+        return new EmailSenderService(_configurationMock.Object, _mailSenderClientMock.Object, _mailKitClientMock.Object, _emailTemplateServiceMock.Object);
     }
 
     private SendEmailDto GetValidSendEmailDto()
