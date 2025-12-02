@@ -496,4 +496,304 @@ Your account will no longer be deleted and remains active.</value>
     <data name="DeleteUser_AbortDelete_Subject" xml:space="preserve">
         <value>{{appName}} - Deletion request aborted</value>
     </data>
+    <data name="DeleteUser_Deletion_HTML" xml:space="preserve">
+        <value>&lt;!DOCTYPE html&gt;
+&lt;html lang='en'&gt;
+&lt;head&gt;
+    &lt;meta charset='UTF-8'&gt;
+    &lt;meta name='viewport' content='width=device-width, initial-scale=1.0'&gt;
+    &lt;title&gt;Deletion Request&lt;/title&gt;
+    &lt;style&gt;
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #212529;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #f87b07 0%, #fdc570 100%);
+            padding: 30px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .app-icon {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .app-icon img {
+            width: 40px;
+            height: 40px;
+        }
+
+        .app-name {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .content {
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 22px;
+            color: rgb(46, 38, 26);
+            margin-bottom: 20px;
+        }
+
+        .message {
+            color: #6c757d;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .alert-box {
+            background: #fff3cd;
+            border-left: 4px solid #f87b07;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .alert-box h3 {
+            margin: 0 0 10px 0;
+            color: #856404;
+            font-size: 18px;
+        }
+
+        .alert-box p {
+            margin: 0;
+            color: #856404;
+            font-size: 14px;
+        }
+
+        .footer {
+            background: rgb(46, 38, 26);
+            color: #fdc570;
+            padding: 20px 30px;
+            text-align: center;
+            border-radius: 0 0 8px 8px;
+            font-size: 14px;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class='container'&gt;
+        &lt;div class='header'&gt;
+            &lt;div class='app-icon'&gt;
+                &lt;img src='{{logoIconUrl}}' alt='{{appName}} logo'&gt;
+            &lt;/div&gt;
+            &lt;h1 class='app-name'&gt;{{appName}}&lt;/h1&gt;
+        &lt;/div&gt;
+
+        &lt;div class='content'&gt;
+            &lt;h2 class='title'&gt;Deletion Request&lt;/h2&gt;
+            
+            &lt;p class='message'&gt;
+                We have received your account deletion request.
+            &lt;/p&gt;
+
+            &lt;div class='alert-box'&gt;
+                &lt;h3&gt;Account Deactivated&lt;/h3&gt;
+                &lt;p&gt;Your account is scheduled to be &lt;strong&gt;permanently deleted in 30 days&lt;/strong&gt;.&lt;/p&gt;
+            &lt;/div&gt;
+
+            &lt;p class='message'&gt;
+                If you change your mind or submitted this request by mistake, please contact our support team immediately to cancel the deletion.
+            &lt;/p&gt;
+        &lt;/div&gt;
+
+        &lt;div class='footer'&gt;
+            &lt;p&gt;This is an automated security email.&lt;/p&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</value>
+    </data>
+    <data name="DeleteUser_Deletion_Plain" xml:space="preserve">
+        <value>{{appName}} - Deletion Request
+
+We have received your account deletion request.
+
+Your account has been deactivated and will be deleted in 30 days.
+
+If you change your mind, please contact our support team to cancel the deletion.
+</value>
+    </data>
+    <data name="DeleteUser_Deletion_Subject" xml:space="preserve">
+        <value>{{appName}} - Deletion Request
+</value>
+    </data>
+    <data name="DeleteUser_AccountDeleted_HTML" xml:space="preserve">
+        <value>&lt;!DOCTYPE html&gt;
+&lt;html lang='en'&gt;
+&lt;head&gt;
+    &lt;meta charset='UTF-8'&gt;
+    &lt;meta name='viewport' content='width=device-width, initial-scale=1.0'&gt;
+    &lt;title&gt;Account Deleted&lt;/title&gt;
+    &lt;style&gt;
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #212529;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #f87b07 0%, #fdc570 100%);
+            padding: 30px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .app-icon {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .app-icon img {
+            width: 40px;
+            height: 40px;
+        }
+
+        .app-name {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .content {
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 22px;
+            color: rgb(46, 38, 26);
+            margin-bottom: 20px;
+        }
+
+        .message {
+            color: #6c757d;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .deletion-notice {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .deletion-notice h3 {
+            margin: 0 0 10px 0;
+            color: #721c24;
+            font-size: 18px;
+        }
+
+        .deletion-notice p {
+            margin: 0;
+            color: #721c24;
+            font-size: 14px;
+        }
+
+        .footer {
+            background: rgb(46, 38, 26);
+            color: #fdc570;
+            padding: 20px 30px;
+            text-align: center;
+            border-radius: 0 0 8px 8px;
+            font-size: 14px;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class='container'&gt;
+        &lt;div class='header'&gt;
+            &lt;div class='app-icon'&gt;
+                &lt;img src='{{logoIconUrl}}' alt='{{appName}} logo'&gt;
+            &lt;/div&gt;
+            &lt;h1 class='app-name'&gt;{{appName}}&lt;/h1&gt;
+        &lt;/div&gt;
+
+        &lt;div class='content'&gt;
+            &lt;h2 class='title'&gt;Account Deleted&lt;/h2&gt;
+            
+            &lt;p class='message'&gt;
+                We inform you that the deletion process has been completed.
+            &lt;/p&gt;
+
+            &lt;div class='deletion-notice'&gt;
+                &lt;h3&gt;Access Removed&lt;/h3&gt;
+                &lt;p&gt;Your {{appName}} account has been deleted. You will no longer be able to access your data, and it has been removed from the platform.&lt;/p&gt;
+            &lt;/div&gt;
+
+            &lt;p class='message'&gt;
+                Thank you for the time you spent with us.
+            &lt;/p&gt;
+        &lt;/div&gt;
+
+        &lt;div class='footer'&gt;
+            &lt;p&gt;We hope to see you again in the future.&lt;/p&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</value>
+    </data>
+    <data name="DeleteUser_AccountDeleted_Subject" xml:space="preserve">
+        <value>{{appName}} - Account Deleted
+</value>
+    </data>
+    <data name="DeleteUser_AccountDeleted_Plain" xml:space="preserve">
+        <value>{{appName}} - Account Deleted
+
+Your {{appName}} account has been deleted.
+
+You will no longer be able to access your data, and it has been removed from the platform.
+
+Thank you for the time you spent with us.
+</value>
+    </data>
 </root>

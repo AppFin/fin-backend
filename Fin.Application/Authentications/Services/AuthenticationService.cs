@@ -1,11 +1,9 @@
 ﻿using Fin.Application.Authentications.Dtos;
 using Fin.Application.Authentications.Enums;
-using Fin.Application.Authentications.Utils;
 using Fin.Application.Emails;
 using Fin.Application.Globals.Dtos;
 using Fin.Application.Users.Services;
 using Fin.Domain.Global;
-using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Entities;
 using Fin.Infrastructure.Authentications;
@@ -15,7 +13,6 @@ using Fin.Infrastructure.Authentications.Enums;
 using Fin.Infrastructure.AutoServices.Interfaces;
 using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Database.Repositories;
-using Fin.Infrastructure.EmailSenders;
 using Fin.Infrastructure.EmailSenders.Dto;
 using Fin.Infrastructure.Redis;
 using Microsoft.EntityFrameworkCore;
@@ -43,7 +40,6 @@ public class AuthenticationService : IAuthenticationService, IAutoTransient
     private readonly IUserCreateService _userCreateService;
     private readonly IAuthenticationTokenService _tokenService;
     private readonly IConfiguration _configuration;
-    private readonly IEmailTemplateService _emailTemplateService;
 
     private readonly CryptoHelper _cryptoHelper;
 
@@ -53,8 +49,7 @@ public class AuthenticationService : IAuthenticationService, IAutoTransient
         IEmailSenderService emailSender,
         IConfiguration configuration,
         IAuthenticationTokenService tokenService,
-        IUserCreateService userCreateService,
-        IEmailTemplateService emailTemplateService)
+        IUserCreateService userCreateService)
     {
         _credentialRepository = credentialRepository;
         _cache = cache;
@@ -62,7 +57,7 @@ public class AuthenticationService : IAuthenticationService, IAutoTransient
         _configuration = configuration;
         _tokenService = tokenService;
         _userCreateService = userCreateService;
-        _emailTemplateService = emailTemplateService;
+        
 
         var encryptKey = configuration.GetSection(AuthenticationConstants.EncryptKeyConfigKey).Value ?? "";
         var encryptIv = configuration.GetSection(AuthenticationConstants.EncryptIvConfigKey).Value ?? "";
@@ -99,17 +94,12 @@ public class AuthenticationService : IAuthenticationService, IAutoTransient
         parameters.Add("linkLifeTime", tokenLifeTimeInHours.ToString());
         parameters.Add("resetLink", resetLink);
         parameters.Add("logoIconUrl", logoIconUrl);
-
-        var subject = _emailTemplateService.Get("ResetPassword_Subject", parameters);
-        var plainBody = _emailTemplateService.Get("ResetPassword_Plain", parameters);
-        var htmlBody = _emailTemplateService.Get("ResetPassword_HTML", parameters);
-
+        
         await _emailSender.SendEmailAsync(new SendEmailDto
         {
-            Subject = subject,
+            BaseTemplatesName = "ResetPassword_",
+            TemplateProperties = parameters,
             ToEmail = input.Email,
-            PlainBody =  plainBody,
-            HtmlBody = htmlBody,
             ToName = credential.User.DisplayName
         });
     }

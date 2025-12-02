@@ -1,9 +1,7 @@
 ﻿using System.Security;
 using Fin.Application.Emails;
-using Fin.Application.Users.Utils;
 using Fin.Domain.Global;
 using Fin.Domain.Global.Classes;
-using Fin.Domain.Notifications.Dtos;
 using Fin.Domain.Notifications.Entities;
 using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Dtos;
@@ -11,14 +9,11 @@ using Fin.Domain.Users.Entities;
 using Fin.Infrastructure.AmbientDatas;
 using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.AutoServices.Interfaces;
-using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Database.Extensions;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.DateTimes;
-using Fin.Infrastructure.EmailSenders;
 using Fin.Infrastructure.EmailSenders.Dto;
 using Fin.Infrastructure.UnitOfWorks;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
@@ -29,7 +24,9 @@ public interface IUserDeleteService
     public Task<bool> RequestDeleteUser(CancellationToken cancellationToken = default);
     public Task<bool> EffectiveDeleteUsers(CancellationToken cancellationToken = default);
     public Task<bool> AbortDeleteUser(Guid userId, CancellationToken cancellationToken = default);
-    public Task<PagedOutput<UserDeleteRequestDto>> GetList(PagedFilteredAndSortedInput input, CancellationToken cancellationToken = default);
+
+    public Task<PagedOutput<UserDeleteRequestDto>> GetList(PagedFilteredAndSortedInput input,
+        CancellationToken cancellationToken = default);
 }
 
 public class UserDeleteService(
@@ -106,14 +103,15 @@ public class UserDeleteService(
         return true;
     }
 
-    public async Task<PagedOutput<UserDeleteRequestDto>> GetList(PagedFilteredAndSortedInput input, CancellationToken cancellationToken = default)
+    public async Task<PagedOutput<UserDeleteRequestDto>> GetList(PagedFilteredAndSortedInput input,
+        CancellationToken cancellationToken = default)
     {
         return await userDeleteRequestRepo.AsNoTracking()
             .Include(u => u.User)
             .Include(u => u.UserAborted)
             .ApplyFilterAndSorter(input)
             .Select(n => new UserDeleteRequestDto(n))
-            .ToPagedResult(input, cancellationToken );
+            .ToPagedResult(input, cancellationToken);
     }
 
     private async Task DeleteUser(Guid userId, CancellationToken cancellationToken = default)
@@ -157,7 +155,6 @@ public class UserDeleteService(
 
         await using (var scope = await unitOfWork.BeginTransactionAsync(cancellationToken))
         {
-
             foreach (var notification in notifications)
                 await notificationRepo.DeleteAsync(notification, cancellationToken);
             foreach (var delivery in notificationDeliveries)
@@ -184,8 +181,9 @@ public class UserDeleteService(
             await scope.CompleteAsync(cancellationToken);
         }
     }
-    
-     private async Task<bool> SendAbortDeleteEmailAsync(CancellationToken cancellationToken, UserDeleteRequest deleteRequest)
+
+    private async Task<bool> SendAbortDeleteEmailAsync(CancellationToken cancellationToken,
+        UserDeleteRequest deleteRequest)
     {
         var userEmail = _cryptoHelper.Decrypt(deleteRequest.User.Credential.EncryptedEmail);
         return await emailSender.SendEmailAsync(new SendEmailDto
@@ -194,52 +192,22 @@ public class UserDeleteService(
             BaseTemplatesName = "DeleteUser_AbortDelete_"
         }, cancellationToken);
     }
-    
+
     private async Task<bool> SendDeleteAccountEmailAsync(CancellationToken cancellationToken, string userEmail)
     {
-        var frontUrl = configuration.GetSection(AppConstants.FrontUrlConfigKey).Get<string>();
-        var logoIconUrl = $"{frontUrl}/icons/fin.png";
-
-        var htmlBody = DeleteUserTemplates.AccountDeletionTemplate
-            .Replace("{{appName}}", AppConstants.AppName)
-            .Replace("{{logoIconUrl}}", logoIconUrl);
-        
-        var plainBody = DeleteUserTemplates.AccountDeletionPlainTemplate
-            .Replace("{{appName}}", AppConstants.AppName);
-        
-        var subject = DeleteUserTemplates.AccountDeletionSubject
-            .Replace("{{appName}}", AppConstants.AppName);
-        
         return await emailSender.SendEmailAsync(new SendEmailDto
         {
             ToEmail = userEmail,
-            Subject = subject,
-            HtmlBody = htmlBody,
-            PlainBody = plainBody
+            BaseTemplatesName = "DeleteUser_Deletion_"
         }, cancellationToken);
     }
-    
+
     private async Task<bool> SendAccountDeletedEmailAsync(CancellationToken cancellationToken, string userEmail)
     {
-        var frontUrl = configuration.GetSection(AppConstants.FrontUrlConfigKey).Get<string>();
-        var logoIconUrl = $"{frontUrl}/icons/fin.png";
-
-        var htmlBody = AccountDeletedTemplates.AccountDeletedTemplate
-            .Replace("{{appName}}", AppConstants.AppName)
-            .Replace("{{logoIconUrl}}", logoIconUrl);
-        
-        var plainBody = AccountDeletedTemplates.AccountDeletedPlainTemplate
-            .Replace("{{appName}}", AppConstants.AppName);
-        
-        var subject = AccountDeletedTemplates.AccountDeletedSubject
-            .Replace("{{appName}}", AppConstants.AppName);
-        
         return await emailSender.SendEmailAsync(new SendEmailDto
         {
             ToEmail = userEmail,
-            Subject = subject,
-            HtmlBody = htmlBody,
-            PlainBody = plainBody
+            BaseTemplatesName = "DeleteUser_AccountDeleted_"
         }, cancellationToken);
     }
 }

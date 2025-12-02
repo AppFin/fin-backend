@@ -493,4 +493,304 @@ Su cuenta ya no será eliminada y permanece activa.</value>
     <data name="DeleteUser_AbortDelete_Subject" xml:space="preserve">
         <value>{{appName}} - Solicitud de eliminación cancelada</value>
     </data>
+    <data name="DeleteUser_Deletion_HTML" xml:space="preserve">
+        <value>&lt;!DOCTYPE html&gt;
+&lt;html lang='es'&gt;
+&lt;head&gt;
+    &lt;meta charset='UTF-8'&gt;
+    &lt;meta name='viewport' content='width=device-width, initial-scale=1.0'&gt;
+    &lt;title&gt;Solicitud de Eliminación&lt;/title&gt;
+    &lt;style&gt;
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #212529;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #f87b07 0%, #fdc570 100%);
+            padding: 30px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .app-icon {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .app-icon img {
+            width: 40px;
+            height: 40px;
+        }
+
+        .app-name {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .content {
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 22px;
+            color: rgb(46, 38, 26);
+            margin-bottom: 20px;
+        }
+
+        .message {
+            color: #6c757d;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .alert-box {
+            background: #fff3cd;
+            border-left: 4px solid #f87b07;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .alert-box h3 {
+            margin: 0 0 10px 0;
+            color: #856404;
+            font-size: 18px;
+        }
+
+        .alert-box p {
+            margin: 0;
+            color: #856404;
+            font-size: 14px;
+        }
+
+        .footer {
+            background: rgb(46, 38, 26);
+            color: #fdc570;
+            padding: 20px 30px;
+            text-align: center;
+            border-radius: 0 0 8px 8px;
+            font-size: 14px;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class='container'&gt;
+        &lt;div class='header'&gt;
+            &lt;div class='app-icon'&gt;
+                &lt;img src='{{logoIconUrl}}' alt='{{appName}} logo'&gt;
+            &lt;/div&gt;
+            &lt;h1 class='app-name'&gt;{{appName}}&lt;/h1&gt;
+        &lt;/div&gt;
+
+        &lt;div class='content'&gt;
+            &lt;h2 class='title'&gt;Solicitud de Eliminación&lt;/h2&gt;
+            
+            &lt;p class='message'&gt;
+                Hemos recibido su solicitud de eliminación de cuenta.
+            &lt;/p&gt;
+
+            &lt;div class='alert-box'&gt;
+                &lt;h3&gt;Cuenta Desactivada&lt;/h3&gt;
+                &lt;p&gt;Su cuenta está programada para ser &lt;strong&gt;eliminada permanentemente en 30 días&lt;/strong&gt;.&lt;/p&gt;
+            &lt;/div&gt;
+
+            &lt;p class='message'&gt;
+                Si cambia de opinión o realizó esta solicitud por error, póngase en contacto con nuestro equipo de soporte inmediatamente para cancelar la eliminación.
+            &lt;/p&gt;
+        &lt;/div&gt;
+
+        &lt;div class='footer'&gt;
+            &lt;p&gt;Este es un correo electrónico automático de seguridad.&lt;/p&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</value>
+    </data>
+    <data name="DeleteUser_Deletion_Plain" xml:space="preserve">
+        <value>{{appName}} - Solicitud de Eliminación
+
+Hemos recibido su solicitud de eliminación de cuenta.
+
+Su cuenta ha sido desactivada y será eliminada en 30 días.
+
+Si cambia de opinión, póngase en contacto con nuestro equipo de soporte para cancelar la eliminación.
+</value>
+    </data>
+    <data name="DeleteUser_Deletion_Subject" xml:space="preserve">
+        <value>{{appName}} - Solicitud de Eliminación
+</value>
+    </data>
+    <data name="DeleteUser_AccountDeleted_HTML" xml:space="preserve">
+        <value>&lt;!DOCTYPE html&gt;
+&lt;html lang='es'&gt;
+&lt;head&gt;
+    &lt;meta charset='UTF-8'&gt;
+    &lt;meta name='viewport' content='width=device-width, initial-scale=1.0'&gt;
+    &lt;title&gt;Cuenta Eliminada&lt;/title&gt;
+    &lt;style&gt;
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #212529;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #f87b07 0%, #fdc570 100%);
+            padding: 30px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .app-icon {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .app-icon img {
+            width: 40px;
+            height: 40px;
+        }
+
+        .app-name {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .content {
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 22px;
+            color: rgb(46, 38, 26);
+            margin-bottom: 20px;
+        }
+
+        .message {
+            color: #6c757d;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .deletion-notice {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .deletion-notice h3 {
+            margin: 0 0 10px 0;
+            color: #721c24;
+            font-size: 18px;
+        }
+
+        .deletion-notice p {
+            margin: 0;
+            color: #721c24;
+            font-size: 14px;
+        }
+
+        .footer {
+            background: rgb(46, 38, 26);
+            color: #fdc570;
+            padding: 20px 30px;
+            text-align: center;
+            border-radius: 0 0 8px 8px;
+            font-size: 14px;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class='container'&gt;
+        &lt;div class='header'&gt;
+            &lt;div class='app-icon'&gt;
+                &lt;img src='{{logoIconUrl}}' alt='{{appName}} logo'&gt;
+            &lt;/div&gt;
+            &lt;h1 class='app-name'&gt;{{appName}}&lt;/h1&gt;
+        &lt;/div&gt;
+
+        &lt;div class='content'&gt;
+            &lt;h2 class='title'&gt;Cuenta Eliminada&lt;/h2&gt;
+            
+            &lt;p class='message'&gt;
+                Le informamos que el proceso de eliminación ha sido completado.
+            &lt;/p&gt;
+
+            &lt;div class='deletion-notice'&gt;
+                &lt;h3&gt;Acceso Eliminado&lt;/h3&gt;
+                &lt;p&gt;Su cuenta de {{appName}} ha sido eliminada. Ya no podrá acceder a sus datos y estos han sido removidos de la plataforma.&lt;/p&gt;
+            &lt;/div&gt;
+
+            &lt;p class='message'&gt;
+                Le agradecemos por el tiempo que estuvo con nosotros.
+            &lt;/p&gt;
+        &lt;/div&gt;
+
+        &lt;div class='footer'&gt;
+            &lt;p&gt;Esperamos verlo nuevamente en el futuro.&lt;/p&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</value>
+    </data>
+    <data name="DeleteUser_AccountDeleted_Plain" xml:space="preserve">
+        <value>{{appName}} - Cuenta Eliminada
+
+Su cuenta de {{appName}} ha sido eliminada.
+
+Ya no podrá acceder a sus datos y estos han sido eliminados de la plataforma.
+
+Le agradecemos por el tiempo que estuvo con nosotros.
+</value>
+    </data>
+    <data name="DeleteUser_AccountDeleted_Subject" xml:space="preserve">
+        <value>{{appName}} - Cuenta Eliminada
+</value>
+    </data>
 </root>

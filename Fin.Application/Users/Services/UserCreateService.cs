@@ -3,7 +3,6 @@ using Fin.Application.Globals.Dtos;
 using Fin.Application.Globals.Services;
 using Fin.Application.Users.Dtos;
 using Fin.Application.Users.Enums;
-using Fin.Application.Users.Utils;
 using Fin.Domain.Global;
 using Fin.Domain.Notifications.Entities;
 using Fin.Domain.Tenants.Entities;
@@ -14,10 +13,8 @@ using Fin.Domain.Wallets.Dtos;
 using Fin.Domain.Wallets.Entities;
 using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.AutoServices.Interfaces;
-using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.DateTimes;
-using Fin.Infrastructure.EmailSenders;
 using Fin.Infrastructure.EmailSenders.Dto;
 using Fin.Infrastructure.Redis;
 using Fin.Infrastructure.UnitOfWorks;
@@ -50,8 +47,6 @@ public class UserCreateService : IUserCreateService, IAutoTransient
     private readonly IEmailSenderService _emailSender;
     private readonly IConfirmationCodeGenerator _codeGenerator;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IConfiguration _configuration;
-    private readonly IEmailTemplateService _emailTemplateService;
 
     private readonly CryptoHelper _cryptoHelper;
 
@@ -67,12 +62,10 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         IRepository<UserNotificationSettings> notificationSettingsRepository,
         IRepository<UserRememberUseSetting> userRememberUseSettingRepository, 
         IUnitOfWork unitOfWork, 
-        IRepository<Wallet> walletRepository, 
-        IEmailTemplateService emailTemplateService)
+        IRepository<Wallet> walletRepository)
     {
         _credentialRepository = credentialRepository;
         _dateTimeProvider = dateTimeProvider;
-        _configuration = configuration;
         _cache = cache;
         _emailSender = emailSender;
         _codeGenerator = codeGenerator;
@@ -80,7 +73,6 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         _userRememberUseSettingRepository = userRememberUseSettingRepository;
         _unitOfWork = unitOfWork;
         _walletRepository = walletRepository;
-        _emailTemplateService = emailTemplateService;
         _tenantRepository = tenantRepository;
         _userRepository = userRepository;
 
@@ -287,25 +279,15 @@ public class UserCreateService : IUserCreateService, IAutoTransient
     }
     
     private async Task SendConfirmationCode(string email, string confirmationCode)
-    {
-        var frontUrl = _configuration.GetSection(AppConstants.FrontUrlConfigKey).Get<string>();
-        var logoIconUrl = $"{frontUrl}/icons/fin.png";
-
+    { 
         var properties = new Dictionary<string, string>();
-        properties.Add("appName", AppConstants.AppName);
-        properties.Add("logoIconUrl", logoIconUrl);
         properties.Add("confirmationCode", confirmationCode);
 
-        var htmlBody = _emailTemplateService.Get("CreateUser_ConfirmarionCode_HTML", properties);
-        var plainBody = _emailTemplateService.Get("CreateUser_ConfirmarionCode_Plain", properties);
-        var subject = _emailTemplateService.Get("CreateUser_ConfirmarionCode_Subject", properties);
-        
         await _emailSender.SendEmailAsync(new SendEmailDto
         {
             ToEmail = email,
-            Subject = subject,
-            HtmlBody = htmlBody,
-            PlainBody = plainBody
+            TemplateProperties = properties,
+            BaseTemplatesName = "CreateUser_ConfirmarionCode_",
         }, CancellationToken.None);
     }
 }
