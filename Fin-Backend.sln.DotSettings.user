@@ -20,6 +20,7 @@
   &lt;Project Location="/home/rafaelchicovis/git/fin-backend/Fin.Test" Presentation="&amp;lt;Fin.Test&amp;gt;" /&gt;
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=Fin_002EApplication_002FResources_002FEmailTemplates_002FEmailTemplates/@EntryIndexedValue">True</s:Boolean>
+	
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=Fin_002EApplication_002FResources_002FEmailTemplates_002FResources_002Ees_002DEN/@EntryIndexedValue">False</s:Boolean>
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=Fin_002EApplication_002FResources_002FEmailTemplates_002FResources_002Ees_002DEN/@EntryIndexRemoved">True</s:Boolean>
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=Fin_002EApplication_002FResources_002FEmailTemplates_002FResources/@EntryIndexedValue">False</s:Boolean>
