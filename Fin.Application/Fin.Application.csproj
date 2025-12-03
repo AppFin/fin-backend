@@ -22,6 +22,14 @@
     <ItemGroup>
       <Folder Include="Notifications\Services\" />
     </ItemGroup>
+
+    <Target Name="CreatePtBrFolder" BeforeTargets="Build">
+        <MakeDir Directories="$(OutputPath)pt-br" />
+    </Target>
+
+    <Target Name="CreateEsEsFolder" BeforeTargets="Build">
+        <MakeDir Directories="$(OutputPath)es-es" />
+    </Target>
     
     <ItemGroup>
       <Compile Update="Resources\EmailTemplates\EmailTemplates.Designer.cs">
