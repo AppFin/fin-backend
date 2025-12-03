@@ -6,37 +6,42 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Fin.Domain\Fin.Domain.csproj" />
-        <ProjectReference Include="..\Fin.Infrastructure\Fin.Infrastructure.csproj" />
+        <ProjectReference Include="..\Fin.Domain\Fin.Domain.csproj"/>
+        <ProjectReference Include="..\Fin.Infrastructure\Fin.Infrastructure.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Hangfire" Version="1.8.20" />
-      <PackageReference Include="Hangfire.AspNetCore" Version="1.8.20" />
-      <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
-      <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.2" />
-      <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0-preview.3.25171.5" />
-      <PackageReference Include="StackExchange.Redis" Version="2.8.31" />
+        <PackageReference Include="Hangfire" Version="1.8.20"/>
+        <PackageReference Include="Hangfire.AspNetCore" Version="1.8.20"/>
+        <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0"/>
+        <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.2"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0-preview.3.25171.5"/>
+        <PackageReference Include="StackExchange.Redis" Version="2.8.31"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Notifications\Services\" />
+        <Folder Include="Notifications\Services\"/>
     </ItemGroup>
 
-    <Target Name="CreatePtBrFolder" BeforeTargets="Build">
-        <MakeDir Directories="$(OutputPath)pt-br" />
-    </Target>
-
-    <Target Name="CreateEsEsFolder" BeforeTargets="Build">
-        <MakeDir Directories="$(OutputPath)es-es" />
-    </Target>
-    
     <ItemGroup>
-      <Compile Update="Resources\EmailTemplates\EmailTemplates.Designer.cs">
-        <DesignTime>True</DesignTime>
-        <AutoGen>True</AutoGen>
-        <DependentUpon>EmailTemplates.resx</DependentUpon>
-      </Compile>
+        <Compile Update="Resources\EmailTemplates\EmailTemplates.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>EmailTemplates.resx</DependentUpon>
+        </Compile>
+
+        <EmbeddedResource Update="Resources\EmailTemplates\EmailTemplates.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>EmailTemplates.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+
+        <EmbeddedResource Update="Resources\EmailTemplates\EmailTemplates.pt-br.resx">
+            <DependentUpon>EmailTemplates.resx</DependentUpon>
+        </EmbeddedResource>
+
+        <EmbeddedResource Update="Resources\EmailTemplates\EmailTemplates.es-ES.resx">
+            <DependentUpon>EmailTemplates.resx</DependentUpon>
+        </EmbeddedResource>
     </ItemGroup>
-    
+
 </Project>
