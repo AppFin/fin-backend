@@ -1,4 +1,5 @@
-﻿using Fin.Application.Globals.Services;
+﻿using Fin.Application.Emails;
+using Fin.Application.Globals.Services;
 using Fin.Application.Users.Dtos;
 using Fin.Application.Users.Enums;
 using Fin.Application.Users.Services;
@@ -552,6 +553,8 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
             FirstName = TestUtils.Strings[5],
             BirthDate = DateOnly.FromDateTime(TestUtils.UtcDateTimes[1]),
             ImagePublicUrl = TestUtils.Strings[6],
+            Locale = "pt-Br",
+            Timezone = "America/Sao_Paulo"
         };
 
         // Act
@@ -622,6 +625,8 @@ public class UserCreateServiceTest : TestUtils.BaseTestWithContext
             FirstName = TestUtils.Strings[5],
             BirthDate = DateOnly.FromDateTime(TestUtils.UtcDateTimes[1]),
             ImagePublicUrl = TestUtils.Strings[6],
+            Locale = "pt-Br",
+            Timezone = "America/Sao_Paulo"
         };
 
         var googleId = TestUtils.Strings[1];

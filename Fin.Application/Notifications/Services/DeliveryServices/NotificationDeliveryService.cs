@@ -1,4 +1,5 @@
-﻿using Fin.Domain.Global;
+﻿using Fin.Application.Emails;
+using Fin.Domain.Global;
 using Fin.Domain.Notifications.Dtos;
 using Fin.Domain.Notifications.Entities;
 using Fin.Domain.Notifications.Enums;

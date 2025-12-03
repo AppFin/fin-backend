@@ -1,43 +1,22 @@
-﻿using Fin.Infrastructure.AutoServices.Interfaces;
-using Fin.Infrastructure.EmailSenders.Constants;
 using Fin.Infrastructure.EmailSenders.Dto;
-using Fin.Infrastructure.EmailSenders.MailSender;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Configuration;
 using MimeKit;
 
-namespace Fin.Infrastructure.EmailSenders;
+namespace Fin.Infrastructure.EmailSenders.MailKit;
 
-public interface IEmailSenderService
+public interface IMailKitClient
 {
-    public Task<bool> SendEmailAsync(SendEmailDto dto, CancellationToken cancellationToken = default);
+    public Task<bool> SendEmailAsync(SendEmailDto dto, CancellationToken cancellationToken);
 }
 
-public class EmailSenderService(
-    IConfiguration configuration,
-    IMailSenderClient mailSenderClient
-    ) : IEmailSenderService, IAutoTransient
+public class MailKitClient(IConfiguration configuration): IMailKitClient
 {
     private const string EmailConfigKey = "ApiSettings:EmailSender:EmailAddress";
     private const string PasswordConfigKey = "ApiSettings:EmailSender:Password";
-
-    public async Task<bool> SendEmailAsync(SendEmailDto dto, CancellationToken cancellationToken = default)
-    {
-        return GetMailService() switch
-        {
-            MailServicesConst.MailSender => await mailSenderClient.SendEmailAsync(dto, cancellationToken),
-            _ => await SendEmailWithMailKit(dto, cancellationToken)
-        };
-    }
     
-    private string GetMailService()
-    {
-        var mailService = configuration.GetSection(MailServicesConst.MailServiceConfigurationKey).Value;
-        return mailService ?? "";
-    }
-
-    private async Task<bool> SendEmailWithMailKit(SendEmailDto dto, CancellationToken cancellationToken)
+    public async Task<bool> SendEmailAsync(SendEmailDto dto, CancellationToken cancellationToken)
     {
         var emailAddress = configuration.GetSection(EmailConfigKey).Value ?? "";
         var emailPassword = configuration.GetSection(PasswordConfigKey).Value ?? "";

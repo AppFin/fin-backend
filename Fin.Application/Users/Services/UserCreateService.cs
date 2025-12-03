@@ -1,8 +1,8 @@
-﻿using Fin.Application.Globals.Dtos;
+﻿using Fin.Application.Emails;
+using Fin.Application.Globals.Dtos;
 using Fin.Application.Globals.Services;
 using Fin.Application.Users.Dtos;
 using Fin.Application.Users.Enums;
-using Fin.Application.Users.Utils;
 using Fin.Domain.Global;
 using Fin.Domain.Notifications.Entities;
 using Fin.Domain.Tenants.Entities;
@@ -13,10 +13,8 @@ using Fin.Domain.Wallets.Dtos;
 using Fin.Domain.Wallets.Entities;
 using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.AutoServices.Interfaces;
-using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.DateTimes;
-using Fin.Infrastructure.EmailSenders;
 using Fin.Infrastructure.EmailSenders.Dto;
 using Fin.Infrastructure.Redis;
 using Fin.Infrastructure.UnitOfWorks;
@@ -49,7 +47,6 @@ public class UserCreateService : IUserCreateService, IAutoTransient
     private readonly IEmailSenderService _emailSender;
     private readonly IConfirmationCodeGenerator _codeGenerator;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IConfiguration _configuration;
 
     private readonly CryptoHelper _cryptoHelper;
 
@@ -63,11 +60,12 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         IEmailSenderService emailSender,
         IConfirmationCodeGenerator codeGenerator,
         IRepository<UserNotificationSettings> notificationSettingsRepository,
-        IRepository<UserRememberUseSetting> userRememberUseSettingRepository, IUnitOfWork unitOfWork, IRepository<Wallet> walletRepository)
+        IRepository<UserRememberUseSetting> userRememberUseSettingRepository, 
+        IUnitOfWork unitOfWork, 
+        IRepository<Wallet> walletRepository)
     {
         _credentialRepository = credentialRepository;
         _dateTimeProvider = dateTimeProvider;
-        _configuration = configuration;
         _cache = cache;
         _emailSender = emailSender;
         _codeGenerator = codeGenerator;
@@ -205,7 +203,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         var user = new User(input, now);
         var credential = UserCredentialFactory.Create(user.Id, process.EncryptedEmail, process.EncryptedPassword, UserCredentialFactoryType.Password);
 
-        return await ExecuteCreateUser(creationToken, user, credential);
+        return await ExecuteCreateUser(creationToken, user, credential, input.Timezone, input.Locale);
     }
 
     public async Task<ValidationResultDto<UserDto>> CreateUser(string googleId, string email, UserUpdateOrCreateInput input)
@@ -223,12 +221,12 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         var user = new User(input, now);
         var credential = UserCredentialFactory.Create(user.Id, encryptedEmail, googleId, UserCredentialFactoryType.Google);
 
-        return await ExecuteCreateUser(null, user, credential);
+        return await ExecuteCreateUser(null, user, credential, input.Timezone, input.Locale);
     }
     
-    private async Task<ValidationResultDto<UserDto>> ExecuteCreateUser(string creationToken, User user, UserCredential credential)
+    private async Task<ValidationResultDto<UserDto>> ExecuteCreateUser(string creationToken, User user, UserCredential credential, string timezone, string locale)
     {
-        var tenant = new Tenant(user.CreatedAt);
+        var tenant = new Tenant(user.CreatedAt, timezone, locale);
         user.Tenants.Add(tenant);
         
         var notificationSetting = new UserNotificationSettings(user.Id, tenant.Id);
@@ -281,28 +279,15 @@ public class UserCreateService : IUserCreateService, IAutoTransient
     }
     
     private async Task SendConfirmationCode(string email, string confirmationCode)
-    {
-        var frontUrl = _configuration.GetSection(AppConstants.FrontUrlConfigKey).Get<string>();
-        var logoIconUrl = $"{frontUrl}/icons/fin.png";
+    { 
+        var properties = new Dictionary<string, string>();
+        properties.Add("confirmationCode", confirmationCode);
 
-        var htmlBody = CreateUserTemplates.SendConfirmationCodeTemplate
-            .Replace("{{appName}}", AppConstants.AppName)
-            .Replace("{{logoIconUrl}}", logoIconUrl)
-            .Replace("{{confirmationCode}}", confirmationCode);
-        
-        var plainBody = CreateUserTemplates.SendConfirmationCodePlainTemplate
-            .Replace("{{appName}}", AppConstants.AppName)
-            .Replace("{{confirmationCode}}", confirmationCode);
-        
-        var subject = CreateUserTemplates.SendConfirmationCodeSubject
-            .Replace("{{appName}}", AppConstants.AppName);
-        
         await _emailSender.SendEmailAsync(new SendEmailDto
         {
             ToEmail = email,
-            Subject = subject,
-            HtmlBody = htmlBody,
-            PlainBody = plainBody
+            TemplateProperties = properties,
+            BaseTemplatesName = "CreateUser_ConfirmarionCode_",
         }, CancellationToken.None);
     }
 }

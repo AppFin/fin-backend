@@ -1,10 +1,9 @@
 ﻿using Fin.Application.Authentications.Dtos;
 using Fin.Application.Authentications.Enums;
-using Fin.Application.Authentications.Utils;
+using Fin.Application.Emails;
 using Fin.Application.Globals.Dtos;
 using Fin.Application.Users.Services;
 using Fin.Domain.Global;
-using Fin.Domain.Tenants.Entities;
 using Fin.Domain.Users.Dtos;
 using Fin.Domain.Users.Entities;
 using Fin.Infrastructure.Authentications;
@@ -14,7 +13,6 @@ using Fin.Infrastructure.Authentications.Enums;
 using Fin.Infrastructure.AutoServices.Interfaces;
 using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Database.Repositories;
-using Fin.Infrastructure.EmailSenders;
 using Fin.Infrastructure.EmailSenders.Dto;
 using Fin.Infrastructure.Redis;
 using Microsoft.EntityFrameworkCore;
@@ -59,6 +57,7 @@ public class AuthenticationService : IAuthenticationService, IAutoTransient
         _configuration = configuration;
         _tokenService = tokenService;
         _userCreateService = userCreateService;
+        
 
         var encryptKey = configuration.GetSection(AuthenticationConstants.EncryptKeyConfigKey).Value ?? "";
         var encryptIv = configuration.GetSection(AuthenticationConstants.EncryptIvConfigKey).Value ?? "";
@@ -90,26 +89,17 @@ public class AuthenticationService : IAuthenticationService, IAutoTransient
         var logoIconUrl = $"{frontUrl}/icons/fin.png";
         var resetLink = $"{frontUrl}/authentication/reset-password?token={token}";
 
-        var subject = AuthenticationTemplates.ResetPasswordEmailSubject
-            .Replace("{{appName}}", AppConstants.AppName);
+        var parameters = new Dictionary<string, string>();
+        parameters.Add("appName", AppConstants.AppName);
+        parameters.Add("linkLifeTime", tokenLifeTimeInHours.ToString());
+        parameters.Add("resetLink", resetLink);
+        parameters.Add("logoIconUrl", logoIconUrl);
         
-        var plainBody = AuthenticationTemplates.ResetPasswordEmailPlainTemplate
-            .Replace("{{appName}}", AppConstants.AppName)
-            .Replace("{{linkLifeTime}}", tokenLifeTimeInHours.ToString())
-            .Replace("{{resetLink}}", resetLink);
-        
-        var htmlBody = AuthenticationTemplates.ResetPasswordEmailTemplate
-            .Replace("{{appName}}", AppConstants.AppName)
-            .Replace("{{logoIconUrl}}", logoIconUrl)
-            .Replace("{{linkLifeTime}}", tokenLifeTimeInHours.ToString())
-            .Replace("{{resetLink}}", resetLink);
-
         await _emailSender.SendEmailAsync(new SendEmailDto
         {
-            Subject = subject,
+            BaseTemplatesName = "ResetPassword_",
+            TemplateProperties = parameters,
             ToEmail = input.Email,
-            PlainBody =  plainBody,
-            HtmlBody = htmlBody,
             ToName = credential.User.DisplayName
         });
     }

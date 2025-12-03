@@ -58,7 +58,7 @@ public class AuthenticationTokenServiceTest : TestUtils.BaseTestWithContext
         }, now)
         {
             Id = TestUtils.Guids[0],
-            Tenants = [new Tenant(now)]
+            Tenants = [new Tenant(now, TestUtils.Strings[1], TestUtils.Strings[2])]
         };
         var credential =
             UserCredentialFactory.Create(user.Id, encryptedEmail, encryptedPass, UserCredentialFactoryType.Password);
@@ -110,7 +110,7 @@ public class AuthenticationTokenServiceTest : TestUtils.BaseTestWithContext
         }, now)
         {
             Id = TestUtils.Guids[0],
-            Tenants = [new Tenant(now)]
+            Tenants = [new Tenant(now, TestUtils.Strings[1], TestUtils.Strings[2])]
         };
         var credential = UserCredentialFactory.Create(user.Id, encryptedEmail, encryptedPass, UserCredentialFactoryType.Password);
         credential.Id = TestUtils.Guids[1];
@@ -118,7 +118,6 @@ public class AuthenticationTokenServiceTest : TestUtils.BaseTestWithContext
 
         if (!activatedUser)
             user.ToggleActivity();
-        ;
 
         for (var i = 0; i < previusesAttempts; i++)
         {
@@ -190,7 +189,7 @@ public class AuthenticationTokenServiceTest : TestUtils.BaseTestWithContext
             Id = userId,
             Tenants = new List<Tenant>
             {
-                new(now)
+                new(now, TestUtils.Strings[1], TestUtils.Strings[2])
             }
         };
         await resources.UseRepository.AddAsync(user, true);
@@ -240,7 +239,7 @@ public class AuthenticationTokenServiceTest : TestUtils.BaseTestWithContext
             Id = userId,
             Tenants = new List<Tenant>
             {
-                new(now)
+                new(now, TestUtils.Strings[1], TestUtils.Strings[2])
             }
         };
         user.ToggleActivity();
@@ -386,7 +385,7 @@ public class AuthenticationTokenServiceTest : TestUtils.BaseTestWithContext
         var user = new UserDto()
         {
             DisplayName = TestUtils.Strings[1],
-            Tenants = { new Tenant(now) },
+            Tenants = { new Tenant(now, TestUtils.Strings[1], TestUtils.Strings[2]) },
             Id = TestUtils.Guids[0]
         };
 
@@ -446,8 +445,8 @@ public class AuthenticationTokenServiceTest : TestUtils.BaseTestWithContext
 
         var resources = new MockResources
         {
-            CredentialRepository = base.GetRepository<UserCredential>(),
-            UseRepository = base.GetRepository<User>(),
+            CredentialRepository = GetRepository<UserCredential>(),
+            UseRepository = GetRepository<User>(),
             FakeRedis = new Mock<IRedisCacheService>(),
             FakeConfiguration = new Mock<IConfiguration>(),
             CryptoHelper = new CryptoHelper(key, iv)

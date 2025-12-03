@@ -1,4 +1,5 @@
-﻿using Fin.Application.Notifications.Services.DeliveryServices;
+﻿using Fin.Application.Emails;
+using Fin.Application.Notifications.Services.DeliveryServices;
 using Fin.Domain.Global;
 using Fin.Domain.Notifications.Dtos;
 using Fin.Domain.Notifications.Entities;
