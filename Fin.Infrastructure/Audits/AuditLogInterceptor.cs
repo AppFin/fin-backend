@@ -1,9 +1,11 @@
+using Fin.Domain.Global.Interfaces;
 using Fin.Infrastructure.AmbientDatas;
 using Fin.Infrastructure.Audits.Enums;
 using Fin.Infrastructure.Audits.Interfaces;
 using Fin.Infrastructure.DateTimes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using MongoDB.Bson;
 
 namespace Fin.Infrastructure.Audits;
 
@@ -43,7 +45,7 @@ public class AuditLogInterceptor(
                 
                 if (entry.State == EntityState.Modified && property.IsModified)
                 {
-                    auditEntry.PreviousValues[property.Metadata.Name] = property.OriginalValue;
+                    auditEntry.PreviousValues[property.Metadata.Name] = ConvertToBsonValid(property.OriginalValue);
                 }
             }
         }
@@ -84,9 +86,10 @@ public class AuditLogInterceptor(
                 EntityName = entry.TableName,
                 Action = action,
                 UserId = entry.UserId,
+                TenantId = entry.TenantId,
                 DateTime = dateTimeProvider.UtcNow(),
                 Snapshot = entry.Snapshot,
-                PreviousValues = entry.PreviousValues.Any() ? entry.PreviousValues : null,
+                PreviousValues = entry.PreviousValues.Any() ? entry.PreviousValues.ToBsonDocument() : null,
                 KeyValues = entry.KeyValues 
             });
         }
@@ -94,5 +97,15 @@ public class AuditLogInterceptor(
         await auditService.LogAsync(mongoLogs);
         _temporaryAuditEntries.Clear();
         return await base.SavedChangesAsync(eventData, result, cancellationToken);
+    }
+    
+    private static object ConvertToBsonValid(object value)
+    {
+        return value switch
+        {
+            null => null,
+            Guid guid => guid.ToString(),
+            _ => value
+        };
     }
 }

@@ -11,13 +11,16 @@ public class AuditLogDocument
     public string InternalId { get; set; }
 
     public string EntityName { get; set; }
+    [BsonIgnore]
     public Dictionary<string, object> KeyValues { get; set; } = new();
     public AuditLogAction Action { get; set; }
-    public Guid UserId { get; set; }
     public DateTime DateTime { get; set; }
     
+    public Guid UserId { get; set; }
+    public Guid TenantId { get; set; }
+    
     public object Snapshot { get; set; } 
-    public Dictionary<string, object> PreviousValues { get; set; }
+    public BsonDocument PreviousValues { get; set; }
     
     public string EntityIdString 
     { 

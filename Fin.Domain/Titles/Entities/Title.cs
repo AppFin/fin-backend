@@ -9,7 +9,7 @@ using Fin.Domain.Wallets.Entities;
 
 namespace Fin.Domain.Titles.Entities;
 
-public class Title: IAuditedTenantEntity
+public class Title: IAuditedTenantEntity, ILoggable
 {
     public decimal Value { get; set; }
     public TitleType Type { get; set; }
@@ -142,5 +142,30 @@ public class Title: IAuditedTenantEntity
         }
 
         return titlePeopleToDelete;
+    }
+
+    public object GetLogSnapshot()
+    {
+        return new
+        {
+            Id = Id,
+            Date = Date,
+            Description = Description,
+        
+            Type = Type,
+            TypeDescription = Type.ToString(), // TODO implement a to description 
+            OriginalValue = Value,
+            EffectiveValue = EffectiveValue,   
+            PreviousBalance = PreviousBalance,
+            ResultingBalance = ResultingBalance,
+            
+            WalletId = WalletId,
+            TenantId = TenantId,
+
+            Categories = TitleCategories?.Select(c => new { c.Id, c.Name }).ToList(),
+            People = TitlePeople?.Select(p => new { p.Percentage, Id = p.PersonId, p.Person?.Name }).ToList(),
+            CreatedBy = CreatedBy,
+            CreatedAt = CreatedAt
+        };
     }
 }

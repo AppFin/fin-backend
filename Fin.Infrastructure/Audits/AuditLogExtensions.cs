@@ -10,11 +10,15 @@ public static class AuditLogExtensions
 {
     public static IServiceCollection AddAuditLog(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSingleton<IMongoClient>(_ => new MongoClient(configuration.GetConnectionString("MongoDbConnection")));
+        var settings = MongoClientSettings.FromConnectionString(configuration.GetConnectionString("MongoDbConnection"));
+        var mongoClient = new MongoClient(settings);
+        
+        services.AddSingleton<IMongoClient>(_ => mongoClient);
         services.AddScoped(sp => sp.GetRequiredService<IMongoClient>().GetDatabase("LogsDB"));
         services.AddScoped<IAuditLogService, MongoAuditLogService>();
         
         services.AddScoped<AuditLogInterceptor>();
+        
         
         return services;
     }
