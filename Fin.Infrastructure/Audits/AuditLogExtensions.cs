@@ -1,7 +1,9 @@
-using Fin.Infrastructure.Audits.Enums;
 using Fin.Infrastructure.Audits.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 
 namespace Fin.Infrastructure.Audits;
@@ -10,6 +12,12 @@ public static class AuditLogExtensions
 {
     public static IServiceCollection AddAuditLog(this IServiceCollection services, IConfiguration configuration)
     {
+        try 
+        { 
+            BsonSerializer.RegisterSerializer(new GuidSerializer(BsonType.String)); 
+        } 
+        catch (BsonSerializationException) {}
+        
         var settings = MongoClientSettings.FromConnectionString(configuration.GetConnectionString("MongoDbConnection"));
         var mongoClient = new MongoClient(settings);
         

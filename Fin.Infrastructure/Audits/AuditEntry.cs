@@ -1,19 +1,19 @@
 using Fin.Domain.Global.Interfaces;
 using Fin.Infrastructure.AmbientDatas;
+using Fin.Infrastructure.Audits.Enums;
 using Fin.Infrastructure.Audits.Interfaces;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Fin.Infrastructure.Audits;
 
-public class AuditEntry(EntityEntry<ILoggable> entry, IAmbientData ambientData)
+public class AuditEntry(IAmbientData ambientData)
 {
-    public EntityEntry<ILoggable> Entry { get; } = entry;
-    public Guid UserId { get; } = ambientData.UserId.GetValueOrDefault(); 
-    public Guid TenantId { get; } = ambientData.TenantId.GetValueOrDefault(); 
-    public string TableName { get; } = entry.Entity.GetType().Name;
+    public string EntityName { get; set; }
+    public string EntityId { get; set; }
+    public object NewValue { get; set; }
+    public object OldValue { get; set; }
 
-    public Dictionary<string, object> KeyValues { get; } = new();
-    public object Snapshot { get; } = entry.Entity.GetLogSnapshot();
-    public Dictionary<string, object> PreviousValues { get; } = new();
-    public List<PropertyEntry> TemporaryProperties { get; } = new();
+    public AuditLogAction Action { get; set; }
+    public Guid UserId { get; set; } = ambientData.UserId.GetValueOrDefault();
+    public Guid TenantId { get; set; } = ambientData.TenantId.GetValueOrDefault();
 }

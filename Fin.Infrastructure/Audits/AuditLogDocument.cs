@@ -11,23 +11,14 @@ public class AuditLogDocument
     public string InternalId { get; set; }
 
     public string EntityName { get; set; }
-    [BsonIgnore]
-    public Dictionary<string, object> KeyValues { get; set; } = new();
+    public string EntityId { get; set; }
+    
     public AuditLogAction Action { get; set; }
     public DateTime DateTime { get; set; }
     
+    public object NewValue { get; set; } 
+    public object OldValue { get; set; } 
+    
     public Guid UserId { get; set; }
     public Guid TenantId { get; set; }
-    
-    public object Snapshot { get; set; } 
-    public BsonDocument PreviousValues { get; set; }
-    
-    public string EntityIdString 
-    { 
-        get 
-        {
-            if (KeyValues == null || !KeyValues.Any()) return null;
-            return KeyValues.Count == 1 ? KeyValues.Values.First().ToString() : string.Join("|", KeyValues.Select(kvp => $"{kvp.Key}:{kvp.Value}"));
-        }
-    }
 }

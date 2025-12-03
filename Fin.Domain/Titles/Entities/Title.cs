@@ -144,7 +144,7 @@ public class Title: IAuditedTenantEntity, ILoggable
         return titlePeopleToDelete;
     }
 
-    public object GetLogSnapshot()
+    public object GetLog()
     {
         return new
         {
@@ -162,8 +162,6 @@ public class Title: IAuditedTenantEntity, ILoggable
             WalletId = WalletId,
             TenantId = TenantId,
 
-            Categories = TitleCategories?.Select(c => new { c.Id, c.Name }).ToList(),
-            People = TitlePeople?.Select(p => new { p.Percentage, Id = p.PersonId, p.Person?.Name }).ToList(),
             CreatedBy = CreatedBy,
             CreatedAt = CreatedAt
         };

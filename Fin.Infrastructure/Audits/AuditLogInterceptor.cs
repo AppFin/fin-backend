@@ -1,111 +1,156 @@
+using System.Text.Json;
 using Fin.Domain.Global.Interfaces;
 using Fin.Infrastructure.AmbientDatas;
 using Fin.Infrastructure.Audits.Enums;
 using Fin.Infrastructure.Audits.Interfaces;
-using Fin.Infrastructure.DateTimes;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using MongoDB.Bson;
 
 namespace Fin.Infrastructure.Audits;
 
 public class AuditLogInterceptor(
     IAuditLogService auditService,
-    IAmbientData ambientData,
-    IDateTimeProvider dateTimeProvider
-    ) : SaveChangesInterceptor
+    IAmbientData ambientData
+) : SaveChangesInterceptor
 {
-    private readonly List<AuditEntry> _temporaryAuditEntries = new();
+    private List<AuditEntry> _pendingLogs;
 
-    public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
-        DbContextEventData eventData, 
-        InterceptionResult<int> result, 
+    public override InterceptionResult<int> SavingChanges(
+        DbContextEventData eventData,
+        InterceptionResult<int> result)
+    {
+        CaptureChanges(eventData.Context);
+        return base.SavingChanges(eventData, result);
+    }
+
+    public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
+        DbContextEventData eventData,
+        InterceptionResult<int> result,
         CancellationToken cancellationToken = default)
     {
-        _temporaryAuditEntries.Clear();
-        var context = eventData.Context;
-        if (context == null) return base.SavingChangesAsync(eventData, result, cancellationToken);
+        CaptureChanges(eventData.Context);
+        return await base.SavingChangesAsync(eventData, result, cancellationToken);
+    }
 
-        context.ChangeTracker.DetectChanges();
-        
-        foreach (var entry in context.ChangeTracker.Entries<ILoggable>())
-        {
-            if (entry.State is EntityState.Detached or EntityState.Unchanged) continue;
-
-            var auditEntry = new AuditEntry(entry, ambientData);
-            _temporaryAuditEntries.Add(auditEntry);
-
-            foreach (var property in entry.Properties)
-            {
-                if (property.IsTemporary)
-                {
-                    auditEntry.TemporaryProperties.Add(property);
-                    continue;
-                }
-                
-                if (entry.State == EntityState.Modified && property.IsModified)
-                {
-                    auditEntry.PreviousValues[property.Metadata.Name] = ConvertToBsonValid(property.OriginalValue);
-                }
-            }
-        }
-
-        return base.SavingChangesAsync(eventData, result, cancellationToken);
+    public override int SavedChanges(SaveChangesCompletedEventData eventData, int result)
+    {
+        SaveLogs();
+        return base.SavedChanges(eventData, result);
     }
 
     public override async ValueTask<int> SavedChangesAsync(
-        SaveChangesCompletedEventData eventData, 
-        int result, 
+        SaveChangesCompletedEventData eventData,
+        int result,
         CancellationToken cancellationToken = default)
     {
-        if (_temporaryAuditEntries == null || _temporaryAuditEntries.Count == 0)
-            return await base.SavedChangesAsync(eventData, result, cancellationToken);
-
-        var mongoLogs = new List<AuditLogDocument>();
-
-        foreach (var entry in _temporaryAuditEntries)
-        {
-            foreach (var prop in entry.TemporaryProperties.Where(prop => prop.Metadata.IsPrimaryKey()))
-            {
-                entry.KeyValues[prop.Metadata.Name] = prop.CurrentValue;
-            }
-
-            var action = AuditLogAction.Updated;
-            switch (entry.Entry.State)
-            {
-                case EntityState.Deleted:
-                    action = AuditLogAction.Deleted;
-                    break;
-                case EntityState.Added:
-                    action = AuditLogAction.Created;
-                    break;
-            }
-            
-            mongoLogs.Add(new AuditLogDocument
-            {
-                EntityName = entry.TableName,
-                Action = action,
-                UserId = entry.UserId,
-                TenantId = entry.TenantId,
-                DateTime = dateTimeProvider.UtcNow(),
-                Snapshot = entry.Snapshot,
-                PreviousValues = entry.PreviousValues.Any() ? entry.PreviousValues.ToBsonDocument() : null,
-                KeyValues = entry.KeyValues 
-            });
-        }
-
-        await auditService.LogAsync(mongoLogs);
-        _temporaryAuditEntries.Clear();
+        await SaveLogsAsync();
         return await base.SavedChangesAsync(eventData, result, cancellationToken);
     }
-    
-    private static object ConvertToBsonValid(object value)
+
+    private void CaptureChanges(DbContext context)
     {
-        return value switch
+        _pendingLogs = new List<AuditEntry>();
+
+        var entries = context.ChangeTracker.Entries()
+            .Where(e => e.Entity is ILoggable &&
+                        (e.State == EntityState.Added ||
+                         e.State == EntityState.Modified ||
+                         e.State == EntityState.Deleted))
+            .ToList();
+
+        foreach (var entry in entries)
         {
-            null => null,
-            Guid guid => guid.ToString(),
-            _ => value
-        };
+            if (entry.Entity is not ILoggable loggable) continue;
+
+            var entityType = entry.Entity.GetType();
+            var entityName = entityType.Name;
+
+            var logEntry = new AuditEntry(ambientData)
+            {
+                EntityName = entityName,
+                EntityId = GetEntityId(entry),
+            };
+
+            switch (entry.State)
+            {
+                case EntityState.Added:
+                    logEntry.Action = AuditLogAction.Created;
+                    logEntry.NewValue = loggable.GetLog();
+                    logEntry.OldValue = null;
+                    break;
+
+                case EntityState.Modified:
+                    logEntry.Action = AuditLogAction.Updated;
+                    logEntry.NewValue = loggable.GetLog();
+                    logEntry.OldValue = GetOriginalValues(entry);
+                    break;
+
+                case EntityState.Deleted:
+                    logEntry.Action = AuditLogAction.Deleted;
+                    logEntry.NewValue = null;
+                    logEntry.OldValue = loggable.GetLog();
+                    break;
+            }
+
+            _pendingLogs.Add(logEntry);
+        }
+    }
+
+    private string GetEntityId(EntityEntry entry)
+    {
+        var keyValues = entry.Properties
+            .Where(p => p.Metadata.IsKey())
+            .Select(p => new { p.Metadata.Name, Value = p.CurrentValue })
+            .ToList();
+
+        if (keyValues.Count == 1)
+        {
+            return keyValues[0].Value?.ToString() ?? string.Empty;
+        }
+
+        var compositeKey = keyValues.ToDictionary(
+            k => k.Name,
+            k => k.Value
+        );
+        return JsonSerializer.Serialize(compositeKey);
+    }
+
+    private object GetOriginalValues(EntityEntry entry)
+    {
+        var loggable = entry.Entity as ILoggable;
+        if (loggable == null) return null;
+
+        var originalEntity = Activator.CreateInstance(entry.Entity.GetType());
+
+        foreach (var property in entry.Properties)
+        {
+            var propInfo = entry.Entity.GetType().GetProperty(property.Metadata.Name);
+            if (propInfo != null && propInfo.CanWrite)
+            {
+                propInfo.SetValue(originalEntity, property.OriginalValue);
+            }
+        }
+
+        if (originalEntity is ILoggable loggableOriginal)
+        {
+            return loggableOriginal.GetLog();
+        }
+
+        return null;
+    }
+
+    private async Task SaveLogsAsync()
+    {
+        if (_pendingLogs.Count == 0) return;
+        await auditService.LogAsync(_pendingLogs);
+        _pendingLogs.Clear();
+    }
+    
+    private void SaveLogs()
+    {
+        if (_pendingLogs.Count == 0) return;
+        auditService.Log(_pendingLogs);
+        _pendingLogs.Clear();
     }
 }

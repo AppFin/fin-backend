@@ -4,16 +4,7 @@ using Fin.Infrastructure.Database.Extensions;
 using Fin.Infrastructure.Extensions;
 using Fin.Infrastructure.Seeders.Extensions;
 using Hangfire;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
-using MongoDB.Bson.Serialization.Serializers;
 using NSwag;
-
-try 
-{ 
-    BsonSerializer.RegisterSerializer(new GuidSerializer(BsonType.String)); 
-} 
-catch (BsonSerializationException) {}
 
 var builder = WebApplication.CreateBuilder(args);
 
