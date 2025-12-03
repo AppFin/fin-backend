@@ -3,12 +3,8 @@
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
+        <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     </PropertyGroup>
-
-    <Target Name="EnsureResourceFolders" BeforeTargets="Build">
-        <MakeDir Directories="$(OutputPath)pt-br" Condition="!Exists('$(OutputPath)pt-br')" />
-        <MakeDir Directories="$(OutputPath)es-ES" Condition="!Exists('$(OutputPath)es-ES')" />
-    </Target>
     
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.4" />
