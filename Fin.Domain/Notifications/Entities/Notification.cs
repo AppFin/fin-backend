@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using Fin.Domain.Global.Decorators;
 using Fin.Domain.Global.Extensions;
 using Fin.Domain.Global.Interfaces;
 using Fin.Domain.Notifications.Dtos;
@@ -6,7 +7,7 @@ using Fin.Domain.Notifications.Enums;
 
 namespace Fin.Domain.Notifications.Entities;
 
-public class Notification: IAuditedEntity
+public class Notification: IAuditedEntity, ILoggable
 {
     public List<NotificationWay> Ways { get; set; } = [];
     public string TextBody { get; set; }
@@ -89,5 +90,30 @@ public class Notification: IAuditedEntity
         }
 
         return deliveriesToDelete;
+    }
+    
+    public object GetLog()
+    {
+        return new
+        {
+            Id,
+            CreatedAt,
+            CreatedBy,
+            UpdatedAt,
+            UpdatedBy,
+            Ways,
+            WaysDescriptions = Ways.Select(way => way.GetTranslateKey()),
+            TextBody,
+            HtmlBody,
+            NormalizedTextBody,
+            Title,
+            Continuous,
+            NormalizedTitle,
+            StartToDelivery,
+            StopToDelivery,
+            Link,
+            Severity,
+            SeverityDescriptions = Severity.GetTranslateKey(),
+        };
     }
 }

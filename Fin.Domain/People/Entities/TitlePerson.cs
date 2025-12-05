@@ -4,7 +4,7 @@ using Fin.Domain.Titles.Entities;
 
 namespace Fin.Domain.People.Entities;
 
-public class TitlePerson: ITenant, IAudited
+public class TitlePerson: ITenant, IAudited, ILoggable
 {
     public Guid PersonId { get; private set; }
     public virtual Person Person { get; set; }
@@ -35,4 +35,19 @@ public class TitlePerson: ITenant, IAudited
     public Guid UpdatedBy { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    
+    public object GetLog()
+    {
+        return new
+        {
+            CreatedAt,
+            CreatedBy,
+            UpdatedAt,
+            UpdatedBy,
+            TenantId,
+            PersonId,
+            TitleId,
+            Percentage
+        };
+    }
 }

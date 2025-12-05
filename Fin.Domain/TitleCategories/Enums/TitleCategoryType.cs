@@ -1,11 +1,15 @@
+using Fin.Domain.Global.Decorators;
 using Fin.Domain.Titles.Enums;
 
 namespace Fin.Domain.TitleCategories.Enums;
 
 public enum TitleCategoryType: byte
 {
+    [FrontTranslateKey("finCore.features.titleCategory.type.expense")]
     Expense = 0,
+    [FrontTranslateKey("finCore.features.titleCategory.type.income")]
     Income = 1,
+    [FrontTranslateKey("finCore.features.titleCategory.type.both")]
     Both = 2
 }
 

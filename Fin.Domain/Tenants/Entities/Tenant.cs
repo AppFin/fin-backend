@@ -3,7 +3,7 @@ using Fin.Domain.Users.Entities;
 
 namespace Fin.Domain.Tenants.Entities;
 
-public class Tenant: IEntity
+public class Tenant: IEntity, ILoggable
 {
     public Guid Id { get; set; }
     public DateTime CreatedAt { get; private set; }
@@ -25,5 +25,17 @@ public class Tenant: IEntity
         UpdatedAt = now;
         Locale = locale ?? "pt-BR";
         Timezone = timezone ?? "America/Sao_Paulo";
-    } 
+    }
+
+    public object GetLog()
+    {
+        return new
+        {
+            Id,
+            CreatedAt,
+            UpdatedAt,
+            Locale,
+            Timezone
+        };
+    }
 }

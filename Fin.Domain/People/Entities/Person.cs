@@ -4,7 +4,7 @@ using Fin.Domain.Titles.Entities;
 
 namespace Fin.Domain.People.Entities;
 
-public class Person: IAuditedTenantEntity
+public class Person: ILoggableAuditedTenantEntity
 {
     public string Name { get; private set; }
     public bool Inactivated { get; private set; }
@@ -36,5 +36,20 @@ public class Person: IAuditedTenantEntity
     public void ToggleInactivated()
     {
         Inactivated = !Inactivated;
+    }
+
+    public object GetLog()
+    {
+        return new
+        {
+            Id,
+            CreatedAt,
+            CreatedBy,
+            UpdatedAt,
+            UpdatedBy,
+            TenantId,
+            Name,
+            Inactivated
+        };
     }
 }

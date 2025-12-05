@@ -1,11 +1,12 @@
-﻿using Fin.Domain.Global.Interfaces;
+﻿using Fin.Domain.Global.Decorators;
+using Fin.Domain.Global.Interfaces;
 using Fin.Domain.Notifications.Dtos;
 using Fin.Domain.Notifications.Enums;
 using Fin.Domain.Users.Entities;
 
 namespace Fin.Domain.Notifications.Entities;
 
-public class UserNotificationSettings: IAuditedTenantEntity
+public class UserNotificationSettings: ILoggableAuditedTenantEntity
 {
     public Guid UserId { get; set; }
     public bool Enabled { get; set; }
@@ -60,5 +61,23 @@ public class UserNotificationSettings: IAuditedTenantEntity
     public void RemoveTokens(List<string> tokens)
     {
         FirebaseTokens = FirebaseTokens.Except(tokens).ToList();
+    }
+
+    public object GetLog()
+    {
+        return new
+        {
+            Id,
+            CreatedAt,
+            CreatedBy,
+            UpdatedAt,
+            UpdatedBy,
+            TenantId,
+            UserId,
+            Enabled,
+            AllowedWays,
+            AllowedWaysDesciptions = AllowedWays.Select(way => way.GetTranslateKey()),
+            FirebaseTokens
+        };
     }
 }

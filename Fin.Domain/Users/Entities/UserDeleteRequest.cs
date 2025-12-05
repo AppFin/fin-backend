@@ -2,7 +2,7 @@
 
 namespace Fin.Domain.Users.Entities;
 
-public class UserDeleteRequest : IAuditedEntity
+public class UserDeleteRequest : IAuditedEntity, ILoggable
 {
     public Guid UserId { get; set; }
     public virtual User User { get; set; }
@@ -44,4 +44,21 @@ public class UserDeleteRequest : IAuditedEntity
         if (!User.IsActivity) User.ToggleActivity();
     }
 
+    public object GetLog()
+    {
+        return new
+        {
+            Id,
+            CreatedAt,
+            CreatedBy,
+            UpdatedAt,
+            UpdatedBy,
+            UserId,
+            UserAbortedId,
+            AbortedAt,
+            Aborted,
+            DeleteRequestedAt,
+            DeleteEffectivatedAt
+        };
+    }
 }

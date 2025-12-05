@@ -1,11 +1,12 @@
-﻿using Fin.Domain.Global.Interfaces;
+﻿using Fin.Domain.Global.Decorators;
+using Fin.Domain.Global.Interfaces;
 using Fin.Domain.Notifications.Dtos;
 using Fin.Domain.Notifications.Enums;
 using Fin.Domain.Users.Entities;
 
 namespace Fin.Domain.Notifications.Entities;
 
-public class UserRememberUseSetting : IAuditedTenantEntity
+public class UserRememberUseSetting : ILoggableAuditedTenantEntity
 {
     public Guid UserId { get; set; }
     public List<NotificationWay> Ways { get; set; } = new();
@@ -41,5 +42,23 @@ public class UserRememberUseSetting : IAuditedTenantEntity
         WeekDays = input.WeekDays;
         WeekDays = input.WeekDays;
         NotifyOn = input.NotifyOn;
+    }
+    
+    public object GetLog()
+    {
+        return new
+        {
+            Id,
+            CreatedAt,
+            CreatedBy,
+            UpdatedAt,
+            UpdatedBy,
+            TenantId,
+            UserId,
+            Ways,
+            WaysDescriptions = Ways.Select(way => way.GetTranslateKey()),
+            NotifyOn,
+            WeekDays,
+        };
     }
 }

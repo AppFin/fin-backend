@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Fin.Domain.Global.Decorators;
 using Fin.Domain.Global.Interfaces;
 using Fin.Domain.People.Dtos;
 using Fin.Domain.People.Entities;
@@ -12,6 +13,7 @@ namespace Fin.Domain.Titles.Entities;
 public class Title: IAuditedTenantEntity, ILoggable
 {
     public decimal Value { get; set; }
+    
     public TitleType Type { get; set; }
     
     public string Description { get; set; }
@@ -153,7 +155,7 @@ public class Title: IAuditedTenantEntity, ILoggable
             Description = Description,
         
             Type = Type,
-            TypeDescription = Type.ToString(), // TODO implement a to description 
+            TypeDescription = Type.GetTranslateKey(), 
             OriginalValue = Value,
             EffectiveValue = EffectiveValue,   
             PreviousBalance = PreviousBalance,

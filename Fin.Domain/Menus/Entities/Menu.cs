@@ -1,10 +1,11 @@
-﻿using Fin.Domain.Global.Interfaces;
+﻿using Fin.Domain.Global.Decorators;
+using Fin.Domain.Global.Interfaces;
 using Fin.Domain.Menus.Dtos;
 using Fin.Domain.Menus.Enums;
 
 namespace Fin.Domain.Menus.Entities;
 
-public class Menu: IAuditedEntity
+public class Menu: IAuditedEntity, ILoggable
 {
     public string FrontRoute { get; set; }
     public string Name { get; set; }
@@ -44,5 +45,25 @@ public class Menu: IAuditedEntity
         KeyWords = input.KeyWords;
         OnlyForAdmin = input.OnlyForAdmin;
         Position = input.Position;
+    }
+
+    public object GetLog()
+    {
+        return new
+        {
+            Id,
+            CreatedAt,
+            CreatedBy,
+            UpdatedAt,
+            UpdatedBy,
+            FrontRoute,
+            Name,
+            Icon,
+            Color,
+            KeyWords,
+            OnlyForAdmin,
+            Position,
+            PositionDescription = Position.GetTranslateKey()
+        };
     }
 }
