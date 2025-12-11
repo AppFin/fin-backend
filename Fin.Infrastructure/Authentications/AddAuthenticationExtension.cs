@@ -1,5 +1,8 @@
-﻿using System.Text;
+﻿#nullable enable
+using System.Security.Claims;
+using System.Text;
 using Fin.Infrastructure.Authentications.Constants;
+using Fin.Infrastructure.Notifications.Hubs;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -23,11 +26,13 @@ public static class AddAuthenticationExtension
             .AddCookie()
             .AddGoogle("Google", options =>
             {
-                options.ClientId = configuration.GetSection(AuthenticationConstants.GoogleClientIdConfigKey).Value ?? "";
-                options.ClientSecret = configuration.GetSection(AuthenticationConstants.GoogleClientSecretConfigKey).Value ?? "";
+                options.ClientId = configuration.GetSection(AuthenticationConstants.GoogleClientIdConfigKey).Value ??
+                                   "";
+                options.ClientSecret =
+                    configuration.GetSection(AuthenticationConstants.GoogleClientSecretConfigKey).Value ?? "";
                 options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.CallbackPath = "/authentications/google-sign-callback";
-                
+
                 options.ClaimActions.MapJsonKey("picture", "picture", "url");
             })
             .AddJwtBearer(options =>
@@ -39,23 +44,60 @@ public static class AddAuthenticationExtension
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = configuration.GetSection(AuthenticationConstants.TokenJwtIssuerConfigKey).Value ?? "",
-                    ValidAudience = configuration.GetSection(AuthenticationConstants.TokenJwtAudienceConfigKey).Value ?? "",
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetSection(AuthenticationConstants.TokenJwtKeyConfigKey).Value ?? ""))
+                    ValidAudience = configuration.GetSection(AuthenticationConstants.TokenJwtAudienceConfigKey).Value ??
+                                    "",
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+                        configuration.GetSection(AuthenticationConstants.TokenJwtKeyConfigKey).Value ?? ""))
                 };
-                
+
                 options.Events = new JwtBearerEvents
                 {
-                    OnMessageReceived = context =>
+                    OnMessageReceived = async context =>
                     {
-                        var accessToken = context.Request.Query["access_token"];
                         var path = context.HttpContext.Request.Path;
-                        
-                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/notifications-hub"))
+                        if (!path.StartsWithSegments("/notifications-hub")) return;
+
+                        var connectionToken = context.Request.Query["access_token"].ToString();
+
+                        if (string.IsNullOrEmpty(connectionToken))
                         {
-                            context.Token = accessToken;
+                            var authHeader = context.Request.Headers["Authorization"].ToString();
+                            if (!string.IsNullOrEmpty(authHeader) &&  authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                            {
+                                connectionToken = authHeader.Substring("Bearer ".Length).Trim();
+                            } else if (!string.IsNullOrEmpty(authHeader))
+                            {
+                                connectionToken = authHeader;
+                            }
                         }
                         
-                        return Task.CompletedTask;
+                        if (string.IsNullOrEmpty(connectionToken))
+                        {
+                            context.Fail("Connection token is required");
+                            return;
+                        }
+
+                        var tokenService = context.HttpContext.RequestServices.GetRequiredService<IWebSocketTokenService>();
+                        var tokenData = await tokenService.ValidateAndConsumeTokenAsync(connectionToken);
+
+                        if (tokenData == null)
+                        {
+                            context.Fail("Invalid or expired connection token");
+                            return;
+                        }
+
+                        var claims = new[]
+                        {
+                            new Claim("userId", tokenData.UserId.ToString()),
+                            new Claim("tenantId", tokenData.TenantId.ToString()),
+                            new Claim("displayName", tokenData.DisplayName),
+                            new Claim("isAdmin", tokenData.IsAdmin.ToString()),
+                            new Claim(ClaimTypes.NameIdentifier, tokenData.UserId.ToString())
+                        };
+
+                        var identity = new ClaimsIdentity(claims, "WebSocketToken");
+                        context.Principal = new ClaimsPrincipal(identity);
+                        context.Success();
                     }
                 };
             });

@@ -8,6 +8,9 @@ public static class AddNotificationBackgroundJob
     public static IServiceCollection AddNotifications(this IServiceCollection services)
     {
         services.AddSignalR();
-        return services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
+        return services
+            .AddSingleton<IUserIdProvider, CustomUserIdProvider>()
+            .AddSingleton<IWebSocketTokenService, WebSocketTokenService>();
+
     }
 }

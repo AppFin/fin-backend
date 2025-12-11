@@ -82,7 +82,7 @@ public class FinDbContext : DbContext
                     .GetMethod(nameof(SetTenantFilter), BindingFlags.NonPublic | BindingFlags.Instance)
                     ?.MakeGenericMethod(entityType.ClrType);
 
-                method?.Invoke(this, new object[] { modelBuilder });
+                method?.Invoke(this, [modelBuilder]);
             }
         }
     }
@@ -90,7 +90,7 @@ public class FinDbContext : DbContext
     private void SetTenantFilter<TEntity>(ModelBuilder modelBuilder) where TEntity : class, ITenant
     {
         if (Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite") return;
-        modelBuilder.Entity<TEntity>().HasQueryFilter(e => _ambientData.IsLogged && e.TenantId == _ambientData.TenantId);
+        modelBuilder.Entity<TEntity>().HasQueryFilter(e => !_ambientData.IsLogged || e.TenantId == _ambientData.TenantId);
     }
 
     private void ApplyUtcConverterToDateTime(ModelBuilder modelBuilder)

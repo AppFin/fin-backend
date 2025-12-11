@@ -1,0 +1,107 @@
+@page 
+@using Fin.Infrastructure.Constants
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+
+@{
+Layout = null;
+
+var frontendUrl = Configuration[AppConstants.FrontUrlConfigKey] ?? "http://localhost:4200";
+var appName = Configuration[AppConstants.AppName] ?? "FinApp";
+
+var iconUrl = $"{frontendUrl}/icons/fin.png";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@appName - API Status</title>
+    <link rel="icon" type="image/png" href="@iconUrl">
+
+    <link rel="stylesheet" href="~/css/status.css" asp-append-version="true" />
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="logo">
+            <img src="@iconUrl" alt="Fin Logo">
+        </div>
+        <h1>@appName - API</h1>
+        <p class="subtitle">Backend running successfully!</p>
+    </div>
+
+    <div class="status" id="statusCard">
+        <div class="status-indicator"></div>
+        <span id="statusText">Checking status...</span>
+    </div>
+
+    <div class="health-info" id="healthInfo" style="display: none;">
+        <div class="info-row">
+            <span class="info-label">Status:</span>
+            <span class="info-value" id="healthStatus">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Version:</span>
+            <span class="info-value" id="healthVersion">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Timestamp:</span>
+            <span class="info-value" id="healthTimestamp">-</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Environment:</span>
+            <span class="info-value">@Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")</span>
+        </div>
+    </div>
+
+    <div class="links">
+        <a href="@frontendUrl" target="_blank" class="link-button">App Frontend</a>
+        <a href="/v1/swagger" class="link-button">Swagger Documentation</a>
+        <a href="/v1/health" class="link-button">Health Check JSON</a>
+    </div>
+
+    <div class="footer">
+        Built by @appName Co. • © @DateTime.Now.Year
+    </div>
+</div>
+
+<script>
+    async function loadHealthInfo() {
+        try {
+            const response = await fetch('/v1/health');
+            const data = await response.json();
+
+            const statusCard = document.getElementById('statusCard');
+            const statusText = document.getElementById('statusText');
+
+            if (data.status === 'OK' || data.status === 'Healthy') {
+                statusText.textContent = 'System operational and running';
+                statusCard.classList.remove('error');
+            } else {
+                statusText.textContent = 'System has issues';
+                statusCard.classList.add('error');
+            }
+
+            document.getElementById('healthInfo').style.display = 'block';
+            document.getElementById('healthStatus').textContent = data.status;
+            
+            document.getElementById('healthVersion').textContent = data.version || '1.0.0';
+
+            const timestamp = data.timestamp ? new Date(data.timestamp) : new Date();
+            document.getElementById('healthTimestamp').textContent = timestamp.toLocaleString('pt-BR');
+
+        } catch (error) {
+            console.error('Error loading health check:', error);
+            const statusCard = document.getElementById('statusCard');
+            const statusText = document.getElementById('statusText');
+            statusText.textContent = 'Error connecting to API';
+            statusCard.classList.add('error');
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', loadHealthInfo);
+</script>
+</body>
+</html>
