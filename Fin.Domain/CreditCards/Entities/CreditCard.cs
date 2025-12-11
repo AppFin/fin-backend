@@ -6,7 +6,7 @@ using Fin.Domain.Wallets.Entities;
 
 namespace Fin.Domain.CreditCards.Entities;
 
-public class CreditCard: IAuditedTenantEntity
+public class CreditCard: ILoggableAuditedTenantEntity
 {
     public string Name { get; private set; }
     public string Color { get; private set; }
@@ -63,4 +63,25 @@ public class CreditCard: IAuditedTenantEntity
     }
     
     public void ToggleInactivated() => Inactivated = !Inactivated;
+    
+    public object GetLog()
+    {
+        return new
+        {
+            Id,
+            CreatedAt,
+            CreatedBy,
+            UpdatedAt,
+            UpdatedBy,
+            TenantId,
+            Name,
+            Color, 
+            Icon,
+            Limit,
+            DueDay,
+            ClosingDay,
+            DebitWalletId,
+            FinancialInstitutionId,
+        };
+    }
 }

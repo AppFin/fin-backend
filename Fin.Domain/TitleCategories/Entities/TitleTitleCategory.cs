@@ -1,8 +1,9 @@
+using Fin.Domain.Global.Interfaces;
 using Fin.Domain.Titles.Entities;
 
 namespace Fin.Domain.TitleCategories.Entities;
 
-public class TitleTitleCategory
+public class TitleTitleCategory: ILoggable
 {
     public Guid TitleId { get; set; }
     public virtual Title Title { get; set; }
@@ -18,5 +19,14 @@ public class TitleTitleCategory
     {
         TitleId = titleId;
         TitleCategoryId = categoryId;
+    }
+
+    public object GetLog()
+    {
+        return new
+        {
+            TitleId,
+            TitleCategoryId
+        };
     }
 }

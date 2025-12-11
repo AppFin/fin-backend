@@ -4,7 +4,7 @@ using Fin.Domain.Global.Interfaces;
 
 namespace Fin.Domain.CardBrands.Entities;
 
-public class CardBrand: IAuditedEntity
+public class CardBrand: IAuditedEntity, ILoggable
 {
     public string Name { get; set; }
     public string Icon { get; set; }
@@ -35,5 +35,20 @@ public class CardBrand: IAuditedEntity
         Icon = input.Icon;
         Color = input.Color;
         
+    }
+
+    public object GetLog()
+    {
+        return new
+        {
+            Id,
+            CreatedAt,
+            CreatedBy,
+            UpdatedAt,
+            UpdatedBy,
+            Name,
+            Color,
+            Icon
+        };
     }
 }

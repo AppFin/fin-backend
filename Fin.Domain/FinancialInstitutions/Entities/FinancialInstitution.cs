@@ -1,12 +1,13 @@
 using Fin.Domain.CreditCards.Entities;
 using Fin.Domain.FinancialInstitutions.Dtos;
 using Fin.Domain.FinancialInstitutions.Enums;
+using Fin.Domain.Global.Decorators;
 using Fin.Domain.Global.Interfaces;
 using Fin.Domain.Wallets.Entities;
 
 namespace Fin.Domain.FinancialInstitutions.Entities;
 
-public class FinancialInstitution : IAuditedEntity
+public class FinancialInstitution : IAuditedEntity, ILoggable
 {
     public string Name { get; set; }
     public string Code { get; set; }
@@ -47,4 +48,21 @@ public class FinancialInstitution : IAuditedEntity
     }
 
    public void ToggleInactive() => Inactive = !Inactive;
+   public object GetLog()
+   {
+       return new
+       {
+           Id,
+           CreatedAt,
+           CreatedBy,
+           UpdatedAt,
+           UpdatedBy,
+           Code,
+           Icon,
+           Color,
+           Inactive,
+           Type,
+           TypeDescription = Type.GetTranslateKey(),
+       };
+   }
 }

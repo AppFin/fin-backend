@@ -7,7 +7,7 @@ using Fin.Domain.Wallets.Dtos;
 
 namespace Fin.Domain.Wallets.Entities;
 
-public class Wallet: IAuditedTenantEntity
+public class Wallet: ILoggableAuditedTenantEntity
 {
     public Guid Id { get; set; }
     public Guid CreatedBy { get; set; }
@@ -65,5 +65,24 @@ public class Wallet: IAuditedTenantEntity
             .FirstOrDefault();
 
         return lastTitle?.ResultingBalance ?? InitialBalance;
+    }
+
+    public object GetLog()
+    {
+        return new
+        {
+            Id,
+            CreatedBy,
+            CreatedAt,
+            UpdatedAt,
+            UpdatedBy,
+            TenantId,
+            Name,
+            Color,
+            Icon,
+            Inactivated,
+            FinancialInstitutionId,
+            InitialBalance
+        };
     }
 }

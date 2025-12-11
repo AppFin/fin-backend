@@ -1,3 +1,4 @@
+using Fin.Domain.Global.Decorators;
 using Fin.Domain.Global.Interfaces;
 using Fin.Domain.TitleCategories.Dtos;
 using Fin.Domain.TitleCategories.Enums;
@@ -5,7 +6,7 @@ using Fin.Domain.Titles.Entities;
 
 namespace Fin.Domain.TitleCategories.Entities;
 
-public class TitleCategory: IAuditedTenantEntity
+public class TitleCategory: ILoggableAuditedTenantEntity
 {
     public bool Inactivated { get; private set; }
     public string Name { get; private set; }
@@ -43,4 +44,23 @@ public class TitleCategory: IAuditedTenantEntity
     }
     
     public void ToggleInactivated() => Inactivated = !Inactivated;
+ 
+    public object GetLog()
+    {
+        return new
+        {
+            Id,
+            CreatedAt,
+            CreatedBy,
+            UpdatedAt,
+            UpdatedBy,
+            TenantId,
+            Inactivated,
+            Name,
+            Icon,
+            Color,
+            Type,
+            TypeDescription = Type.GetTranslateKey(),
+        };
+    }
 }

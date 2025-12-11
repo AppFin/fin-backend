@@ -32,6 +32,15 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
+      
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
 
 volumes:
   postgres_data:

@@ -1,8 +1,9 @@
-﻿using Fin.Domain.Users.Entities;
+﻿using Fin.Domain.Global.Interfaces;
+using Fin.Domain.Users.Entities;
 
 namespace Fin.Domain.Notifications.Entities;
 
-public class NotificationUserDelivery
+public class NotificationUserDelivery: ILoggable
 {
     public Guid NotificationId { get; set; }
     public Guid UserId { get; set; }
@@ -32,5 +33,17 @@ public class NotificationUserDelivery
     public void MarkAsVisualized()
     {
         Visualized = true;
+    }
+
+    public object GetLog()
+    {
+        return new
+        {
+            NotificationId,
+            UserId,
+            Delivery,
+            Visualized,
+            BackgroundJobId
+        };
     }
 }

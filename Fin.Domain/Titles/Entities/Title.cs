@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Fin.Domain.Global.Decorators;
 using Fin.Domain.Global.Interfaces;
 using Fin.Domain.People.Dtos;
 using Fin.Domain.People.Entities;
@@ -9,9 +10,10 @@ using Fin.Domain.Wallets.Entities;
 
 namespace Fin.Domain.Titles.Entities;
 
-public class Title: IAuditedTenantEntity
+public class Title: IAuditedTenantEntity, ILoggable
 {
     public decimal Value { get; set; }
+    
     public TitleType Type { get; set; }
     
     public string Description { get; set; }
@@ -142,5 +144,28 @@ public class Title: IAuditedTenantEntity
         }
 
         return titlePeopleToDelete;
+    }
+
+    public object GetLog()
+    {
+        return new
+        {
+            Id = Id,
+            Date = Date,
+            Description = Description,
+        
+            Type = Type,
+            TypeDescription = Type.GetTranslateKey(), 
+            OriginalValue = Value,
+            EffectiveValue = EffectiveValue,   
+            PreviousBalance = PreviousBalance,
+            ResultingBalance = ResultingBalance,
+            
+            WalletId = WalletId,
+            TenantId = TenantId,
+
+            CreatedBy = CreatedBy,
+            CreatedAt = CreatedAt
+        };
     }
 }

@@ -1,7 +1,18 @@
-﻿namespace Fin.Domain.Tenants.Entities;
+﻿using Fin.Domain.Global.Interfaces;
 
-public class TenantUser
+namespace Fin.Domain.Tenants.Entities;
+
+public class TenantUser: ILoggable
 {
     public Guid TenantId { get; set; }
     public Guid UserId { get; set; }
+    
+    public object GetLog()
+    {
+        return new
+        {
+            TenantId,
+            UserId
+        };
+    }
 }

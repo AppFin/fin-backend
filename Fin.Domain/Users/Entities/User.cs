@@ -5,7 +5,7 @@ using Fin.Domain.Users.Enums;
 
 namespace Fin.Domain.Users.Entities;
 
-public class User: IEntity
+public class User: IEntity, ILoggable
 {
     public Guid Id { get; set; }
     
@@ -87,5 +87,20 @@ public class User: IEntity
     public void MakeAdmin()
     {
         IsAdmin = true;
+    }
+
+    public object GetLog()
+    {
+        return new
+        {
+            Id,
+            FirstName,
+            LastName,
+            DisplayName,
+            CreatedAt,
+            UpdatedAt,
+            IsAdmin,
+            IsActivity
+        };
     }
 }

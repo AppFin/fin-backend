@@ -1,4 +1,5 @@
 ﻿using Fin.Infrastructure.AmbientDatas;
+using Fin.Infrastructure.Audits;
 using Fin.Infrastructure.Authentications;
 using Fin.Infrastructure.AutoServices.Extensions;
 using Fin.Infrastructure.BackgroundJobs;
@@ -26,6 +27,7 @@ public static class AddInfrastructureExtension
             .AddScoped<TokenBlacklistMiddleware>()
             .AddScoped<ActivatedMiddleware>()
             .AddScoped<AmbientDataMiddleware>()
+            .AddAuditLog(configuration)
             .AddDatabase(configuration)
             .AddFirebase(configuration)
             .AddSeeders()

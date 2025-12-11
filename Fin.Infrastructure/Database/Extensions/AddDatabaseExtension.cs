@@ -1,4 +1,5 @@
-﻿using Fin.Infrastructure.Database.Interceptors;
+﻿using Fin.Infrastructure.Audits;
+using Fin.Infrastructure.Database.Interceptors;
 using Fin.Infrastructure.Database.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -19,11 +20,13 @@ public static class AddDatabaseExtension
             {
                 var auditedEntityInterceptor = serviceProvider.GetRequiredService<AuditedEntityInterceptor>();
                 var tenantEntityInterceptor = serviceProvider.GetRequiredService<TenantEntityInterceptor>();
+                var auditLogInterceptor = serviceProvider.GetRequiredService<AuditLogInterceptor>();
                 
                 op
                     .UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
                     .AddInterceptors(auditedEntityInterceptor)
-                    .AddInterceptors(tenantEntityInterceptor);
+                    .AddInterceptors(tenantEntityInterceptor)
+                    .AddInterceptors(auditLogInterceptor);
             })
             .AddScoped(typeof(IRepository<>), typeof(Repository<>));;
         
