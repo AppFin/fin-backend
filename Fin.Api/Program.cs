@@ -11,6 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 var frontEndUrl = builder.Configuration.GetSection(AppConstants.FrontUrlConfigKey).Get<string>();
 var version = builder.Configuration.GetSection(AppConstants.VersionConfigKey).Get<string>();
 
+builder.Services.AddRazorPages();
+
 builder.Services
     .AddInfrastructure(builder.Configuration)
     .AddOpenApiDocument(config =>
@@ -73,5 +75,6 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapRazorPages();
 app.MapControllers();
 app.Run();
