@@ -1,7 +1,9 @@
 using Fin.Domain.CardBrands.Entities;
 using Fin.Domain.CreditCards.Dtos;
+using Fin.Domain.CreditCharges.Entities;
 using Fin.Domain.FinancialInstitutions.Entities;
 using Fin.Domain.Global.Interfaces;
+using Fin.Domain.TitleCategories.Entities;
 using Fin.Domain.Wallets.Entities;
 
 namespace Fin.Domain.CreditCards.Entities;
@@ -24,6 +26,9 @@ public class CreditCard: ILoggableAuditedTenantEntity
     
     public Guid FinancialInstitutionId { get; set; }
     public virtual FinancialInstitution FinancialInstitution { get; set; }
+    
+    public ICollection<CreditCharge> CreditCharges { get; set; } = [];
+    public ICollection<CardBilling> CardBillings { get; set; } = [];
     
     public Guid Id { get; set; }
     public Guid CreatedBy { get; set; }

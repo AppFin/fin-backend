@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Fin.Domain.CreditCharges.Entities;
 using Fin.Domain.Global.Decorators;
 using Fin.Domain.Global.Interfaces;
 using Fin.Domain.People.Dtos;
@@ -26,6 +27,7 @@ public class Title: IAuditedTenantEntity, ILoggable
     public decimal EffectiveValue => (Value * (Type == TitleType.Expense ? -1 : 1));
     
     public virtual Wallet Wallet { get; set; }
+    public virtual CardBilling CardBilling { get; set; }
     
     public ICollection<TitleCategory> TitleCategories { get; set; } = [];
     public ICollection<TitleTitleCategory> TitleTitleCategories { get; set; } = [];
@@ -45,8 +47,7 @@ public class Title: IAuditedTenantEntity, ILoggable
     {
     }
 
-    public 
-        Title(TitleInput input, decimal previousBalance)
+    public Title(TitleInput input, decimal previousBalance)
     {
         Id = Guid.NewGuid();
         

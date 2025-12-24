@@ -1,3 +1,4 @@
+using Fin.Domain.CreditCharges.Entities;
 using Fin.Domain.Global.Interfaces;
 using Fin.Domain.People.Dtos;
 using Fin.Domain.Titles.Entities;
@@ -18,6 +19,9 @@ public class Person: ILoggableAuditedTenantEntity
 
     public virtual ICollection<Title> Titles { get; set; } = [];
     public virtual ICollection<TitlePerson> TitlePeople { get; set; } = [];
+    
+    public virtual ICollection<CreditCharge> CreditCharges { get; set; } = [];
+    public virtual ICollection<CreditChargePerson> CreditChargePeople { get; set; } = [];
 
     public Person()
     {

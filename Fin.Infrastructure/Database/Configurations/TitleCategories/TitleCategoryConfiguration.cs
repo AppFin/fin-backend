@@ -1,4 +1,5 @@
-﻿using Fin.Domain.TitleCategories.Entities;
+﻿using Fin.Domain.TitleCategories;
+using Fin.Domain.TitleCategories.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -28,6 +29,22 @@ public class TitleCategoryConfiguration : IEntityTypeConfiguration<TitleCategory
                 r => r
                     .HasOne(ttc => ttc.TitleCategory)
                     .WithMany(category => category.TitleTitleCategories)
+                    .HasForeignKey(e => e.TitleCategoryId)
+                    .OnDelete(DeleteBehavior.Cascade)
+            );
+        
+        builder
+            .HasMany(x => x.CreditCharges)
+            .WithMany(x => x.TitleCategories)
+            .UsingEntity<CreditChargeCategory>(
+                l => l
+                    .HasOne(ttc => ttc.CreditCharge)
+                    .WithMany(title => title.CreditChargeCategories)
+                    .HasForeignKey(e => e.CreditChargeId) 
+                    .OnDelete(DeleteBehavior.Cascade),
+                r => r
+                    .HasOne(ttc => ttc.TitleCategory)
+                    .WithMany(category => category.CreditChargeCategories)
                     .HasForeignKey(e => e.TitleCategoryId)
                     .OnDelete(DeleteBehavior.Cascade)
             );
