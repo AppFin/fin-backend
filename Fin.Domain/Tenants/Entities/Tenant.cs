@@ -26,6 +26,13 @@ public class Tenant: IEntity, ILoggable
         Locale = locale ?? "pt-BR";
         Timezone = timezone ?? "America/Sao_Paulo";
     }
+    
+    public void Update(DateTime now, string timezone, string locale)
+    {
+        UpdatedAt = now;
+        Locale = locale ?? Locale;
+        Timezone = timezone ?? Timezone;
+    }
 
     public object GetLog()
     {

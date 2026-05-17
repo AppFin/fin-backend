@@ -32,7 +32,7 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
-      
+  
   mongodb:
     image: mongo:latest
     container_name: mongodb
@@ -45,3 +45,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  mongo-data:  # Add this line
