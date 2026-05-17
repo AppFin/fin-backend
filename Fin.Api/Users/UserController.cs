@@ -18,6 +18,13 @@ public class UserController(IUserService service): ControllerBase
         return menu != null ? Ok(menu) : NotFound();   
     }
     
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult> Update([FromRoute] Guid id, [FromBody] UserUpdateOrCreateInput input, CancellationToken token)
+    {
+        await service.Update(id, input, token);
+        return Ok();   
+    }
+    
     [HttpGet]
     public async Task<PagedOutput<UserDto>> GetList([FromQuery] PagedFilteredAndSortedInput input)
     {
