@@ -1,0 +1,6 @@
+{
+  "dotnet.defaultSolution": "Fin-Backend.sln",
+  "resharper.solution.autoOpenSingleSolution": true,
+  "editor.formatOnType": true,
+  "resharper.editor.enableTypingAssist": true
+}

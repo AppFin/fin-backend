@@ -4,15 +4,32 @@ namespace Fin.Domain.CreditCharges.Entities;
 
 public class Installment: IAuditedTenantEntity
 {
-    public decimal Value { get; set; }
-    public DateTime DueDate { get; set; }
-    public byte Order { get; set; } = 0;
+    public decimal Value { get; private set; }
+    public DateTime DueDate { get; private set; }
+    public byte Order { get; private set; } = 0;
     
-    public Guid CreditChargeId { get; set; }
+    public Guid CreditChargeId { get; private set; }
     public CreditCharge CreditCharge { get; set; }
     
-    public Guid CardBillingId { get; set; }
+    public Guid CardBillingId { get; private set; }
     public CardBilling CardBilling { get; set; }
+    
+    public Installment()
+    {
+    }
+    
+    public Installment(decimal value, DateTime dueDate, byte order, Guid creditChargeId)
+    {
+        Value = value;
+        DueDate = dueDate;
+        Order = order;
+        CreditChargeId = creditChargeId;
+    }
+    
+    public void SetCardBillingId(Guid cardBillingId)
+    {
+        CardBillingId = cardBillingId;
+    }
     
     
     public Guid Id { get; set; }

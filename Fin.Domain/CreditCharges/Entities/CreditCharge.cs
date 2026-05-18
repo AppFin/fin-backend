@@ -8,11 +8,12 @@ namespace Fin.Domain.CreditCharges.Entities;
 
 public partial class CreditCharge: IAuditedTenantEntity
 {
-    public decimal Value { get; set; }
-    public string Description { get; set; }
-    public DateTime Date { get; set; }
+    public decimal Value { get; private set; }
+    public string Description { get; private set; }
+    public DateTime Date { get; private set; }
+    public int NumberOfInstallments { get; private set; } = 1;
     
-    public Guid CreditCardId { get; set; }
+    public Guid CreditCardId { get; private set; }
     public virtual CreditCard CreditCard { get; set; }
     
     public ICollection<TitleCategory> TitleCategories { get; set; } = [];
@@ -22,6 +23,28 @@ public partial class CreditCharge: IAuditedTenantEntity
     public ICollection<CreditChargePerson> CreditChargePeople { get; set; } = [];
     
     public ICollection<Installment> Installments { get; set; }
+    
+    public CreditCharge()
+    {
+    }
+    
+    public CreditCharge(decimal value, string description, DateTime date, int numberOfInstallments, Guid creditCardId)
+    {
+        Value = value;
+        Description = description;
+        Date = date;
+        NumberOfInstallments = numberOfInstallments;
+        CreditCardId = creditCardId;
+    }
+    
+    public void Update(decimal value, string description, DateTime date, int numberOfInstallments, Guid creditCardId)
+    {
+        Value = value;
+        Description = description;
+        Date = date;
+        NumberOfInstallments = numberOfInstallments;
+        CreditCardId = creditCardId;
+    }
     
     public Guid Id { get; set; }
     public Guid CreatedBy { get; set; }
