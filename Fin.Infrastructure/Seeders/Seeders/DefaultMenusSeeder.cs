@@ -116,6 +116,17 @@ public class DefaultMenusSeeder(
                 OnlyForAdmin = false,
                 Position = MenuPosition.LeftTop,
                 KeyWords = "person, people, pessoas"
+            },
+            new()
+            {
+                Id = Guid.Parse("970580F4-7DE1-415F-9795-DAB349BA3018"),
+                FrontRoute = "/credit-charges",
+                Name = "finCore.features.creditCharge.title",
+                Color = "#fdc570",
+                Icon = "credit-card",
+                OnlyForAdmin = false,
+                Position = MenuPosition.LeftTop,
+                KeyWords = "credit, people, pessoas"
             }
         };
         var defaultMenusIds = defaultMenus.Select(x => x.Id).ToList();
