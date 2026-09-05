@@ -49,8 +49,8 @@ jobs:
 
             # Built one at a time, with a memory cap each, so the build
             # doesn't fight the running containers for RAM on a small VM.
-            docker build --memory=1g --memory-swap=1g -t fin-api:latest -f fin-backend/Dockerfile fin-backend
-            docker build --memory=1g --memory-swap=1g \
+            docker build --memory=6g --memory-swap=4g -t fin-api:latest -f fin-backend/Dockerfile fin-backend
+            docker build --memory=6g --memory-swap=4g \
               --build-arg API_URL="${PUBLIC_API_URL:-https://localhost:7122/v1}" \
               -t fin-front:latest fin-frontend
 
