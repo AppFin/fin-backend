@@ -1,0 +1,6 @@
+{
+  "recommendations": [
+    "JetBrains.resharper-code",
+    "ms-dotnettools.vscode-dotnet-runtime"
+  ]
+}

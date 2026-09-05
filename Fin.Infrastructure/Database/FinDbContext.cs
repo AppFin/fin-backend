@@ -1,10 +1,13 @@
 ﻿using System.Reflection;
 using Fin.Domain.CardBrands.Entities;
 using Fin.Domain.CreditCards.Entities;
+using Fin.Domain.CreditCharges.Entities;
 using Fin.Domain.Global.Interfaces;
 using Fin.Domain.Menus.Entities;
 using Fin.Domain.Notifications.Entities;
+using Fin.Domain.People.Entities;
 using Fin.Domain.Tenants.Entities;
+using Fin.Domain.TitleCategories;
 using Fin.Domain.TitleCategories.Entities;
 using Fin.Domain.Titles.Entities;
 using Fin.Domain.Users.Entities;
@@ -37,7 +40,17 @@ public class FinDbContext : DbContext
     
     public DbSet<TitleCategory> TitleCategories { get; set; }
     public DbSet<TitleTitleCategory> TitleTitleCategories { get; set; }
+    public DbSet<CreditChargeCategory> CreditChargeCategories { get; set; }
+    
+    public DbSet<Person> Persons { get; set; }
+    public DbSet<TitlePerson> TitlePersons { get; set; }
+    public DbSet<CreditChargePerson> CreditChargePersons { get; set; }
+    
     public DbSet<Title> Titles { get; set; }
+    
+    public DbSet<CreditCharge> CreditCharges { get; set; }
+    public DbSet<Installment> Installments { get; set; }
+    public DbSet<CardBilling> CardBillings { get; set; }
 
     private readonly IAmbientData _ambientData;
 
@@ -45,8 +58,7 @@ public class FinDbContext : DbContext
     {
     }
 
-    public FinDbContext(DbContextOptions<FinDbContext> options, IAmbientData ambientData) :
-        base(options)
+    public FinDbContext(DbContextOptions<FinDbContext> options, IAmbientData ambientData) : base(options)
     {
         _ambientData = ambientData;
     }

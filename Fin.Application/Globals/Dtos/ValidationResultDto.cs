@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using Fin.Infrastructure.Errors;
 using Fin.Infrastructure.ValidationsPipeline;
+using Microsoft.AspNetCore.Http;
 
 namespace Fin.Application.Globals.Dtos;
 
@@ -69,6 +70,12 @@ public class ValidationResultDto<TDSuccess, TDError, TErroCode> where TErroCode 
             ErrorData = pipelineOutput.Data,
             ErrorCode = pipelineOutput.Code,
         };
+    }
+
+    public void ThrowIfHasError()
+    {
+        if (Success) return;
+        throw new BadHttpRequestException(Message);
     }
 }
 

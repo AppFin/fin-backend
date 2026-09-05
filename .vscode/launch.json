@@ -1,0 +1,27 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Fin.Api (launch)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/Fin.Api/bin/Debug/net9.0/Fin.Api.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/Fin.Api",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    {
+      "name": "Fin.Api (attach)",
+      "type": "coreclr",
+      "request": "attach"
+    }
+  ]
+}

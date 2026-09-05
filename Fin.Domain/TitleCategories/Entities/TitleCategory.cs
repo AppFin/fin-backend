@@ -1,3 +1,4 @@
+using Fin.Domain.CreditCharges.Entities;
 using Fin.Domain.Global.Decorators;
 using Fin.Domain.Global.Interfaces;
 using Fin.Domain.TitleCategories.Dtos;
@@ -23,6 +24,9 @@ public class TitleCategory: ILoggableAuditedTenantEntity
     
     public virtual ICollection<Title> Titles { get; set; }
     public virtual ICollection<TitleTitleCategory> TitleTitleCategories { get; set; }
+    
+    public virtual ICollection<CreditCharge> CreditCharges { get; set; }
+    public virtual ICollection<CreditChargeCategory> CreditChargeCategories { get; set; }
     
     public TitleCategory()
     {
