@@ -1,0 +1,80 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: fin-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: fin_app
+      POSTGRES_USER: fin_app
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fin_app"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  redis:
+    image: redis:7-alpine
+    container_name: fin-redis
+    restart: always
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - internal
+
+  mongodb:
+    image: mongo:latest
+    container_name: fin-mongo
+    restart: always
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - internal
+
+  api:
+    image: fin-api:latest
+    container_name: fin-api
+    restart: always
+    env_file:
+      - .env
+    environment:
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=fin_app;Username=fin_app;Password=${POSTGRES_PASSWORD}
+      ConnectionStrings__MongoDbConnection: mongodb://mongodb:27017
+      ApiSettings__Redis: redis:6379
+    depends_on:
+      - postgres
+      - redis
+      - mongodb
+    networks:
+      - internal
+      - web
+
+  front:
+    image: fin-front:latest
+    container_name: fin-front
+    restart: always
+    depends_on:
+      - api
+    networks:
+      - web
+
+networks:
+  internal:
+  # Created once on the server (docker network create web) and shared with
+  # whatever reverse proxy you point at fin-api / fin-front later.
+  web:
+    external: true
+
+volumes:
+  postgres_data:
+  redis_data:
+  mongo_data:

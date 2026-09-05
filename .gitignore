@@ -56,3 +56,4 @@ notifications.md
 
 .vs
 appsettings.Development.json
+.env

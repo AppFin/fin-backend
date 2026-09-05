@@ -4,6 +4,7 @@ using Fin.Infrastructure.Database.Extensions;
 using Fin.Infrastructure.Extensions;
 using Fin.Infrastructure.Seeders.Extensions;
 using Hangfire;
+using Microsoft.AspNetCore.HttpOverrides;
 using NSwag;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -57,8 +58,16 @@ if (app.Environment.IsDevelopment())
     app.UseOpenApi();
     app.UseSwaggerUi();
     app.UseHangfireDashboard();
-    app.UseCors("AllowAngularLocalhost");
 }
+
+// Runs behind a reverse proxy that terminates TLS (e.g. the portfolio demo deploy),
+// so Kestrel needs the forwarded headers to know the original request was HTTPS.
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
+app.UseCors("AllowAngularLocalhost");
 
 app.UseNotifications();
 app.UseFinMiddlewares();
