@@ -1,10 +1,12 @@
 using Fin.Application.Emails;
+using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.EmailSenders.Constants;
 using Fin.Infrastructure.EmailSenders.Dto;
 using Fin.Infrastructure.EmailSenders.MailKit;
 using Fin.Infrastructure.EmailSenders.MailSender;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Fin.Test.EmailSenders;
@@ -15,6 +17,7 @@ public class EmailSenderServiceTest
     private readonly Mock<IMailSenderClient> _mailSenderClientMock = new();
     private readonly Mock<IMailKitClient> _mailKitClientMock = new();
     private readonly Mock<IConfigurationSection> _mailServiceSectionMock = new();
+    private readonly Mock<IConfigurationSection> _demoModeSectionMock = new();
     private readonly Mock<IEmailTemplateService> _emailTemplateServiceMock = new();
 
     #region SendEmailAsync - MailSender
@@ -594,6 +597,28 @@ public class EmailSenderServiceTest
 
     #endregion
 
+    #region Demo Mode
+
+    [Fact]
+    public async Task SendEmailAsync_ShouldSkipRealSend_WhenDemoModeEnabled()
+    {
+        // Arrange
+        SetupDemoMode(true);
+        var service = new EmailSenderService(_configurationMock.Object, _mailSenderClientMock.Object,
+            _mailKitClientMock.Object, _emailTemplateServiceMock.Object, Mock.Of<ILogger<EmailSenderService>>());
+        var dto = GetValidSendEmailDto();
+
+        // Act
+        var result = await service.SendEmailAsync(dto);
+
+        // Assert
+        result.Should().BeTrue();
+        _mailSenderClientMock.Verify(m => m.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mailKitClientMock.Verify(m => m.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    #endregion
+
     #region Exception Handling
 
     [Fact]
@@ -648,7 +673,16 @@ public class EmailSenderServiceTest
 
     private EmailSenderService GetService()
     {
-        return new EmailSenderService(_configurationMock.Object, _mailSenderClientMock.Object, _mailKitClientMock.Object, _emailTemplateServiceMock.Object);
+        SetupDemoMode(false);
+        return new EmailSenderService(_configurationMock.Object, _mailSenderClientMock.Object, _mailKitClientMock.Object, _emailTemplateServiceMock.Object, Mock.Of<ILogger<EmailSenderService>>());
+    }
+
+    private void SetupDemoMode(bool enabled)
+    {
+        _demoModeSectionMock.Setup(s => s.Value).Returns(enabled.ToString());
+        _configurationMock
+            .Setup(c => c.GetSection(AppConstants.DemoModeConfigKey))
+            .Returns(_demoModeSectionMock.Object);
     }
 
     private SendEmailDto GetValidSendEmailDto()

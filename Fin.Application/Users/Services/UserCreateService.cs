@@ -13,6 +13,7 @@ using Fin.Domain.Wallets.Dtos;
 using Fin.Domain.Wallets.Entities;
 using Fin.Infrastructure.Authentications.Constants;
 using Fin.Infrastructure.AutoServices.Interfaces;
+using Fin.Infrastructure.Constants;
 using Fin.Infrastructure.Database.Repositories;
 using Fin.Infrastructure.DateTimes;
 using Fin.Infrastructure.EmailSenders.Dto;
@@ -49,6 +50,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
     private readonly IUnitOfWork _unitOfWork;
 
     private readonly CryptoHelper _cryptoHelper;
+    private readonly bool _demoMode;
 
     public UserCreateService(
         IRepository<UserCredential> credentialRepository,
@@ -80,6 +82,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
         var encryptIv = configuration.GetSection(AuthenticationConstants.EncryptIvConfigKey).Value ?? "";
 
         _cryptoHelper = new CryptoHelper(encryptKey, encryptIv);
+        _demoMode = configuration.GetValue<bool>(AppConstants.DemoModeConfigKey);
     }
 
     public async Task<ValidationResultDto<UserStartCreateOutput, UserStartCreateErrorCode>> StartCreate(UserStartCreateInput input)
@@ -128,6 +131,7 @@ public class UserCreateService : IUserCreateService, IAutoTransient
                 CreationToken = creationToken,
                 Email = input.Email,
                 SentEmailDateTime = sentDateTime,
+                ConfirmationCode = _demoMode ? confirmationCode : null,
             }
         };
     }

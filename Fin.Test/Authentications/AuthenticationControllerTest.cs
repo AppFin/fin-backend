@@ -5,10 +5,12 @@ using Fin.Application.Authentications.Services;
 using Fin.Application.Authentications.Utils;
 using Fin.Application.Globals.Dtos;
 using Fin.Infrastructure.Authentications.Dtos;
+using Fin.Infrastructure.Constants;
 using FluentAssertions;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Moq;
 
 namespace Fin.Test.Authentications;
@@ -17,13 +19,26 @@ public class AuthenticationControllerTest : TestUtils.BaseTest
 {
     private readonly Mock<IAuthenticationService> _authServiceMock;
     private readonly Mock<IAuthenticationHelper> _authHelperMock;
+    private readonly Mock<IConfiguration> _configurationMock;
+    private readonly Mock<IConfigurationSection> _demoModeSectionMock;
     private readonly AuthenticationController _controller;
 
     public AuthenticationControllerTest()
     {
         _authServiceMock = new Mock<IAuthenticationService>();
         _authHelperMock = new Mock<IAuthenticationHelper>();
-        _controller = new AuthenticationController(_authServiceMock.Object, _authHelperMock.Object);
+        _configurationMock = new Mock<IConfiguration>();
+        _demoModeSectionMock = new Mock<IConfigurationSection>();
+        SetDemoMode(false);
+        _controller = new AuthenticationController(_authServiceMock.Object, _authHelperMock.Object, _configurationMock.Object);
+    }
+
+    private void SetDemoMode(bool enabled)
+    {
+        _demoModeSectionMock.Setup(s => s.Value).Returns(enabled.ToString());
+        _configurationMock
+            .Setup(c => c.GetSection(AppConstants.DemoModeConfigKey))
+            .Returns(_demoModeSectionMock.Object);
     }
 
     [Fact]
@@ -179,5 +194,62 @@ public class AuthenticationControllerTest : TestUtils.BaseTest
 
         // Assert
         result.Should().BeOfType<UnprocessableEntityObjectResult>();
+    }
+
+    [Fact]
+    public void LoginGoogle_ShouldReturnNotFound_WhenDemoModeEnabled()
+    {
+        // Arrange
+        SetDemoMode(true);
+
+        // Act
+        var result = _controller.LoginGoogle();
+
+        // Assert
+        result.Should().BeOfType<NotFoundObjectResult>();
+    }
+
+    [Fact]
+    public async Task GoogleCallback_ShouldReturnNotFound_WhenDemoModeEnabled()
+    {
+        // Arrange
+        SetDemoMode(true);
+
+        // Act
+        var result = await _controller.GoogleCallback();
+
+        // Assert
+        result.Should().BeOfType<NotFoundObjectResult>();
+        _authHelperMock.Verify(h => h.GenerateCallbackResponse(It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<LoginOutput>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task StartResetPassword_ShouldReturnNotFound_WhenDemoModeEnabled()
+    {
+        // Arrange
+        SetDemoMode(true);
+        var input = new SendResetPasswordEmailInput { Email = "user@email.com" };
+
+        // Act
+        var result = await _controller.StartResetPassword(input);
+
+        // Assert
+        result.Should().BeOfType<NotFoundObjectResult>();
+        _authServiceMock.Verify(s => s.SendResetPasswordEmail(It.IsAny<SendResetPasswordEmailInput>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ResetPassword_ShouldReturnNotFound_WhenDemoModeEnabled()
+    {
+        // Arrange
+        SetDemoMode(true);
+        var input = new ResetPasswordInput { ResetToken = TestUtils.Strings[0], PasswordConfirmation = TestUtils.Strings[1], Password = TestUtils.Strings[2] };
+
+        // Act
+        var result = await _controller.ResetPassword(input);
+
+        // Assert
+        result.Should().BeOfType<NotFoundObjectResult>();
+        _authServiceMock.Verify(s => s.ResetPassword(It.IsAny<ResetPasswordInput>()), Times.Never);
     }
 }

@@ -3,17 +3,25 @@ using System.Text.Json;
 using Fin.Application.Authentications.Dtos;
 using Fin.Application.Authentications.Utils;
 using Fin.Infrastructure.Authentications.Dtos;
+using Fin.Infrastructure.Constants;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using IAuthenticationService = Fin.Application.Authentications.Services.IAuthenticationService;
 
 namespace Fin.Api.Authentication;
 
 [Route("authentications")]
-public class AuthenticationController(IAuthenticationService authenticationService, IAuthenticationHelper helper) : ControllerBase
+public class AuthenticationController(
+    IAuthenticationService authenticationService,
+    IAuthenticationHelper helper,
+    IConfiguration configuration) : ControllerBase
 {
+    private bool IsDemoMode => configuration.GetValue<bool>(AppConstants.DemoModeConfigKey);
+
+    private const string DemoModeDisabledMessage = "This feature is disabled in the portfolio demo.";
     [HttpPost("login")]
     public async Task<ActionResult<LoginOutput>> Login([FromBody] LoginInput input)
     {
@@ -46,6 +54,9 @@ public class AuthenticationController(IAuthenticationService authenticationServi
     [HttpGet("login-google")]
     public IActionResult LoginGoogle([FromQuery] string state = null)
     {
+        if (IsDemoMode)
+            return NotFound(DemoModeDisabledMessage);
+
         if (string.IsNullOrEmpty(state))
         {
             state = Guid.NewGuid().ToString("N");
@@ -62,6 +73,9 @@ public class AuthenticationController(IAuthenticationService authenticationServi
     [HttpGet("google-callback")]
     public async Task<IActionResult> GoogleCallback()
     {
+        if (IsDemoMode)
+            return NotFound(DemoModeDisabledMessage);
+
         try
         {
             var result = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
@@ -92,6 +106,9 @@ public class AuthenticationController(IAuthenticationService authenticationServi
     [HttpPost("send-reset-password-email")]
     public async Task<ActionResult> StartResetPassword([FromBody] SendResetPasswordEmailInput input)
     {
+        if (IsDemoMode)
+            return NotFound(DemoModeDisabledMessage);
+
         await authenticationService.SendResetPasswordEmail(input);
         return Ok();
     }
@@ -99,6 +116,9 @@ public class AuthenticationController(IAuthenticationService authenticationServi
     [HttpPost("reset-password")]
     public async Task<ActionResult> ResetPassword([FromBody] ResetPasswordInput input)
     {
+        if (IsDemoMode)
+            return NotFound(DemoModeDisabledMessage);
+
         var result = await authenticationService.ResetPassword(input);
         if (result.Success)
             return Ok(result.Data);
