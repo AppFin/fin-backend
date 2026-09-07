@@ -2,10 +2,12 @@
 using Fin.Application.Users.Services;
 using Fin.Domain.Users.Dtos;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Fin.Api.Users;
 
 [Route("users/create")]
+[EnableRateLimiting("auth")]
 public class UserCreateController(IUserCreateService userCreateService) : ControllerBase
 {
     [HttpPost("start")]

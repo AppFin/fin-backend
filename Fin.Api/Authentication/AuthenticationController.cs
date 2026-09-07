@@ -8,12 +8,14 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using IAuthenticationService = Fin.Application.Authentications.Services.IAuthenticationService;
 
 namespace Fin.Api.Authentication;
 
 [Route("authentications")]
+[EnableRateLimiting("auth")]
 public class AuthenticationController(
     IAuthenticationService authenticationService,
     IAuthenticationHelper helper,
