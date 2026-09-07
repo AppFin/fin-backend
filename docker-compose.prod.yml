@@ -54,9 +54,13 @@ services:
       - postgres
       - redis
       - mongodb
+    # Published on the VM's private IP so the NPM instance on the other
+    # (AMD) VM can reach it over the Oracle private network - Docker
+    # networks don't span hosts, so a same-host "web" network is no use here.
+    ports:
+      - "${FIN_API_PORT:-8091}:8080"
     networks:
       - internal
-      - web
 
   front:
     image: fin-front:latest
@@ -64,15 +68,13 @@ services:
     restart: always
     depends_on:
       - api
+    ports:
+      - "${FIN_FRONT_PORT:-8090}:80"
     networks:
-      - web
+      - internal
 
 networks:
   internal:
-  # Created once on the server (docker network create web) and shared with
-  # whatever reverse proxy you point at fin-api / fin-front later.
-  web:
-    external: true
 
 volumes:
   postgres_data:

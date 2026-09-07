@@ -13,7 +13,6 @@ builda as duas imagens Docker e sobe com `docker-compose.prod.yml`.
 
 **2. No servidor**, uma vez:
 ```bash
-docker network create web   # rede externa que o proxy reverso vai usar depois
 mkdir -p ~/fin-portfolio-demo/fin-backend
 cp .env.example ~/fin-portfolio-demo/fin-backend/.env   # depois de clonar, ou copie o conteúdo abaixo
 ```
@@ -21,11 +20,20 @@ Preencha `~/fin-portfolio-demo/fin-backend/.env` (nunca vai pro git) com base no
 Os valores de `Encrypt__Key`/`Encrypt__Iv`/`Jwt__Key` têm que ser reais - com placeholder tipo
 `EXEMPLE` a API quebra ao tentar cadastrar usuário (a criptografia exige 32/16 caracteres exatos).
 
-**3. Proxy/domínio**: por enquanto os containers `fin-api` e `fin-front` só entram na rede
-`web`, sem porta publicada no host. Quando você configurar o proxy reverso, aponte para os
-container names (`fin-api:8080`, `fin-front:80`) nessa rede. Depois de ter domínios reais,
-atualize `PUBLIC_API_URL` e `ApiSettings__FrontendConfigs__Url` no `.env` do servidor e rode
-o workflow de novo (ou `workflow_dispatch` manual) para rebuildar o front com a URL certa.
+**3. Proxy/domínio (setup ARM + AMD)**: como o proxy (NPM) roda numa VM diferente (AMD) da
+que sobe estes containers (ARM), uma rede docker não ajuda - ela não atravessa hosts. Por isso
+`fin-api` e `fin-front` publicam porta no host da VM ARM (`FIN_API_PORT`/`FIN_FRONT_PORT` no
+`.env`, padrão `8091`/`8090`), do mesmo jeito que o n8n já faz. No NPM, aponte os "Proxy Hosts"
+para o **IP privado da VM ARM** (estável mesmo quando o IP público muda) nessas portas:
+- `fin-api` -> `http://<IP_PRIVADO_ARM>:8091`
+- `fin-front` -> `http://<IP_PRIVADO_ARM>:8090`
+
+Garanta que a Security List/NSG da VM ARM libera essas portas só pra sub-rede privada (não pro
+`0.0.0.0/0`), já que quem deve acessá-las é só a VM AMD, nunca a internet direto.
+
+Depois de ter os domínios reais, atualize `PUBLIC_API_URL` e `ApiSettings__FrontendConfigs__Url`
+no `.env` do servidor e rode o workflow de novo (ou `workflow_dispatch` manual) para rebuildar
+o front com a URL certa.
 
 ## Rodando manualmente (sem esperar o CI)
 
