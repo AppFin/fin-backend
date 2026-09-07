@@ -31,15 +31,6 @@ services:
     networks:
       - internal
 
-  mongodb:
-    image: mongo:latest
-    container_name: fin-mongo
-    restart: always
-    volumes:
-      - mongo_data:/data/db
-    networks:
-      - internal
-
   api:
     image: fin-api:latest
     container_name: fin-api
@@ -48,12 +39,10 @@ services:
       - .env
     environment:
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=fin_app;Username=fin_app;Password=${POSTGRES_PASSWORD}
-      ConnectionStrings__MongoDbConnection: mongodb://mongodb:27017
       ApiSettings__Redis: redis:6379
     depends_on:
       - postgres
       - redis
-      - mongodb
     # Published on the VM's private IP so the NPM instance on the other
     # (AMD) VM can reach it over the Oracle private network - Docker
     # networks don't span hosts, so a same-host "web" network is no use here.
@@ -79,4 +68,3 @@ networks:
 volumes:
   postgres_data:
   redis_data:
-  mongo_data:
